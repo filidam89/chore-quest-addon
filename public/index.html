@@ -29,7 +29,7 @@
 
   <!-- HEADER BAR (LOGO IS CLICKABLE HOME BUTTON) -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
       <div onclick="goToHome()" title="Torna alla Home" class="flex items-center gap-3 cursor-pointer hover:opacity-80 transition group">
         <div class="w-10 h-10 rounded-2xl bg-indigo-600 group-hover:scale-105 transition text-white flex items-center justify-center text-xl shadow-md font-bold">
           ⚡
@@ -37,7 +37,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md">v1.4</span>
+            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md">v1.5</span>
           </h1>
           <p class="text-xs text-slate-500 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -48,10 +48,10 @@
 
       <!-- VIEW MODE SWITCHER: USO vs GESTIONE -->
       <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200">
-        <button id="btn-mode-use" onclick="switchMode('use')" class="px-3 py-1.5 rounded-xl font-extrabold text-xs transition bg-indigo-600 text-white shadow">
+        <button id="btn-mode-use" onclick="switchMode('use')" class="px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition bg-indigo-600 text-white shadow">
           📱 Uso Quotidiano
         </button>
-        <button id="btn-mode-admin" onclick="switchMode('admin')" class="px-3 py-1.5 rounded-xl font-extrabold text-xs transition text-slate-600 hover:text-slate-900">
+        <button id="btn-mode-admin" onclick="switchMode('admin')" class="px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition text-slate-600 hover:text-slate-900">
           ⚙️ Gestione & Admin
         </button>
       </div>
@@ -59,20 +59,25 @@
   </header>
 
   <!-- ==================== MODE 1: USO QUOTIDIANO ==================== -->
-  <main id="mode-use" class="max-w-6xl mx-auto px-4 pt-6 space-y-6">
+  <main id="mode-use" class="max-w-7xl mx-auto px-4 pt-6 space-y-6">
 
-    <!-- ACTIVE FAMILY MEMBERS BAR (SPACIOUS & CENTERED) -->
+    <!-- ACTIVE FAMILY MEMBERS BAR (FULL-WIDTH EXPANDED CARDS WITH MULTI-AUTHOR SELECTION) -->
     <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
       <div class="flex items-center justify-between flex-wrap gap-2">
-        <div class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Chi ha completato l'attività?</div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Chi ha partecipato all'attività?</span>
+          <button onclick="toggleSelectAllMembers()" id="btn-select-all" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-md">
+            Seleziona Tutti
+          </button>
+        </div>
         <!-- Period Winners Badges Indicator -->
         <div id="period-winners-badge" class="flex items-center gap-2 flex-wrap text-xs">
           <!-- Injected via JS -->
         </div>
       </div>
 
-      <!-- Centered Member Cards Grid -->
-      <div id="members-bar" class="flex justify-center flex-wrap gap-4 w-full">
+      <!-- Expanded Full-Width Centered Member Cards Grid -->
+      <div id="members-bar" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
         <!-- Injected via JS -->
       </div>
     </div>
@@ -83,7 +88,7 @@
         <span>⚡</span> Spontanee
       </button>
       <button id="tab-btn-routine" onclick="switchTab('routine')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
-        <span>🔄</span> Routine
+        <span>🔄</span> Routine & Calendario
         <span id="badge-due-routine-count" class="bg-rose-500 text-white text-[11px] px-2 py-0.5 rounded-full font-bold hidden">0</span>
       </button>
       <button id="tab-btn-assigned" onclick="switchTab('assigned')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
@@ -103,11 +108,13 @@
 
     <!-- TAB 1: SPONTANEE -->
     <div id="section-spontaneous" class="space-y-4">
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between flex-wrap gap-2">
         <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
           <span>⚡</span> Attività Spontanee (Al bisogno)
         </h2>
-        <span class="text-xs text-slate-500 font-semibold">Tocca per assegnare i punti</span>
+        <div id="author-selection-indicator" class="text-xs text-indigo-700 bg-indigo-50 font-bold px-3 py-1 rounded-xl">
+          <!-- Injected via JS -->
+        </div>
       </div>
       <div id="spontaneous-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         <!-- Injected via JS -->
@@ -130,16 +137,40 @@
       </div>
     </div>
 
-    <!-- TAB 2: ROUTINE -->
-    <div id="section-routine" class="hidden space-y-4 max-w-4xl mx-auto">
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
-            <span>🔄</span> Routine & Promemoria
-          </h2>
-          <p class="text-xs text-slate-500">Monitoraggio scadenze, preavvisi, ritardi e promemoria personali</p>
+    <!-- TAB 2: ROUTINE & CALENDARIO PROSSIME SCADENZE -->
+    <div id="section-routine" class="hidden space-y-4 max-w-5xl mx-auto">
+      
+      <!-- Routine Top Banner & View Filter -->
+      <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+              <span>🔄</span> Routine & Calendario Scadenze
+            </h2>
+            <p class="text-xs text-slate-500">Monitoraggio scadenze, preavvisi, ritardi e promemoria personali</p>
+          </div>
+          
+          <!-- Filter Buttons for Routine Views -->
+          <div class="flex gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200 flex-wrap">
+            <button onclick="setRoutineFilter('all')" id="rf-all" class="px-3 py-1.5 text-xs font-extrabold rounded-xl transition bg-indigo-600 text-white shadow">Tutte</button>
+            <button onclick="setRoutineFilter('overdue')" id="rf-overdue" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900 flex items-center gap-1">
+              <span>🔴 Scadute</span> <span id="count-overdue-tag" class="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
+            </button>
+            <button onclick="setRoutineFilter('warning')" id="rf-warning" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900 flex items-center gap-1">
+              <span>🟡 In Scadenza</span> <span id="count-warning-tag" class="bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
+            </button>
+            <button onclick="setRoutineFilter('personal')" id="rf-personal" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900">👤 Personali</button>
+            <button onclick="setRoutineFilter('calendar')" id="rf-calendar" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900">📅 Prossime Scadenze</button>
+          </div>
+        </div>
+
+        <!-- Overdue Alert Banner (If Any) -->
+        <div id="routine-alert-banner" class="hidden p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800 font-bold flex items-center gap-2">
+          <span>⚠️</span> <span id="routine-alert-text">Attenzione: ci sono routine scadute da completare!</span>
         </div>
       </div>
+
+      <!-- Routine Cards / Timeline List -->
       <div id="routine-list" class="space-y-3">
         <!-- Injected via JS -->
       </div>
@@ -195,7 +226,7 @@
     </div>
 
     <!-- TAB 5: STATISTICHE & REPORT -->
-    <div id="section-stats" class="hidden space-y-6 max-w-5xl mx-auto">
+    <div id="section-stats" class="hidden space-y-6 max-w-6xl mx-auto">
       
       <!-- Time Range Filter -->
       <div class="flex items-center justify-between flex-wrap gap-3 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
@@ -203,7 +234,7 @@
           <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
             <span>📊</span> Report & Analisi Statistiche
           </h2>
-          <p class="text-xs text-slate-500">Confronto tra membri, grafici e record per singola attività</p>
+          <p class="text-xs text-slate-500">Confronto tra membri, grafici e record per singola attività (esclusi promemoria personali)</p>
         </div>
         <div id="stats-filter-container" class="flex gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200">
           <!-- Injected dynamically based on period mode -->
@@ -217,7 +248,7 @@
           <div id="kpi-total-points" class="text-2xl font-extrabold text-indigo-600 mt-1">0 pt</div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-          <div class="text-xs font-extrabold uppercase text-slate-400">Attività Svolte</div>
+          <div class="text-xs font-extrabold uppercase text-slate-400">Attività di Punteggio Svolte</div>
           <div id="kpi-total-tasks" class="text-2xl font-extrabold text-slate-900 mt-1">0</div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
@@ -251,13 +282,11 @@
 
       <!-- Detailed Task Analysis & Single Activity Charts -->
       <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
-              <span>🏅</span> Analisi & Grafici per Singola Attività
-            </h3>
-            <p class="text-xs text-slate-500">Seleziona o consulta la ripartizione esatta di chi ha svolto ciascuna attività.</p>
-          </div>
+        <div>
+          <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
+            <span>🏅</span> Analisi & Grafici per Singola Attività
+          </h3>
+          <p class="text-xs text-slate-500">Ripartizione dettagliata di chi ha svolto ciascuna faccenda della casa.</p>
         </div>
 
         <div id="task-breakdown-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
@@ -294,7 +323,7 @@
   </main>
 
   <!-- ==================== MODE 2: GESTIONE & ADMIN ==================== -->
-  <main id="mode-admin" class="hidden max-w-5xl mx-auto px-4 pt-6 space-y-6">
+  <main id="mode-admin" class="hidden max-w-6xl mx-auto px-4 pt-6 space-y-6">
 
     <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
       <div class="flex items-center justify-between border-b border-slate-100 pb-4 flex-wrap gap-4">
@@ -442,6 +471,7 @@
             <span onclick="selectEmoji('📚')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">📚</span>
             <span onclick="selectEmoji('⚡')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">⚡</span>
             <span onclick="selectEmoji('🔄')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🔄</span>
+            <span onclick="selectEmoji('⭐')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">⭐</span>
             <span onclick="selectEmoji('🏆')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🏆</span>
           </div>
         </div>
@@ -516,7 +546,7 @@
 
         <div class="flex items-center gap-2 pt-1">
           <input id="spont-edit-personal" type="checkbox" onchange="toggleSpontPersonal(this.checked)" class="w-4 h-4 text-indigo-600 rounded">
-          <label for="spont-edit-personal" class="text-xs font-bold text-slate-700 cursor-pointer">Attività Personale / Promemoria (0 punti, fuori classifica)</label>
+          <label for="spont-edit-personal" class="text-xs font-bold text-slate-700 cursor-pointer">Attività Personale (0 punti, fuori classifica)</label>
         </div>
 
         <div class="flex justify-end gap-2 pt-2">
@@ -570,17 +600,26 @@
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tipo di Scadenza</label>
-          <select id="rout-edit-type" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
-            <option value="from_last">🕒 Dall'ultimo completamento (es. +X giorni dall'ultima volta)</option>
-            <option value="fixed">📅 A cadenza fissa (es. ogni X giorni dalla data di inizio)</option>
-          </select>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tipo di Scadenza</label>
+            <select id="rout-edit-type" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+              <option value="from_last">🕒 Dall'ultimo completamento</option>
+              <option value="fixed">📅 A cadenza fissa</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Assegnato a</label>
+            <select id="rout-edit-member" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+              <option value="all">👥 Tutta la Famiglia</option>
+              <!-- Member options injected via JS -->
+            </select>
+          </div>
         </div>
 
         <div class="flex items-center gap-2 pt-1">
           <input id="rout-edit-personal" type="checkbox" onchange="toggleRoutPersonal(this.checked)" class="w-4 h-4 text-indigo-600 rounded">
-          <label for="rout-edit-personal" class="text-xs font-bold text-slate-700 cursor-pointer">Promemoria Personale (0 punti, fuori classifica - es. barbiere)</label>
+          <label for="rout-edit-personal" class="text-xs font-bold text-slate-700 cursor-pointer">Promemoria Personale (0 punti, escluso da classifiche e statistiche - es. barbiere)</label>
         </div>
 
         <div class="flex justify-end gap-2 pt-2">
@@ -592,10 +631,11 @@
   </div>
 
   <script>
-    let activeMemberId = null;
+    let selectedMemberIds = new Set();
     let activeTab = 'spontaneous';
     let activeMode = 'use';
     let activeStatsFilter = 'all';
+    let activeRoutineFilter = 'all';
     let appData = null;
     let chartMembers = null;
     let chartTasks = null;
@@ -658,6 +698,7 @@
       });
       if (tab === 'stats') renderStatsReports();
       if (tab === 'history') renderHistory();
+      if (tab === 'routine') renderRoutines();
     }
 
     function toggleCustomTaskBox() {
@@ -665,9 +706,49 @@
       box.classList.toggle('hidden');
     }
 
-    function selectMember(mId) {
-      activeMemberId = mId;
+    function toggleSelectMember(mId) {
+      if (selectedMemberIds.has(mId)) {
+        if (selectedMemberIds.size > 1) {
+          selectedMemberIds.delete(mId);
+        }
+      } else {
+        selectedMemberIds.add(mId);
+      }
       renderMembersBar();
+      updateAuthorIndicator();
+    }
+
+    function toggleSelectAllMembers() {
+      const members = Object.values(appData.members || {});
+      if (selectedMemberIds.size === members.length) {
+        selectedMemberIds.clear();
+        if (members[0]) selectedMemberIds.add(members[0].id);
+      } else {
+        members.forEach(m => selectedMemberIds.add(m.id));
+      }
+      renderMembersBar();
+      updateAuthorIndicator();
+    }
+
+    function updateAuthorIndicator() {
+      const indicator = document.getElementById('author-selection-indicator');
+      const allMembers = appData?.members || {};
+      const selectedNames = Array.from(selectedMemberIds).map(id => allMembers[id]?.name).filter(Boolean);
+      
+      if (indicator) {
+        if (selectedNames.length === 0) {
+          indicator.textContent = 'Seleziona almeno un membro in alto';
+        } else if (selectedNames.length === 1) {
+          indicator.innerHTML = `Assegna punti a: <b>${selectedNames[0]}</b>`;
+        } else {
+          indicator.innerHTML = `Assegna punti a più autori: <b>${selectedNames.join(' + ')}</b>`;
+        }
+      }
+
+      const btnAll = document.getElementById('btn-select-all');
+      if (btnAll) {
+        btnAll.textContent = (selectedMemberIds.size === Object.keys(allMembers).length) ? 'Deseleziona Tutti' : 'Seleziona Tutti';
+      }
     }
 
     // Format Date & Time cleanly: "20/08 21:30" or "Oggi 21:30"
@@ -713,12 +794,13 @@
       const bar = document.getElementById('members-bar');
       const targetSelect = document.getElementById('assign-target-select');
       const histSelect = document.getElementById('history-member-filter');
+      const routMemberSelect = document.getElementById('rout-edit-member');
       const winnersBadge = document.getElementById('period-winners-badge');
       if (!bar || !appData) return;
 
       const members = Object.values(appData.members || {});
-      if (!activeMemberId && members.length > 0) {
-        activeMemberId = members[0].id;
+      if (selectedMemberIds.size === 0 && members.length > 0) {
+        selectedMemberIds.add(members[0].id);
       }
 
       const labels = getPeriodLabels();
@@ -735,12 +817,14 @@
       bar.innerHTML = '';
       if (targetSelect) targetSelect.innerHTML = '';
       if (histSelect) histSelect.innerHTML = '<option value="all">Tutti i membri</option>';
+      if (routMemberSelect) {
+        routMemberSelect.innerHTML = '<option value="all">👥 Tutta la Famiglia</option>';
+      }
 
       members.forEach(m => {
-        const isActive = (m.id === activeMemberId);
+        const isSelected = selectedMemberIds.has(m.id);
         const primary = getPrimaryScore(m);
 
-        // Render last 3 tasks with Date AND Time (e.g. "Oggi 21:30 - Lavatrice (+15)")
         let recentHtml = '<div class="text-[11px] text-slate-400 italic">Nessuna attività recente</div>';
         if (m.recent_tasks && m.recent_tasks.length > 0) {
           recentHtml = m.recent_tasks.map(t => {
@@ -755,7 +839,6 @@
           }).join('');
         }
 
-        // Trophy / Gap badge
         let gapBadge = '';
         if (m.is_leader) {
           gapBadge = `<span class="inline-flex items-center gap-1 text-[11px] font-extrabold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">🏆 ${m.gap_text}</span>`;
@@ -764,12 +847,15 @@
         }
 
         bar.innerHTML += `
-          <div onclick="selectMember('${m.id}')" class="flex-1 min-w-[260px] max-w-[340px] p-4 rounded-3xl border-2 cursor-pointer transition flex flex-col justify-between space-y-3 ${isActive ? 'border-indigo-500 bg-indigo-50/70 shadow-md ring-2 ring-indigo-200' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}">
+          <div onclick="toggleSelectMember('${m.id}')" class="p-4 sm:p-5 rounded-3xl border-2 cursor-pointer transition flex flex-col justify-between space-y-3 shadow-xs hover:shadow-md ${isSelected ? 'border-indigo-600 bg-indigo-50/80 ring-2 ring-indigo-200' : 'border-slate-200 bg-slate-50/90 hover:bg-slate-100'}">
             
             <!-- Member Header & Primary Score -->
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-center text-3xl shadow-xs">${m.icon || '👤'}</div>
+                <div class="relative">
+                  <div class="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-3xl shadow-xs">${m.icon || '👤'}</div>
+                  ${isSelected ? '<span class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow">✓</span>' : ''}
+                </div>
                 <div>
                   <div class="text-base font-extrabold text-slate-900">${m.name}</div>
                   <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">${primary.label}</div>
@@ -787,7 +873,7 @@
             </div>
 
             <!-- Recent 3 Tasks with Date & Time -->
-            <div class="pt-2 border-t border-slate-200/60 space-y-1 bg-white/70 p-2.5 rounded-2xl">
+            <div class="pt-2 border-t border-slate-200/60 space-y-1 bg-white/80 p-2.5 rounded-2xl">
               <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Ultime 3 attività svolte:</div>
               ${recentHtml}
             </div>
@@ -797,6 +883,127 @@
 
         if (targetSelect) targetSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
         if (histSelect) histSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
+        if (routMemberSelect) routMemberSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
+      });
+
+      updateAuthorIndicator();
+    }
+
+    function setRoutineFilter(flt) {
+      activeRoutineFilter = flt;
+      ['all', 'overdue', 'warning', 'personal', 'calendar'].forEach(k => {
+        const btn = document.getElementById(`rf-${k}`);
+        if (btn) {
+          btn.className = (k === flt) ? 'px-3 py-1.5 text-xs font-extrabold rounded-xl transition bg-indigo-600 text-white shadow' : 'px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900';
+        }
+      });
+      renderRoutines();
+    }
+
+    function renderRoutines() {
+      if (!appData) return;
+
+      const routineList = document.getElementById('routine-list');
+      const banner = document.getElementById('routine-alert-banner');
+      const bannerText = document.getElementById('routine-alert-text');
+      const countOverdueTag = document.getElementById('count-overdue-tag');
+      const countWarningTag = document.getElementById('count-warning-tag');
+
+      if (!routineList) return;
+
+      const allRoutines = appData.routine_tasks || [];
+      const overdueRoutines = allRoutines.filter(r => r.status === 'overdue');
+      const warningRoutines = allRoutines.filter(r => r.status === 'warning');
+
+      if (countOverdueTag) {
+        countOverdueTag.textContent = overdueRoutines.length;
+        countOverdueTag.classList.toggle('hidden', overdueRoutines.length === 0);
+      }
+      if (countWarningTag) {
+        countWarningTag.textContent = warningRoutines.length;
+        countWarningTag.classList.toggle('hidden', warningRoutines.length === 0);
+      }
+
+      if (banner) {
+        if (overdueRoutines.length > 0) {
+          banner.classList.remove('hidden');
+          bannerText.textContent = `Attenzione: ci sono ${overdueRoutines.length} routine scadute da completare!`;
+        } else {
+          banner.classList.add('hidden');
+        }
+      }
+
+      routineList.innerHTML = '';
+
+      let filtered = allRoutines;
+      if (activeRoutineFilter === 'overdue') {
+        filtered = overdueRoutines;
+      } else if (activeRoutineFilter === 'warning') {
+        filtered = warningRoutines;
+      } else if (activeRoutineFilter === 'personal') {
+        filtered = allRoutines.filter(r => r.is_personal);
+      }
+
+      if (filtered.length === 0) {
+        routineList.innerHTML = '<div class="text-center py-10 bg-white rounded-3xl border border-slate-200 text-xs text-slate-400 font-medium">Nessuna routine trovata per questa vista. ✨</div>';
+        return;
+      }
+
+      filtered.forEach(r => {
+        let statusBadge = '';
+        let borderClass = 'border-slate-200 bg-white';
+
+        if (r.status === 'overdue') {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-200">🔴 Scaduta da ${r.overdue_days} giorni</span>`;
+          borderClass = 'border-rose-300 bg-rose-50/50';
+        } else if (r.status === 'warning') {
+          const remText = r.days_remaining === 0 ? 'Scade oggi' : `In scadenza tra ${r.days_remaining} gg`;
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">🟡 ${remText}</span>`;
+          borderClass = 'border-amber-300 bg-amber-50/50';
+        } else {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">🟢 Tra ${r.days_remaining} giorni</span>`;
+        }
+
+        let lastInfo = 'Mai eseguita';
+        if (r.last_completed_at) {
+          lastInfo = `${formatDateTime(r.last_completed_at)} (${r.last_completed_by || 'Anonimo'})`;
+        }
+
+        const nextDueDateFormatted = r.due_date ? new Date(r.due_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }) : '-';
+        const typeLabel = (r.schedule_type === 'fixed') ? '📅 Fissa' : '🕒 Dall\'ultimo';
+        
+        let assignedBadge = '';
+        if (r.is_personal) {
+          const mName = r.assigned_member && r.assigned_member !== 'all' ? r.assigned_member : 'Personale';
+          assignedBadge = `<span class="text-[10px] font-extrabold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-md">👤 Promemoria di ${mName} (0 pt)</span>`;
+        }
+
+        const ptsLabel = r.is_personal ? 'Fatto ✓' : `+${r.points} pt (Fatto)`;
+
+        routineList.innerHTML += `
+          <div class="p-4 sm:p-5 ${borderClass} rounded-3xl shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition">
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-2xl shrink-0 shadow-2xs">${r.icon || '🔄'}</div>
+              <div class="space-y-1.5">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h4 class="font-extrabold text-sm sm:text-base text-slate-900">${r.name}</h4>
+                  ${assignedBadge}
+                  ${statusBadge}
+                </div>
+                <div class="text-xs text-slate-500 flex items-center gap-3 flex-wrap">
+                  <span>Prossima scadenza: <b class="text-slate-800">${nextDueDateFormatted}</b></span>
+                  <span>•</span>
+                  <span>Cadenza: <b>${r.frequency_days}gg</b> (${typeLabel})</span>
+                  <span>•</span>
+                  <span>Ultimo: <b>${lastInfo}</b></span>
+                </div>
+              </div>
+            </div>
+            <button onclick="logTask('${r.name}', ${r.points}, 'routine', ${!!r.is_personal})" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">
+              ${ptsLabel}
+            </button>
+          </div>
+        `;
       });
     }
 
@@ -804,6 +1011,7 @@
       if (!appData) return;
 
       renderMembersBar();
+      renderRoutines();
 
       // Badge pending tasks
       const pendingCount = (appData.pending_assigned || []).length;
@@ -826,7 +1034,7 @@
       if (spontGrid) {
         spontGrid.innerHTML = '';
         (appData.spontaneous_tasks || []).forEach(t => {
-          const ptsBadge = t.is_personal ? '<span class="text-[10px] font-extrabold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg self-start">👤 Personale (0 pt)</span>' : `<span class="text-[11px] font-extrabold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-lg self-start">+${t.points} pt</span>`;
+          const ptsBadge = t.is_personal ? '<span class="text-[10px] font-extrabold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-lg self-start">👤 Personale (0 pt)</span>' : `<span class="text-[11px] font-extrabold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-lg self-start">+${t.points} pt</span>`;
           spontGrid.innerHTML += `
             <div onclick="logTask('${t.name}', ${t.points}, 'spontaneous', ${!!t.is_personal})" class="p-3.5 bg-white border border-slate-200/90 hover:border-indigo-500 rounded-2xl shadow-2xs hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-2">
               <div>
@@ -834,59 +1042,6 @@
                 <div class="text-xs font-bold text-slate-900 leading-snug">${t.name}</div>
               </div>
               ${ptsBadge}
-            </div>
-          `;
-        });
-      }
-
-      // Routines with clear headers, warnings, and overdue indicators
-      const routineList = document.getElementById('routine-list');
-      if (routineList) {
-        routineList.innerHTML = '';
-        (appData.routine_tasks || []).forEach(r => {
-          let statusBadge = '';
-          let borderClass = 'border-slate-200 bg-white';
-
-          if (r.status === 'overdue') {
-            statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-200">🔴 Scaduta da ${r.overdue_days} giorni</span>`;
-            borderClass = 'border-rose-300 bg-rose-50/40';
-          } else if (r.status === 'warning') {
-            const remText = r.days_remaining === 0 ? 'Scade oggi' : `In scadenza tra ${r.days_remaining} gg`;
-            statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">🟡 ${remText}</span>`;
-            borderClass = 'border-amber-300 bg-amber-50/40';
-          } else {
-            statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">🟢 Tra ${r.days_remaining} giorni</span>`;
-          }
-
-          let lastInfo = 'Mai eseguita';
-          if (r.last_completed_at) {
-            lastInfo = `${formatDateTime(r.last_completed_at)} (${r.last_completed_by || 'Anonimo'})`;
-          }
-
-          const typeLabel = (r.schedule_type === 'fixed') ? '📅 Fissa' : '🕒 Dall\'ultimo completamento';
-          const personalTag = r.is_personal ? '<span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">👤 Promemoria Personale</span>' : '';
-          const ptsLabel = r.is_personal ? 'Fatto ✓' : `+${r.points} pt (Fatto)`;
-
-          routineList.innerHTML += `
-            <div class="p-4 ${borderClass} rounded-2xl shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition">
-              <div class="flex items-start gap-3.5">
-                <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-2xl shrink-0">${r.icon || '🔄'}</div>
-                <div class="space-y-1">
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <h4 class="font-extrabold text-sm text-slate-900">${r.name}</h4>
-                    ${personalTag}
-                    ${statusBadge}
-                  </div>
-                  <div class="text-xs text-slate-500 flex items-center gap-3 flex-wrap">
-                    <span>${typeLabel} (${r.frequency_days}gg) • Preavviso: ${r.warning_days}gg</span>
-                    <span>•</span>
-                    <span>Ultimo: <b>${lastInfo}</b></span>
-                  </div>
-                </div>
-              </div>
-              <button onclick="logTask('${r.name}', ${r.points}, 'routine', ${!!r.is_personal})" class="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">
-                ${ptsLabel}
-              </button>
             </div>
           `;
         });
@@ -920,14 +1075,12 @@
       const podiumGraphic = document.getElementById('podium-graphic');
       const lbTable = document.getElementById('leaderboard-table');
       const lb = appData.leaderboard || [];
-      const labels = getPeriodLabels();
 
       if (podiumGraphic && lbTable) {
         podiumGraphic.innerHTML = '';
         lbTable.innerHTML = '';
 
         if (lb.length === 1) {
-          // 1 Participant Podium
           const p1 = lb[0];
           podiumGraphic.innerHTML = `
             <div class="flex flex-col items-center w-28">
@@ -937,7 +1090,6 @@
             </div>
           `;
         } else if (lb.length === 2) {
-          // 2 Participants Podium
           const p1 = lb[0];
           const p2 = lb[1];
           podiumGraphic.innerHTML = `
@@ -953,7 +1105,6 @@
             </div>
           `;
         } else if (lb.length >= 3) {
-          // 3+ Participants Podium (2°, 1°, 3°)
           const p1 = lb[0];
           const p2 = lb[1];
           const p3 = lb[2];
@@ -1011,7 +1162,6 @@
 
       const labels = getPeriodLabels();
 
-      // Render Dynamic Filter Buttons
       const filterBox = document.getElementById('stats-filter-container');
       if (filterBox) {
         filterBox.innerHTML = `
@@ -1036,22 +1186,20 @@
         filterStartDate = new Date(now.getFullYear(), 0, 1);
       }
 
-      const filteredLogs = (appData.logs || []).filter(l => new Date(l.created_at) >= filterStartDate);
+      // STRICTLY EXCLUDE personal tasks from gamification stats
+      const filteredLogs = (appData.logs || []).filter(l => new Date(l.created_at) >= filterStartDate && !l.is_personal && parseInt(l.points) > 0);
 
-      // KPIs
       let totalPts = 0;
       const memberPoints = {};
       const taskCounts = {};
-      const taskPerformers = {}; // { taskName: { memberName: count } }
+      const taskPerformers = {};
 
       Object.values(appData.members || {}).forEach(m => memberPoints[m.name] = 0);
 
       filteredLogs.forEach(l => {
         const pts = parseInt(l.points) || 0;
-        if (!l.is_personal && pts > 0) {
-          totalPts += pts;
-          memberPoints[l.member_name] = (memberPoints[l.member_name] || 0) + pts;
-        }
+        totalPts += pts;
+        memberPoints[l.member_name] = (memberPoints[l.member_name] || 0) + pts;
         taskCounts[l.task_name] = (taskCounts[l.task_name] || 0) + 1;
 
         if (!taskPerformers[l.task_name]) taskPerformers[l.task_name] = {};
@@ -1121,7 +1269,7 @@
         });
       }
 
-      // Detailed Single Task Cards with Progress Distribution Bars
+      // Detailed Single Task Cards with Progress Distribution
       const breakdownBox = document.getElementById('task-breakdown-list');
       if (breakdownBox) {
         breakdownBox.innerHTML = '';
@@ -1132,15 +1280,10 @@
         });
 
         if (allTasks.length === 0) {
-          breakdownBox.innerHTML = '<div class="col-span-2 text-center py-6 text-xs text-slate-400">Nessuna attività registrata nel periodo selezionato.</div>';
+          breakdownBox.innerHTML = '<div class="col-span-2 text-center py-6 text-xs text-slate-400">Nessuna attività di punteggio registrata nel periodo selezionato.</div>';
         } else {
           allTasks.forEach(([taskName, performers]) => {
             const totalTimes = Object.values(performers).reduce((acc, v) => acc + v, 0);
-            
-            // Generate visual distribution bar
-            let barsHtml = '';
-            const colors = ['bg-indigo-500', 'bg-pink-500', 'bg-emerald-500', 'bg-amber-500', 'bg-purple-500'];
-            
             const performerDetails = Object.entries(performers)
               .sort((a, b) => b[1] - a[1])
               .map(([mName, count], idx) => {
@@ -1190,7 +1333,7 @@
 
       filtered.forEach(l => {
         const dtFormatted = formatDateTime(l.created_at);
-        const ptsBadge = l.is_personal ? '<span class="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">promemoria</span>' : `<span class="font-extrabold text-indigo-600 text-sm">+${l.points} pt</span>`;
+        const ptsBadge = l.is_personal ? '<span class="text-[11px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-md">promemoria</span>' : `<span class="font-extrabold text-indigo-600 text-sm">+${l.points} pt</span>`;
 
         timeline.innerHTML += `
           <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs">
@@ -1246,13 +1389,11 @@
     function renderAdmin() {
       if (!appData) return;
 
-      // Period mode selector
       const modeSelect = document.getElementById('cfg-period-mode');
       if (modeSelect && appData.settings?.leaderboard_period_mode) {
         modeSelect.value = appData.settings.leaderboard_period_mode;
       }
 
-      // Primary score display selector
       const primaryScoreSelect = document.getElementById('cfg-primary-score');
       if (primaryScoreSelect && appData.settings?.primary_score_display) {
         primaryScoreSelect.value = appData.settings.primary_score_display;
@@ -1282,7 +1423,7 @@
       if (adminSpont) {
         adminSpont.innerHTML = '';
         (appData.spontaneous_tasks || []).forEach(t => {
-          const ptsText = t.is_personal ? '<span class="text-slate-500 font-bold">(Personale - 0 pt)</span>' : `<span class="text-indigo-600 font-extrabold">(+${t.points} pt)</span>`;
+          const ptsText = t.is_personal ? '<span class="text-purple-700 font-bold">(Personale - 0 pt)</span>' : `<span class="text-indigo-600 font-extrabold">(+${t.points} pt)</span>`;
           adminSpont.innerHTML += `
             <div class="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-200 text-xs">
               <div class="font-bold text-slate-900">${t.icon} ${t.name} ${ptsText}</div>
@@ -1301,13 +1442,14 @@
         adminRout.innerHTML = '';
         (appData.routine_tasks || []).forEach(r => {
           const typeBadge = (r.schedule_type === 'fixed') ? '📅 Fissa' : '🕒 Dall\'ultimo';
-          const personalTag = r.is_personal ? '• 👤 <b>Promemoria Personale</b>' : `• Punti: <b>+${r.points} pt</b>`;
+          const assignedText = r.assigned_member && r.assigned_member !== 'all' ? `• Assegnato: <b>${r.assigned_member}</b>` : '';
+          const personalTag = r.is_personal ? '• 👤 <b class="text-purple-700">Promemoria Personale (0 pt)</b>' : `• Punti: <b>+${r.points} pt</b>`;
 
           adminRout.innerHTML += `
             <div class="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-slate-200 text-xs">
               <div>
                 <div class="font-extrabold text-sm text-slate-900">${r.icon} ${r.name}</div>
-                <div class="text-slate-500 font-medium mt-0.5">${typeBadge} • Frequenza: <b>${r.frequency_days}gg</b> • Preavviso: <b>${r.warning_days}gg</b> ${personalTag}</div>
+                <div class="text-slate-500 font-medium mt-0.5">${typeBadge} • Frequenza: <b>${r.frequency_days}gg</b> • Preavviso: <b>${r.warning_days}gg</b> ${assignedText} ${personalTag}</div>
               </div>
               <div class="flex items-center gap-2">
                 <button onclick="editRoutine('${r.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 font-bold rounded-lg text-slate-700">Modifica</button>
@@ -1509,6 +1651,7 @@
       const warnInput = document.getElementById('rout-edit-warning');
       const startInput = document.getElementById('rout-edit-start');
       const typeSelect = document.getElementById('rout-edit-type');
+      const memberSelect = document.getElementById('rout-edit-member');
       const iconInput = document.getElementById('rout-edit-icon');
       const iconPreview = document.getElementById('rout-icon-preview');
       const personalCheck = document.getElementById('rout-edit-personal');
@@ -1526,6 +1669,7 @@
           warnInput.value = item.warning_days !== undefined ? item.warning_days : 1;
           startInput.value = item.start_date ? item.start_date.split('T')[0] : todayIso;
           typeSelect.value = item.schedule_type || 'from_last';
+          memberSelect.value = item.assigned_member || 'all';
           iconInput.value = item.icon || '🔄';
           iconPreview.textContent = item.icon || '🔄';
           personalCheck.checked = !!item.is_personal;
@@ -1540,6 +1684,7 @@
         warnInput.value = "1";
         startInput.value = todayIso;
         typeSelect.value = "from_last";
+        memberSelect.value = "all";
         iconInput.value = "🔄";
         iconPreview.textContent = "🔄";
         personalCheck.checked = false;
@@ -1560,13 +1705,14 @@
       const warning_days = parseInt(document.getElementById('rout-edit-warning').value) || 1;
       const start_date = document.getElementById('rout-edit-start').value;
       const schedule_type = document.getElementById('rout-edit-type').value;
+      const assigned_member = document.getElementById('rout-edit-member').value;
       const icon = document.getElementById('rout-edit-icon').value.trim() || '🔄';
 
       try {
         await fetch(`${apiBase}/routine_tasks`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name, points, frequency_days, warning_days, start_date, schedule_type, icon, is_personal })
+          body: JSON.stringify({ id, name, points, frequency_days, warning_days, start_date, schedule_type, icon, is_personal, assigned_member })
         });
         closeRoutineModal();
         showToast("Routine salvata!");
@@ -1586,21 +1732,27 @@
       } catch (e) {}
     }
 
-    // Task Execution Handlers
+    // Task Execution Handlers (Supports Multi-Authors)
     async function logTask(taskName, points, taskType = 'spontaneous', isPersonal = false) {
-      const activeMemberObj = (appData && appData.members) ? appData.members[activeMemberId] : null;
-      const memberName = activeMemberObj ? activeMemberObj.name : 'Membro 1';
+      const allMembers = appData?.members || {};
+      const targetNames = Array.from(selectedMemberIds).map(id => allMembers[id]?.name).filter(Boolean);
+      
+      if (targetNames.length === 0) {
+        showToast("Seleziona almeno un membro in alto!", "⚠️");
+        return;
+      }
 
       try {
         await fetch(`${apiBase}/log`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ member: memberName, task_name: taskName, points, task_type: taskType, is_personal: isPersonal })
+          body: JSON.stringify({ members: targetNames, task_name: taskName, points, task_type: taskType, is_personal: isPersonal })
         });
+        
         if (isPersonal) {
-          showToast(`Promemoria registrato per ${memberName}!`, '👤');
+          showToast(`Promemoria registrato per ${targetNames.join(' e ')}!`, '👤');
         } else {
-          showToast(`+${points} pt assegnati a ${memberName}!`);
+          showToast(`+${points} pt assegnati a ${targetNames.join(' e ')}!`);
         }
         await loadStats();
       } catch (e) {}
@@ -1621,7 +1773,9 @@
       const txt = document.getElementById('assign-task-input').value.trim();
       const targetMember = document.getElementById('assign-target-select').value;
       if (!txt || !targetMember) return;
-      const fromMember = (appData?.members[activeMemberId]) ? appData.members[activeMemberId].name : 'Membro 1';
+      
+      const firstId = Array.from(selectedMemberIds)[0];
+      const fromMember = (appData?.members[firstId]) ? appData.members[firstId].name : 'Membro';
 
       try {
         await fetch(`${apiBase}/assign`, {
@@ -1636,7 +1790,8 @@
     }
 
     async function completeAssignedTask(taskId) {
-      const completedBy = (appData?.members[activeMemberId]) ? appData.members[activeMemberId].name : null;
+      const firstId = Array.from(selectedMemberIds)[0];
+      const completedBy = (appData?.members[firstId]) ? appData.members[firstId].name : null;
       try {
         await fetch(`${apiBase}/complete_assigned`, {
           method: 'POST',
