@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChoreQuest - Gamified Home & Family Chores</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .podium-step-1 { height: 110px; background: linear-gradient(180deg, #f59e0b, #d97706); }
+    .podium-step-2 { height: 85px; background: linear-gradient(180deg, #94a3b8, #64748b); }
+    .podium-step-3 { height: 65px; background: linear-gradient(180deg, #b45309, #78350f); }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen pb-12">
+
+  <!-- HEADER BAR -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl shadow-md font-bold">
+          ⚡
+        </div>
+        <div>
+          <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 leading-tight">ChoreQuest</h1>
+          <p class="text-xs text-slate-500 font-semibold flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Home Assistant Add-on</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- VIEW MODE SWITCHER: USO vs GESTIONE -->
+      <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
+        <button id="btn-mode-use" onclick="switchMode('use')" class="px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition bg-indigo-600 text-white shadow">
+          📱 Uso Quotidiano
+        </button>
+        <button id="btn-mode-admin" onclick="switchMode('admin')" class="px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition text-slate-600 hover:text-slate-900">
+          ⚙️ Gestione & Admin
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MODE 1: USO QUOTIDIANO ==================== -->
+  <main id="mode-use" class="max-w-6xl mx-auto px-4 pt-6 space-y-6">
+
+    <!-- ACTIVE FAMILY MEMBERS BAR -->
+    <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+      <div class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Chi ha completato l'attività?</div>
+      <div id="members-bar" class="flex gap-3 overflow-x-auto custom-scrollbar pb-1">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+    <!-- MAIN NAVIGATION TABS FOR USE MODE -->
+    <div class="flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar p-1.5 bg-slate-200/80 rounded-2xl">
+      <button id="tab-btn-spontaneous" onclick="switchTab('spontaneous')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition shadow-sm bg-white text-slate-900 flex items-center justify-center gap-1.5">
+        <span>⚡</span> Spontanee
+      </button>
+      <button id="tab-btn-routine" onclick="switchTab('routine')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
+        <span>🔄</span> Routine
+      </button>
+      <button id="tab-btn-assigned" onclick="switchTab('assigned')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
+        <span>📌</span> Compiti Assegnati
+        <span id="badge-pending-count" class="bg-rose-500 text-white text-[11px] px-2 py-0.5 rounded-full font-bold hidden">0</span>
+      </button>
+      <button id="tab-btn-custom" onclick="switchTab('custom')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
+        <span>✍️</span> Non Pianificate
+      </button>
+      <button id="tab-btn-podium" onclick="switchTab('podium')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
+        <span>🏆</span> Classifica
+      </button>
+    </div>
+
+    <!-- TAB 1: SPONTANEE -->
+    <div id="section-spontaneous" class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+          <span>⚡</span> Attività Spontanee (Al bisogno)
+        </h2>
+        <span class="text-xs text-slate-500 font-semibold">Tocca per assegnare i punti</span>
+      </div>
+      <div id="spontaneous-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+    <!-- TAB 2: ROUTINE -->
+    <div id="section-routine" class="hidden space-y-4 max-w-3xl mx-auto">
+      <div class="flex items-center justify-between">
+        <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+          <span>🔄</span> Attività di Routine Schedulate
+        </h2>
+        <span class="text-xs text-slate-500 font-semibold">Tracciamento frequenza</span>
+      </div>
+      <div id="routine-list" class="space-y-3">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
+    <!-- TAB 3: COMPITI ASSEGNATI -->
+    <div id="section-assigned" class="hidden space-y-6 max-w-3xl mx-auto">
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+              <span>📌</span> Compiti Assegnati tra Membri
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Assegna un compito e guadagna punti al completamento</p>
+          </div>
+        </div>
+
+        <form onsubmit="submitAssignTask(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+          <input id="assign-task-input" type="text" required placeholder="Descrizione compito..." class="sm:col-span-2 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
+          <div class="flex gap-2">
+            <select id="assign-target-select" class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500">
+              <!-- Injected via JS -->
+            </select>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
+              Assegna
+            </button>
+          </div>
+        </form>
+
+        <div id="assigned-list" class="space-y-3 pt-2">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: NON PIANIFICATE -->
+    <div id="section-custom" class="hidden space-y-4 max-w-xl mx-auto">
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+          <span>✍️</span> Registra Attività Estemporanea
+        </h2>
+        <p class="text-xs text-slate-500">Registra un'attività con descrizione e punteggio a scelta.</p>
+
+        <form onsubmit="submitCustomTask(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Descrizione Attività</label>
+            <input id="custom-task-input" type="text" required placeholder="Es. Montato mobile..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Punti da Assegnare</label>
+            <input id="custom-pts-input" type="number" required value="15" min="1" max="200" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm rounded-xl shadow transition">
+            ➕ Assegna Punti
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TAB 5: CLASSIFICA & PODIO -->
+    <div id="section-podium" class="hidden space-y-6 max-w-2xl mx-auto">
+      <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+        <div class="text-center space-y-1">
+          <h2 class="font-extrabold text-xl text-slate-900">🏆 Classifica Settimanale ChoreQuest</h2>
+          <p class="text-xs text-slate-500">Punti sincronizzati in tempo reale con Home Assistant</p>
+        </div>
+
+        <div id="podium-graphic" class="flex items-end justify-center gap-3 pt-6 pb-2">
+          <!-- Injected via JS -->
+        </div>
+
+        <div id="leaderboard-table" class="space-y-3 pt-4 border-t border-slate-100">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ==================== MODE 2: GESTIONE & ADMIN ==================== -->
+  <main id="mode-admin" class="hidden max-w-5xl mx-auto px-4 pt-6 space-y-6">
+
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div>
+          <h2 class="font-extrabold text-xl text-slate-900 flex items-center gap-2">
+            <span>⚙️</span> Gestione & Configurazione
+          </h2>
+          <p class="text-xs text-slate-500">Configura i membri della famiglia e i cataloghi attività.</p>
+        </div>
+      </div>
+
+      <!-- ADMIN SECTIONS -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- 1. GESTIONE MEMBRI -->
+        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+              <span>👥</span> Membri Famiglia
+            </h3>
+            <button onclick="openAddMemberModal()" class="px-3 py-1 bg-indigo-600 text-white font-bold text-xs rounded-lg shadow">
+              + Aggiungi
+            </button>
+          </div>
+          <div id="admin-members-list" class="space-y-2">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- 2. CATALOGO ATTIVITÀ SPONTANEE -->
+        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+          <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+            <span>⚡</span> Catalogo Attività Spontanee
+          </h3>
+          <form onsubmit="submitAddSpontaneous(event)" class="grid grid-cols-3 gap-2">
+            <input id="spont-name" type="text" required placeholder="Nome..." class="col-span-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs">
+            <input id="spont-pts" type="number" value="15" required placeholder="Punti" class="px-2 py-1.5 bg-white border border-slate-200 rounded-xl text-xs">
+            <button type="submit" class="col-span-3 py-1.5 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow">
+              + Aggiungi Attività
+            </button>
+          </form>
+          <div id="admin-spontaneous-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- 3. CATALOGO ROUTINE SCHEDULATE -->
+        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4 md:col-span-2">
+          <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+            <span>🔄</span> Catalogo Routine Schedulate
+          </h3>
+          <form onsubmit="submitAddRoutine(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+            <input id="rout-name" type="text" required placeholder="Nome routine..." class="sm:col-span-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs">
+            <input id="rout-pts" type="number" value="20" required placeholder="Punti" class="px-2 py-1.5 bg-white border border-slate-200 rounded-xl text-xs">
+            <input id="rout-freq" type="number" value="7" required placeholder="Frequenza (giorni)" class="px-2 py-1.5 bg-white border border-slate-200 rounded-xl text-xs">
+            <button type="submit" class="sm:col-span-4 py-1.5 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow">
+              + Aggiungi Routine
+            </button>
+          </form>
+          <div id="admin-routine-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: ADD MEMBER -->
+  <div id="modal-member" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-extrabold text-lg text-slate-900">Aggiungi Membro Famiglia</h3>
+        <button onclick="closeAddMemberModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <form onsubmit="submitAddMember(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nome Membro</label>
+          <input id="member-name-input" type="text" required placeholder="Es. Papà, Mamma, Marco..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Icona Emoji</label>
+            <input id="member-icon-input" type="text" value="👤" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-center">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Colore Badge</label>
+            <input id="member-color-input" type="color" value="#6366f1" class="w-full h-10 bg-slate-50 border border-slate-200 rounded-xl p-1 cursor-pointer">
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeAddMemberModal()" class="px-4 py-2 bg-slate-100 font-bold text-xs rounded-xl">Annulla</button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 text-white font-extrabold text-xs rounded-xl shadow">Salva Membro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let activeMemberId = null;
+    let activeTab = 'spontaneous';
+    let activeMode = 'use';
+    let appData = null;
+
+    // Relative base path for seamless Ingress support
+    const apiBase = './api';
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadStats();
+    });
+
+    async function loadStats() {
+      try {
+        const res = await fetch(`${apiBase}/stats`);
+        appData = await res.json();
+        render();
+      } catch (e) {
+        console.error("Errore caricamento dati:", e);
+      }
+    }
+
+    function switchMode(mode) {
+      activeMode = mode;
+      document.getElementById('mode-use').classList.toggle('hidden', mode !== 'use');
+      document.getElementById('mode-admin').classList.toggle('hidden', mode !== 'admin');
+      document.getElementById('btn-mode-use').className = (mode === 'use') ? 'px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition bg-indigo-600 text-white shadow' : 'px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition text-slate-600 hover:text-slate-900';
+      document.getElementById('btn-mode-admin').className = (mode === 'admin') ? 'px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition bg-indigo-600 text-white shadow' : 'px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition text-slate-600 hover:text-slate-900';
+      if (mode === 'admin') renderAdmin();
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      const tabs = ['spontaneous', 'routine', 'assigned', 'custom', 'podium'];
+      tabs.forEach(t => {
+        const sec = document.getElementById(`section-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (sec) sec.classList.toggle('hidden', t !== tab);
+        if (btn) {
+          if (t === tab) {
+            btn.className = 'flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition shadow-sm bg-white text-slate-900 flex items-center justify-center gap-1.5';
+          } else {
+            btn.className = 'flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5';
+          }
+        }
+      });
+    }
+
+    function selectMember(mId) {
+      activeMemberId = mId;
+      renderMembersBar();
+    }
+
+    function renderMembersBar() {
+      const bar = document.getElementById('members-bar');
+      const targetSelect = document.getElementById('assign-target-select');
+      if (!bar || !appData) return;
+
+      const members = Object.values(appData.members || {});
+      if (!activeMemberId && members.length > 0) {
+        activeMemberId = members[0].id;
+      }
+
+      bar.innerHTML = '';
+      if (targetSelect) targetSelect.innerHTML = '';
+
+      members.forEach(m => {
+        const isActive = (m.id === activeMemberId);
+        bar.innerHTML += `
+          <div onclick="selectMember('${m.id}')" class="flex-1 min-w-[110px] p-3 rounded-2xl border-2 cursor-pointer transition text-center ${isActive ? 'border-indigo-500 bg-indigo-50/70 shadow-sm' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'}">
+            <div class="text-2xl mb-1">${m.icon || '👤'}</div>
+            <div class="text-xs font-bold text-slate-900 line-clamp-1">${m.name}</div>
+            <div class="text-sm font-extrabold text-indigo-600 mt-0.5">${m.weekly_points} pt</div>
+          </div>
+        `;
+        if (targetSelect) {
+          targetSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
+        }
+      });
+    }
+
+    function render() {
+      if (!appData) return;
+
+      renderMembersBar();
+
+      const pendingCount = (appData.pending_assigned || []).length;
+      const pendingBadge = document.getElementById('badge-pending-count');
+      if (pendingBadge) {
+        pendingBadge.textContent = pendingCount;
+        pendingBadge.classList.toggle('hidden', pendingCount === 0);
+      }
+
+      const spontGrid = document.getElementById('spontaneous-grid');
+      if (spontGrid) {
+        spontGrid.innerHTML = '';
+        (appData.spontaneous_tasks || []).forEach(t => {
+          spontGrid.innerHTML += `
+            <div onclick="logTask('${t.name}', ${t.points}, 'spontaneous')" class="p-3.5 bg-white border border-slate-200/90 hover:border-indigo-500 rounded-2xl shadow-2xs hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-2">
+              <div>
+                <div class="text-2xl mb-1">${t.icon || '⚡'}</div>
+                <div class="text-xs font-bold text-slate-900 leading-snug">${t.name}</div>
+              </div>
+              <span class="text-[11px] font-extrabold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-lg self-start">+${t.points} pt</span>
+            </div>
+          `;
+        });
+      }
+
+      const routineList = document.getElementById('routine-list');
+      if (routineList) {
+        routineList.innerHTML = '';
+        (appData.routine_tasks || []).forEach(r => {
+          const lastBy = r.last_completed_by ? ` • Ultimo da: ${r.last_completed_by}` : '';
+          routineList.innerHTML += `
+            <div class="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-xl shrink-0">${r.icon || '🔄'}</div>
+                <div>
+                  <h4 class="font-extrabold text-sm text-slate-900">${r.name}</h4>
+                  <p class="text-xs text-slate-500 font-medium">Ogni ${r.frequency_days} giorni${lastBy}</p>
+                </div>
+              </div>
+              <button onclick="logTask('${r.name}', ${r.points}, 'routine')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">
+                +${r.points} pt (Fatto)
+              </button>
+            </div>
+          `;
+        });
+      }
+
+      const assignedList = document.getElementById('assigned-list');
+      if (assignedList) {
+        assignedList.innerHTML = '';
+        const pending = appData.pending_assigned || [];
+        if (pending.length === 0) {
+          assignedList.innerHTML = '<div class="text-center py-8 text-xs text-slate-400 font-medium">Nessun compito in sospeso! ✨</div>';
+        } else {
+          pending.forEach(t => {
+            assignedList.innerHTML += `
+              <div class="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs flex items-center justify-between gap-3">
+                <div>
+                  <h4 class="font-extrabold text-sm text-slate-900">${t.task_name}</h4>
+                  <p class="text-xs text-slate-500">Assegnato da <b>${t.from_member}</b> a <b>${t.to_member}</b></p>
+                </div>
+                <button onclick="completeAssignedTask('${t.id}')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">
+                  ✓ Spunta Completato
+                </button>
+              </div>
+            `;
+          });
+        }
+      }
+
+      const podiumGraphic = document.getElementById('podium-graphic');
+      const lbTable = document.getElementById('leaderboard-table');
+      const lb = appData.leaderboard || [];
+
+      if (podiumGraphic && lbTable) {
+        podiumGraphic.innerHTML = '';
+        lbTable.innerHTML = '';
+
+        if (lb.length >= 2) {
+          const p2 = lb[1] || { name: '-', weekly_points: 0, icon: '👤' };
+          const p1 = lb[0] || { name: '-', weekly_points: 0, icon: '👑' };
+          const p3 = lb[2] || { name: '-', weekly_points: 0, icon: '👤' };
+
+          podiumGraphic.innerHTML = `
+            <div class="flex flex-col items-center w-24">
+              <span class="text-xs font-extrabold text-slate-700 mb-1">${p2.name}</span>
+              <div class="w-full podium-step-2 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-lg shadow-md">2°</div>
+              <span class="text-xs font-extrabold text-slate-600 mt-1">${p2.weekly_points} pt</span>
+            </div>
+            <div class="flex flex-col items-center w-24">
+              <span class="text-xs font-extrabold text-amber-600 mb-1">👑 ${p1.name}</span>
+              <div class="w-full podium-step-1 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-xl shadow-lg">1°</div>
+              <span class="text-xs font-extrabold text-amber-700 mt-1">${p1.weekly_points} pt</span>
+            </div>
+            <div class="flex flex-col items-center w-24">
+              <span class="text-xs font-extrabold text-slate-700 mb-1">${p3.name || '-'}</span>
+              <div class="w-full podium-step-3 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-base shadow-md">3°</div>
+              <span class="text-xs font-extrabold text-slate-600 mt-1">${p3.weekly_points || 0} pt</span>
+            </div>
+          `;
+        }
+
+        lb.forEach(m => {
+          const badgesHtml = (m.badges || []).map(b => `<span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">${b.name}</span>`).join(' ');
+          lbTable.innerHTML += `
+            <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="font-extrabold text-slate-400 text-base w-6">#${m.rank}</span>
+                <span class="text-2xl">${m.icon || '👤'}</span>
+                <div>
+                  <div class="font-extrabold text-sm text-slate-900">${m.name}</div>
+                  <div class="flex flex-wrap gap-1 mt-0.5">${badgesHtml}</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="font-extrabold text-indigo-600 text-base">${m.weekly_points} pt (Sett.)</div>
+                <div class="text-xs text-slate-400 font-semibold">Totale: ${m.total_points} pt</div>
+              </div>
+            </div>
+          `;
+        });
+      }
+    }
+
+    function renderAdmin() {
+      if (!appData) return;
+
+      const adminMembers = document.getElementById('admin-members-list');
+      if (adminMembers) {
+        adminMembers.innerHTML = '';
+        Object.values(appData.members || {}).forEach(m => {
+          adminMembers.innerHTML += `
+            <div class="flex items-center justify-between p-2 bg-white rounded-xl border border-slate-200 text-xs">
+              <div class="flex items-center gap-2 font-bold">${m.icon} ${m.name}</div>
+              <button onclick="deleteMember('${m.id}')" class="text-rose-500 font-bold hover:underline">Elimina</button>
+            </div>
+          `;
+        });
+      }
+
+      const adminSpont = document.getElementById('admin-spontaneous-list');
+      if (adminSpont) {
+        adminSpont.innerHTML = '';
+        (appData.spontaneous_tasks || []).forEach(t => {
+          adminSpont.innerHTML += `
+            <div class="flex items-center justify-between p-2 bg-white rounded-xl border border-slate-200 text-xs">
+              <div class="font-bold">${t.icon} ${t.name} (${t.points} pt)</div>
+              <button onclick="deleteSpontaneous('${t.id}')" class="text-rose-500 font-bold hover:underline">Elimina</button>
+            </div>
+          `;
+        });
+      }
+
+      const adminRout = document.getElementById('admin-routine-list');
+      if (adminRout) {
+        adminRout.innerHTML = '';
+        (appData.routine_tasks || []).forEach(r => {
+          adminRout.innerHTML += `
+            <div class="flex items-center justify-between p-2 bg-white rounded-xl border border-slate-200 text-xs">
+              <div class="font-bold">${r.icon} ${r.name} (${r.points} pt / ${r.frequency_days}gg)</div>
+              <button onclick="deleteRoutine('${r.id}')" class="text-rose-500 font-bold hover:underline">Elimina</button>
+            </div>
+          `;
+        });
+      }
+    }
+
+    async function logTask(taskName, points, taskType = 'spontaneous') {
+      const activeMemberObj = (appData && appData.members) ? appData.members[activeMemberId] : null;
+      const memberName = activeMemberObj ? activeMemberObj.name : 'Membro 1';
+
+      try {
+        await fetch(`${apiBase}/log`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ member: memberName, task_name: taskName, points, task_type: taskType })
+        });
+        loadStats();
+      } catch (e) {}
+    }
+
+    async function submitCustomTask(e) {
+      e.preventDefault();
+      const txt = document.getElementById('custom-task-input').value.trim();
+      const pts = parseInt(document.getElementById('custom-pts-input').value) || 15;
+      if (!txt) return;
+      await logTask(txt, pts, 'custom');
+      document.getElementById('custom-task-input').value = '';
+    }
+
+    async function submitAssignTask(e) {
+      e.preventDefault();
+      const txt = document.getElementById('assign-task-input').value.trim();
+      const targetMember = document.getElementById('assign-target-select').value;
+      if (!txt || !targetMember) return;
+      const fromMember = (appData?.members[activeMemberId]) ? appData.members[activeMemberId].name : 'Membro 1';
+
+      try {
+        await fetch(`${apiBase}/assign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from_member: fromMember, to_member: targetMember, task_name: txt, points: 10 })
+        });
+        document.getElementById('assign-task-input').value = '';
+        loadStats();
+      } catch (e) {}
+    }
+
+    async function completeAssignedTask(taskId) {
+      const completedBy = (appData?.members[activeMemberId]) ? appData.members[activeMemberId].name : null;
+      try {
+        await fetch(`${apiBase}/complete_assigned`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ task_id: taskId, completed_by: completedBy })
+        });
+        loadStats();
+      } catch (e) {}
+    }
+
+    async function deleteMember(mId) {
+      if (!confirm("Sicuro di voler eliminare questo membro?")) return;
+      try {
+        await fetch(`${apiBase}/members/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: mId })
+        });
+        loadStats();
+      } catch (e) {}
+    }
+
+    async function submitAddSpontaneous(e) {
+      e.preventDefault();
+      const name = document.getElementById('spont-name').value.trim();
+      const points = parseInt(document.getElementById('spont-pts').value) || 10;
+      if (!name) return;
+      try {
+        await fetch(`${apiBase}/spontaneous_tasks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, points })
+        });
+        document.getElementById('spont-name').value = '';
+        loadStats();
+      } catch (e) {}
+    }
+
+    async function deleteSpontaneous(tId) {
+      try {
+        await fetch(`${apiBase}/spontaneous_tasks/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: tId })
+        });
+        loadStats();
+      } catch (e) {}
+    }
+
+    async function submitAddRoutine(e) {
+      e.preventDefault();
+      const name = document.getElementById('rout-name').value.trim();
+      const points = parseInt(document.getElementById('rout-pts').value) || 20;
+      const freq = parseInt(document.getElementById('rout-freq').value) || 7;
+      if (!name) return;
+      try {
+        await fetch(`${apiBase}/routine_tasks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, points, frequency_days: freq })
+        });
+        document.getElementById('rout-name').value = '';
+        loadStats();
+      } catch (e) {}
+    }
+
+    async function deleteRoutine(tId) {
+      try {
+        await fetch(`${apiBase}/routine_tasks/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: tId })
+        });
+        loadStats();
+      } catch (e) {}
+    }
+
+    function openAddMemberModal() {
+      document.getElementById('modal-member').classList.remove('hidden');
+    }
+    function closeAddMemberModal() {
+      document.getElementById('modal-member').classList.add('hidden');
+    }
+
+    async function submitAddMember(e) {
+      e.preventDefault();
+      const name = document.getElementById('member-name-input').value.trim();
+      const icon = document.getElementById('member-icon-input').value.trim();
+      const color = document.getElementById('member-color-input').value;
+
+      try {
+        await fetch(`${apiBase}/members`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, icon, color })
+        });
+        closeAddMemberModal();
+        loadStats();
+      } catch (e) {}
+    }
+  </script>
+</body>
+</html>
