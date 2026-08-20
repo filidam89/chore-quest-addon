@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChoreQuest - Gamified Home & Family Chores</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     body { font-family: 'Plus Jakarta Sans', sans-serif; }
     .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -16,7 +17,13 @@
     .podium-step-3 { height: 65px; background: linear-gradient(180deg, #b45309, #78350f); }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen pb-12">
+<body class="bg-slate-100 text-slate-800 min-h-screen pb-16">
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 text-white text-xs font-extrabold px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2">
+    <span id="toast-icon">✅</span>
+    <span id="toast-msg">Operazione completata</span>
+  </div>
 
   <!-- HEADER BAR -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
@@ -35,11 +42,11 @@
       </div>
 
       <!-- VIEW MODE SWITCHER: USO vs GESTIONE -->
-      <div class="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
-        <button id="btn-mode-use" onclick="switchMode('use')" class="px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition bg-indigo-600 text-white shadow">
+      <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200">
+        <button id="btn-mode-use" onclick="switchMode('use')" class="px-3 py-1.5 rounded-xl font-extrabold text-xs transition bg-indigo-600 text-white shadow">
           📱 Uso Quotidiano
         </button>
-        <button id="btn-mode-admin" onclick="switchMode('admin')" class="px-3.5 py-1.5 rounded-xl font-extrabold text-xs transition text-slate-600 hover:text-slate-900">
+        <button id="btn-mode-admin" onclick="switchMode('admin')" class="px-3 py-1.5 rounded-xl font-extrabold text-xs transition text-slate-600 hover:text-slate-900">
           ⚙️ Gestione & Admin
         </button>
       </div>
@@ -69,11 +76,14 @@
         <span>📌</span> Compiti Assegnati
         <span id="badge-pending-count" class="bg-rose-500 text-white text-[11px] px-2 py-0.5 rounded-full font-bold hidden">0</span>
       </button>
-      <button id="tab-btn-custom" onclick="switchTab('custom')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
-        <span>✍️</span> Non Pianificate
-      </button>
       <button id="tab-btn-podium" onclick="switchTab('podium')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
         <span>🏆</span> Classifica
+      </button>
+      <button id="tab-btn-stats" onclick="switchTab('stats')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
+        <span>📊</span> Statistiche
+      </button>
+      <button id="tab-btn-history" onclick="switchTab('history')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
+        <span>📜</span> Storico
       </button>
     </div>
 
@@ -88,15 +98,33 @@
       <div id="spontaneous-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
         <!-- Injected via JS -->
       </div>
+
+      <!-- Quick Custom Task Button -->
+      <div class="pt-2">
+        <button onclick="toggleCustomTaskBox()" class="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5">
+          <span>➕</span> <span>Registra attività estemporanea non in lista</span>
+        </button>
+        <div id="custom-task-box" class="hidden mt-3 bg-white p-4 rounded-2xl border border-slate-200 space-y-3">
+          <form onsubmit="submitCustomTask(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+            <input id="custom-task-input" type="text" required placeholder="Descrizione attività (es. Montato mobile)..." class="sm:col-span-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm">
+            <input id="custom-pts-input" type="number" required value="15" min="1" max="200" placeholder="Punti" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm">
+            <button type="submit" class="py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
+              Assegna
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
 
     <!-- TAB 2: ROUTINE -->
-    <div id="section-routine" class="hidden space-y-4 max-w-3xl mx-auto">
+    <div id="section-routine" class="hidden space-y-4 max-w-4xl mx-auto">
       <div class="flex items-center justify-between">
-        <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
-          <span>🔄</span> Attività di Routine Schedulate
-        </h2>
-        <span class="text-xs text-slate-500 font-semibold">Tracciamento frequenza</span>
+        <div>
+          <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+            <span>🔄</span> Routine Schedulate
+          </h2>
+          <p class="text-xs text-slate-500">Monitoraggio scadenze e frequenza di completamento</p>
+        </div>
       </div>
       <div id="routine-list" class="space-y-3">
         <!-- Injected via JS -->
@@ -133,31 +161,7 @@
       </div>
     </div>
 
-    <!-- TAB 4: NON PIANIFICATE -->
-    <div id="section-custom" class="hidden space-y-4 max-w-xl mx-auto">
-      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-        <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
-          <span>✍️</span> Registra Attività Estemporanea
-        </h2>
-        <p class="text-xs text-slate-500">Registra un'attività con descrizione e punteggio a scelta.</p>
-
-        <form onsubmit="submitCustomTask(event)" class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Descrizione Attività</label>
-            <input id="custom-task-input" type="text" required placeholder="Es. Montato mobile..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Punti da Assegnare</label>
-            <input id="custom-pts-input" type="number" required value="15" min="1" max="200" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
-          </div>
-          <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm rounded-xl shadow transition">
-            ➕ Assegna Punti
-          </button>
-        </form>
-      </div>
-    </div>
-
-    <!-- TAB 5: CLASSIFICA & PODIO -->
+    <!-- TAB 4: CLASSIFICA & PODIO -->
     <div id="section-podium" class="hidden space-y-6 max-w-2xl mx-auto">
       <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
         <div class="text-center space-y-1">
@@ -175,6 +179,91 @@
       </div>
     </div>
 
+    <!-- TAB 5: STATISTICHE & REPORT -->
+    <div id="section-stats" class="hidden space-y-6 max-w-5xl mx-auto">
+      
+      <!-- Time Range Filter -->
+      <div class="flex items-center justify-between flex-wrap gap-3 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+        <div>
+          <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+            <span>📊</span> Report & Analisi Statistiche
+          </h2>
+          <p class="text-xs text-slate-500">Confronto tra membri e ripartizione attività svolte</p>
+        </div>
+        <div class="flex gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200">
+          <button onclick="setStatsFilter('all')" id="flt-all" class="px-3 py-1 text-xs font-extrabold rounded-xl transition bg-indigo-600 text-white shadow">Tutto</button>
+          <button onclick="setStatsFilter('today')" id="flt-today" class="px-3 py-1 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900">Oggi</button>
+          <button onclick="setStatsFilter('7d')" id="flt-7d" class="px-3 py-1 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900">7 Giorni</button>
+          <button onclick="setStatsFilter('month')" id="flt-month" class="px-3 py-1 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900">Mese</button>
+          <button onclick="setStatsFilter('year')" id="flt-year" class="px-3 py-1 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900">Anno</button>
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div class="text-xs font-extrabold uppercase text-slate-400">Punti Totali</div>
+          <div id="kpi-total-points" class="text-2xl font-extrabold text-indigo-600 mt-1">0 pt</div>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div class="text-xs font-extrabold uppercase text-slate-400">Attività Svolte</div>
+          <div id="kpi-total-tasks" class="text-2xl font-extrabold text-slate-900 mt-1">0</div>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div class="text-xs font-extrabold uppercase text-slate-400">Top Contributore</div>
+          <div id="kpi-top-member" class="text-base font-extrabold text-amber-600 mt-1 truncate">-</div>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <div class="text-xs font-extrabold uppercase text-slate-400">Media Giornaliera</div>
+          <div id="kpi-avg-daily" class="text-2xl font-extrabold text-emerald-600 mt-1">0 pt/g</div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Chart 1: Members Comparison -->
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+          <h3 class="font-extrabold text-sm text-slate-900">👥 Confronto Punti tra Membri</h3>
+          <div class="h-64 relative">
+            <canvas id="chart-members"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Task Breakdown -->
+        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+          <h3 class="font-extrabold text-sm text-slate-900">⚡ Top 5 Attività più Eseguite</h3>
+          <div class="h-64 relative">
+            <canvas id="chart-tasks"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 6: STORICO CRONOLOGICO -->
+    <div id="section-history" class="hidden space-y-4 max-w-4xl mx-auto">
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-3">
+          <div>
+            <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+              <span>📜</span> Storico Cronologico Attività
+            </h2>
+            <p class="text-xs text-slate-500">Registro dettagliato con data, orario, autore e punti</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="history-search" type="text" oninput="renderHistory()" placeholder="Cerca attività..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+            <select id="history-member-filter" onchange="renderHistory()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+              <option value="all">Tutti i membri</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="history-timeline" class="space-y-2 max-h-[500px] overflow-y-auto custom-scrollbar">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- ==================== MODE 2: GESTIONE & ADMIN ==================== -->
@@ -184,9 +273,9 @@
       <div class="flex items-center justify-between border-b border-slate-100 pb-4">
         <div>
           <h2 class="font-extrabold text-xl text-slate-900 flex items-center gap-2">
-            <span>⚙️</span> Gestione & Configurazione
+            <span>⚙️</span> Gestione & Configurazione Sistema
           </h2>
-          <p class="text-xs text-slate-500">Configura i membri della famiglia e i cataloghi attività.</p>
+          <p class="text-xs text-slate-500">Configura i membri della famiglia, i cataloghi faccende e le regole di routine.</p>
         </div>
       </div>
 
@@ -199,7 +288,7 @@
             <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
               <span>👥</span> Membri Famiglia
             </h3>
-            <button onclick="openAddMemberModal()" class="px-3 py-1 bg-indigo-600 text-white font-bold text-xs rounded-lg shadow">
+            <button onclick="openMemberModal()" class="px-3 py-1 bg-indigo-600 text-white font-bold text-xs rounded-lg shadow">
               + Aggiungi
             </button>
           </div>
@@ -210,35 +299,33 @@
 
         <!-- 2. CATALOGO ATTIVITÀ SPONTANEE -->
         <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-          <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-            <span>⚡</span> Catalogo Attività Spontanee
-          </h3>
-          <form onsubmit="submitAddSpontaneous(event)" class="grid grid-cols-3 gap-2">
-            <input id="spont-name" type="text" required placeholder="Nome..." class="col-span-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs">
-            <input id="spont-pts" type="number" value="15" required placeholder="Punti" class="px-2 py-1.5 bg-white border border-slate-200 rounded-xl text-xs">
-            <button type="submit" class="col-span-3 py-1.5 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow">
-              + Aggiungi Attività
+          <div class="flex items-center justify-between">
+            <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+              <span>⚡</span> Catalogo Attività Spontanee
+            </h3>
+            <button onclick="openSpontaneousModal()" class="px-3 py-1 bg-indigo-600 text-white font-bold text-xs rounded-lg shadow">
+              + Aggiungi
             </button>
-          </form>
-          <div id="admin-spontaneous-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+          </div>
+          <div id="admin-spontaneous-list" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar">
             <!-- Injected via JS -->
           </div>
         </div>
 
         <!-- 3. CATALOGO ROUTINE SCHEDULATE -->
         <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4 md:col-span-2">
-          <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-            <span>🔄</span> Catalogo Routine Schedulate
-          </h3>
-          <form onsubmit="submitAddRoutine(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-            <input id="rout-name" type="text" required placeholder="Nome routine..." class="sm:col-span-2 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs">
-            <input id="rout-pts" type="number" value="20" required placeholder="Punti" class="px-2 py-1.5 bg-white border border-slate-200 rounded-xl text-xs">
-            <input id="rout-freq" type="number" value="7" required placeholder="Frequenza (giorni)" class="px-2 py-1.5 bg-white border border-slate-200 rounded-xl text-xs">
-            <button type="submit" class="sm:col-span-4 py-1.5 bg-indigo-600 text-white font-bold text-xs rounded-xl shadow">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+                <span>🔄</span> Catalogo Routine Schedulate
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">Scelta tra cadenza a intervallo fisso o dall'ultimo completamento</p>
+            </div>
+            <button onclick="openRoutineModal()" class="px-3 py-1 bg-indigo-600 text-white font-bold text-xs rounded-lg shadow">
               + Aggiungi Routine
             </button>
-          </form>
-          <div id="admin-routine-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+          </div>
+          <div id="admin-routine-list" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
             <!-- Injected via JS -->
           </div>
         </div>
@@ -248,14 +335,15 @@
 
   </main>
 
-  <!-- MODAL: ADD MEMBER -->
+  <!-- MODAL: ADD / EDIT MEMBER -->
   <div id="modal-member" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 class="font-extrabold text-lg text-slate-900">Aggiungi Membro Famiglia</h3>
-        <button onclick="closeAddMemberModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+        <h3 id="modal-member-title" class="font-extrabold text-lg text-slate-900">Membro Famiglia</h3>
+        <button onclick="closeMemberModal()" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
-      <form onsubmit="submitAddMember(event)" class="space-y-4">
+      <form onsubmit="submitMemberForm(event)" class="space-y-4">
+        <input id="member-edit-id" type="hidden" value="">
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nome Membro</label>
           <input id="member-name-input" type="text" required placeholder="Es. Papà, Mamma, Marco..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
@@ -271,8 +359,85 @@
           </div>
         </div>
         <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="closeAddMemberModal()" class="px-4 py-2 bg-slate-100 font-bold text-xs rounded-xl">Annulla</button>
+          <button type="button" onclick="closeMemberModal()" class="px-4 py-2 bg-slate-100 font-bold text-xs rounded-xl">Annulla</button>
           <button type="submit" class="px-5 py-2 bg-indigo-600 text-white font-extrabold text-xs rounded-xl shadow">Salva Membro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT SPONTANEOUS TASK -->
+  <div id="modal-spontaneous" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 id="modal-spontaneous-title" class="font-extrabold text-lg text-slate-900">Attività Spontanea</h3>
+        <button onclick="closeSpontaneousModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <form onsubmit="submitSpontaneousForm(event)" class="space-y-4">
+        <input id="spont-edit-id" type="hidden" value="">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nome Attività</label>
+          <input id="spont-edit-name" type="text" required placeholder="Es. Fare la spesa..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Punti</label>
+            <input id="spont-edit-pts" type="number" required value="15" min="1" max="200" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Icona Emoji</label>
+            <input id="spont-edit-icon" type="text" value="⚡" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-center">
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeSpontaneousModal()" class="px-4 py-2 bg-slate-100 font-bold text-xs rounded-xl">Annulla</button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 text-white font-extrabold text-xs rounded-xl shadow">Salva</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT ROUTINE TASK -->
+  <div id="modal-routine" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 id="modal-routine-title" class="font-extrabold text-lg text-slate-900">Routine Schedulata</h3>
+        <button onclick="closeRoutineModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+      <form onsubmit="submitRoutineForm(event)" class="space-y-4">
+        <input id="rout-edit-id" type="hidden" value="">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nome Routine</label>
+          <input id="rout-edit-name" type="text" required placeholder="Es. Pulizia profonda bagno..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Punti Assegnati</label>
+            <input id="rout-edit-pts" type="number" required value="25" min="1" max="200" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Icona Emoji</label>
+            <input id="rout-edit-icon" type="text" value="🔄" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-center">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Frequenza (Giorni)</label>
+            <input id="rout-edit-freq" type="number" required value="7" min="1" max="365" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Tipo di Scadenza</label>
+            <select id="rout-edit-type" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+              <option value="from_last">🕒 Dall'ultimo completamento</option>
+              <option value="fixed">📅 A cadenza fissa</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeRoutineModal()" class="px-4 py-2 bg-slate-100 font-bold text-xs rounded-xl">Annulla</button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 text-white font-extrabold text-xs rounded-xl shadow">Salva Routine</button>
         </div>
       </form>
     </div>
@@ -282,10 +447,20 @@
     let activeMemberId = null;
     let activeTab = 'spontaneous';
     let activeMode = 'use';
+    let activeStatsFilter = 'all';
     let appData = null;
+    let chartMembers = null;
+    let chartTasks = null;
 
-    // Relative base path for seamless Ingress support
     const apiBase = './api';
+
+    function showToast(msg, icon = '✅') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = msg;
+      document.getElementById('toast-icon').textContent = icon;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+    }
 
     window.addEventListener('DOMContentLoaded', () => {
       loadStats();
@@ -296,6 +471,7 @@
         const res = await fetch(`${apiBase}/stats`);
         appData = await res.json();
         render();
+        if (activeMode === 'admin') renderAdmin();
       } catch (e) {
         console.error("Errore caricamento dati:", e);
       }
@@ -312,7 +488,7 @@
 
     function switchTab(tab) {
       activeTab = tab;
-      const tabs = ['spontaneous', 'routine', 'assigned', 'custom', 'podium'];
+      const tabs = ['spontaneous', 'routine', 'assigned', 'podium', 'stats', 'history'];
       tabs.forEach(t => {
         const sec = document.getElementById(`section-${t}`);
         const btn = document.getElementById(`tab-btn-${t}`);
@@ -325,6 +501,13 @@
           }
         }
       });
+      if (tab === 'stats') renderStatsReports();
+      if (tab === 'history') renderHistory();
+    }
+
+    function toggleCustomTaskBox() {
+      const box = document.getElementById('custom-task-box');
+      box.classList.toggle('hidden');
     }
 
     function selectMember(mId) {
@@ -335,6 +518,7 @@
     function renderMembersBar() {
       const bar = document.getElementById('members-bar');
       const targetSelect = document.getElementById('assign-target-select');
+      const histSelect = document.getElementById('history-member-filter');
       if (!bar || !appData) return;
 
       const members = Object.values(appData.members || {});
@@ -344,6 +528,9 @@
 
       bar.innerHTML = '';
       if (targetSelect) targetSelect.innerHTML = '';
+      if (histSelect) {
+        histSelect.innerHTML = '<option value="all">Tutti i membri</option>';
+      }
 
       members.forEach(m => {
         const isActive = (m.id === activeMemberId);
@@ -354,9 +541,8 @@
             <div class="text-sm font-extrabold text-indigo-600 mt-0.5">${m.weekly_points} pt</div>
           </div>
         `;
-        if (targetSelect) {
-          targetSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
-        }
+        if (targetSelect) targetSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
+        if (histSelect) histSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
       });
     }
 
@@ -365,6 +551,7 @@
 
       renderMembersBar();
 
+      // Badge pending
       const pendingCount = (appData.pending_assigned || []).length;
       const pendingBadge = document.getElementById('badge-pending-count');
       if (pendingBadge) {
@@ -372,6 +559,7 @@
         pendingBadge.classList.toggle('hidden', pendingCount === 0);
       }
 
+      // Spontaneous
       const spontGrid = document.getElementById('spontaneous-grid');
       if (spontGrid) {
         spontGrid.innerHTML = '';
@@ -388,21 +576,50 @@
         });
       }
 
+      // Routines with clear headers and schedule status
       const routineList = document.getElementById('routine-list');
       if (routineList) {
         routineList.innerHTML = '';
         (appData.routine_tasks || []).forEach(r => {
-          const lastBy = r.last_completed_by ? ` • Ultimo da: ${r.last_completed_by}` : '';
+          let statusBadge = '<span class="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800">🟢 In regola</span>';
+          let lastInfo = 'Mai eseguita';
+          let nextInfo = `Ogni ${r.frequency_days} giorni`;
+
+          if (r.last_completed_at) {
+            const lastDate = new Date(r.last_completed_at);
+            lastInfo = `${lastDate.toLocaleDateString('it-IT')} (${r.last_completed_by || 'Anonimo'})`;
+            
+            const diffDays = Math.floor((new Date() - lastDate) / (1000 * 60 * 60 * 24));
+            const remaining = r.frequency_days - diffDays;
+            
+            if (remaining < 0) {
+              statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-800">🔴 Scaduta (${Math.abs(remaining)}gg fa)</span>`;
+            } else if (remaining === 0) {
+              statusBadge = '<span class="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800">🟡 Scade oggi</span>';
+            } else {
+              statusBadge = `<span class="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800">🟢 Tra ${remaining} giorni</span>`;
+            }
+          }
+
+          const typeLabel = (r.schedule_type === 'fixed') ? '📅 Cadenza fissa' : '🕒 Dall\'ultimo completamento';
+
           routineList.innerHTML += `
-            <div class="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs flex items-center justify-between gap-3">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-xl shrink-0">${r.icon || '🔄'}</div>
-                <div>
-                  <h4 class="font-extrabold text-sm text-slate-900">${r.name}</h4>
-                  <p class="text-xs text-slate-500 font-medium">Ogni ${r.frequency_days} giorni${lastBy}</p>
+            <div class="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div class="flex items-start gap-3.5">
+                <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-2xl shrink-0">${r.icon || '🔄'}</div>
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h4 class="font-extrabold text-sm text-slate-900">${r.name}</h4>
+                    ${statusBadge}
+                  </div>
+                  <div class="text-xs text-slate-500 flex items-center gap-3 flex-wrap">
+                    <span>${typeLabel} (${r.frequency_days}gg)</span>
+                    <span>•</span>
+                    <span>Ultimo: <b>${lastInfo}</b></span>
+                  </div>
                 </div>
               </div>
-              <button onclick="logTask('${r.name}', ${r.points}, 'routine')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">
+              <button onclick="logTask('${r.name}', ${r.points}, 'routine')" class="w-full sm:w-auto px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">
                 +${r.points} pt (Fatto)
               </button>
             </div>
@@ -410,6 +627,7 @@
         });
       }
 
+      // Assigned tasks
       const assignedList = document.getElementById('assigned-list');
       if (assignedList) {
         assignedList.innerHTML = '';
@@ -422,7 +640,7 @@
               <div class="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs flex items-center justify-between gap-3">
                 <div>
                   <h4 class="font-extrabold text-sm text-slate-900">${t.task_name}</h4>
-                  <p class="text-xs text-slate-500">Assegnato da <b>${t.from_member}</b> a <b>${t.to_member}</b></p>
+                  <p class="text-xs text-slate-500">Assegnato da <b>${t.from_member}</b> a <b>${t.to_member}</b> (+${t.points} pt)</p>
                 </div>
                 <button onclick="completeAssignedTask('${t.id}')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">
                   ✓ Spunta Completato
@@ -433,6 +651,7 @@
         }
       }
 
+      // Podium & Leaderboard
       const podiumGraphic = document.getElementById('podium-graphic');
       const lbTable = document.getElementById('leaderboard-table');
       const lb = appData.leaderboard || [];
@@ -448,17 +667,17 @@
 
           podiumGraphic.innerHTML = `
             <div class="flex flex-col items-center w-24">
-              <span class="text-xs font-extrabold text-slate-700 mb-1">${p2.name}</span>
+              <span class="text-xs font-extrabold text-slate-700 mb-1 truncate">${p2.name}</span>
               <div class="w-full podium-step-2 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-lg shadow-md">2°</div>
               <span class="text-xs font-extrabold text-slate-600 mt-1">${p2.weekly_points} pt</span>
             </div>
             <div class="flex flex-col items-center w-24">
-              <span class="text-xs font-extrabold text-amber-600 mb-1">👑 ${p1.name}</span>
+              <span class="text-xs font-extrabold text-amber-600 mb-1 truncate">👑 ${p1.name}</span>
               <div class="w-full podium-step-1 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-xl shadow-lg">1°</div>
               <span class="text-xs font-extrabold text-amber-700 mt-1">${p1.weekly_points} pt</span>
             </div>
             <div class="flex flex-col items-center w-24">
-              <span class="text-xs font-extrabold text-slate-700 mb-1">${p3.name || '-'}</span>
+              <span class="text-xs font-extrabold text-slate-700 mb-1 truncate">${p3.name || '-'}</span>
               <div class="w-full podium-step-3 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-base shadow-md">3°</div>
               <span class="text-xs font-extrabold text-slate-600 mt-1">${p3.weekly_points || 0} pt</span>
             </div>
@@ -487,49 +706,430 @@
       }
     }
 
+    // ==================== STATS & REPORTS ====================
+    function setStatsFilter(flt) {
+      activeStatsFilter = flt;
+      ['all', 'today', '7d', 'month', 'year'].forEach(k => {
+        const btn = document.getElementById(`flt-${k}`);
+        if (btn) {
+          btn.className = (k === flt) ? 'px-3 py-1 text-xs font-extrabold rounded-xl transition bg-indigo-600 text-white shadow' : 'px-3 py-1 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900';
+        }
+      });
+      renderStatsReports();
+    }
+
+    function renderStatsReports() {
+      if (!appData) return;
+
+      const now = new Date();
+      let filterStartDate = new Date(0);
+
+      if (activeStatsFilter === 'today') {
+        filterStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      } else if (activeStatsFilter === '7d') {
+        filterStartDate = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+      } else if (activeStatsFilter === 'month') {
+        filterStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else if (activeStatsFilter === 'year') {
+        filterStartDate = new Date(now.getFullYear(), 0, 1);
+      }
+
+      const filteredLogs = (appData.logs || []).filter(l => new Date(l.created_at) >= filterStartDate);
+
+      // KPIs
+      let totalPts = 0;
+      const memberPoints = {};
+      const taskCounts = {};
+
+      Object.values(appData.members || {}).forEach(m => memberPoints[m.name] = 0);
+
+      filteredLogs.forEach(l => {
+        const pts = parseInt(l.points) || 0;
+        totalPts += pts;
+        memberPoints[l.member_name] = (memberPoints[l.member_name] || 0) + pts;
+        taskCounts[l.task_name] = (taskCounts[l.task_name] || 0) + 1;
+      });
+
+      document.getElementById('kpi-total-points').textContent = `${totalPts} pt`;
+      document.getElementById('kpi-total-tasks').textContent = filteredLogs.length;
+
+      let topMember = '-';
+      let maxPts = -1;
+      Object.entries(memberPoints).forEach(([name, pts]) => {
+        if (pts > maxPts && pts > 0) {
+          maxPts = pts;
+          topMember = `${name} (${pts} pt)`;
+        }
+      });
+      document.getElementById('kpi-top-member').textContent = topMember;
+
+      const daysDiff = Math.max(1, Math.round((now - filterStartDate) / (1000 * 60 * 60 * 24)));
+      document.getElementById('kpi-avg-daily').textContent = `${Math.round(totalPts / daysDiff)} pt/g`;
+
+      // Chart 1: Members Breakdown
+      const ctxM = document.getElementById('chart-members')?.getContext('2d');
+      if (ctxM) {
+        if (chartMembers) chartMembers.destroy();
+        chartMembers = new Chart(ctxM, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(memberPoints),
+            datasets: [{
+              data: Object.values(memberPoints),
+              backgroundColor: ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4']
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+          }
+        });
+      }
+
+      // Chart 2: Top Tasks
+      const sortedTasks = Object.entries(taskCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const ctxT = document.getElementById('chart-tasks')?.getContext('2d');
+      if (ctxT) {
+        if (chartTasks) chartTasks.destroy();
+        chartTasks = new Chart(ctxT, {
+          type: 'bar',
+          data: {
+            labels: sortedTasks.map(x => x[0]),
+            datasets: [{
+              label: 'Volte eseguita',
+              data: sortedTasks.map(x => x[1]),
+              backgroundColor: '#6366f1',
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: { x: { ticks: { precision: 0 } } }
+          }
+        });
+      }
+    }
+
+    // ==================== CHRONOLOGICAL HISTORY ====================
+    function renderHistory() {
+      if (!appData) return;
+
+      const timeline = document.getElementById('history-timeline');
+      const search = (document.getElementById('history-search')?.value || '').toLowerCase();
+      const memberFilter = document.getElementById('history-member-filter')?.value || 'all';
+
+      if (!timeline) return;
+      timeline.innerHTML = '';
+
+      const logs = [...(appData.logs || [])].reverse();
+      const filtered = logs.filter(l => {
+        const matchText = l.task_name.toLowerCase().includes(search) || l.member_name.toLowerCase().includes(search);
+        const matchMember = (memberFilter === 'all') || (l.member_name === memberFilter);
+        return matchText && matchMember;
+      });
+
+      if (filtered.length === 0) {
+        timeline.innerHTML = '<div class="text-center py-8 text-xs text-slate-400 font-medium">Nessuna attività registrata nello storico.</div>';
+        return;
+      }
+
+      filtered.forEach(l => {
+        const d = new Date(l.created_at);
+        const dateStr = d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' });
+        const timeStr = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+        timeline.innerHTML += `
+          <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">⚡</span>
+              <div>
+                <div class="font-extrabold text-slate-900 text-sm">${l.task_name}</div>
+                <div class="text-slate-500 font-medium text-[11px] mt-0.5">
+                  👤 <b>${l.member_name}</b> • 🕒 ${dateStr} alle ${timeStr} • <span class="capitalize text-slate-400 font-semibold">${l.task_type}</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="font-extrabold text-indigo-600 text-sm">+${l.points} pt</span>
+              <button onclick="deleteLogEntry('${l.id}')" title="Annulla registrazione" class="text-rose-400 hover:text-rose-600 p-1 rounded-lg">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    async function deleteLogEntry(logId) {
+      if (!confirm("Vuoi annullare e cancellare questa attività dallo storico?")) return;
+      try {
+        await fetch(`${apiBase}/logs/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: logId })
+        });
+        showToast("Attività annullata dallo storico", "🗑️");
+        loadStats();
+      } catch (e) {}
+    }
+
+    // ==================== ADMIN CRUD ====================
     function renderAdmin() {
       if (!appData) return;
 
+      // 1. Members
       const adminMembers = document.getElementById('admin-members-list');
       if (adminMembers) {
         adminMembers.innerHTML = '';
         Object.values(appData.members || {}).forEach(m => {
           adminMembers.innerHTML += `
-            <div class="flex items-center justify-between p-2 bg-white rounded-xl border border-slate-200 text-xs">
-              <div class="flex items-center gap-2 font-bold">${m.icon} ${m.name}</div>
-              <button onclick="deleteMember('${m.id}')" class="text-rose-500 font-bold hover:underline">Elimina</button>
+            <div class="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-200 text-xs">
+              <div class="flex items-center gap-2 font-extrabold text-sm">
+                <span>${m.icon}</span> <span>${m.name}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="editMember('${m.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 font-bold rounded-lg text-slate-700">Modifica</button>
+                <button onclick="deleteMember('${m.id}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 font-bold rounded-lg text-rose-600">Elimina</button>
+              </div>
             </div>
           `;
         });
       }
 
+      // 2. Spontaneous
       const adminSpont = document.getElementById('admin-spontaneous-list');
       if (adminSpont) {
         adminSpont.innerHTML = '';
         (appData.spontaneous_tasks || []).forEach(t => {
           adminSpont.innerHTML += `
-            <div class="flex items-center justify-between p-2 bg-white rounded-xl border border-slate-200 text-xs">
-              <div class="font-bold">${t.icon} ${t.name} (${t.points} pt)</div>
-              <button onclick="deleteSpontaneous('${t.id}')" class="text-rose-500 font-bold hover:underline">Elimina</button>
+            <div class="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-200 text-xs">
+              <div class="font-bold text-slate-900">${t.icon} ${t.name} <span class="text-indigo-600 font-extrabold">(+${t.points} pt)</span></div>
+              <div class="flex items-center gap-2">
+                <button onclick="editSpontaneous('${t.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 font-bold rounded-lg text-slate-700">Modifica</button>
+                <button onclick="deleteSpontaneous('${t.id}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 font-bold rounded-lg text-rose-600">Elimina</button>
+              </div>
             </div>
           `;
         });
       }
 
+      // 3. Routines Table
       const adminRout = document.getElementById('admin-routine-list');
       if (adminRout) {
         adminRout.innerHTML = '';
         (appData.routine_tasks || []).forEach(r => {
+          const typeBadge = (r.schedule_type === 'fixed') ? '📅 Cadenza fissa' : '🕒 Dall\'ultimo completamento';
           adminRout.innerHTML += `
-            <div class="flex items-center justify-between p-2 bg-white rounded-xl border border-slate-200 text-xs">
-              <div class="font-bold">${r.icon} ${r.name} (${r.points} pt / ${r.frequency_days}gg)</div>
-              <button onclick="deleteRoutine('${r.id}')" class="text-rose-500 font-bold hover:underline">Elimina</button>
+            <div class="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-slate-200 text-xs">
+              <div>
+                <div class="font-extrabold text-sm text-slate-900">${r.icon} ${r.name}</div>
+                <div class="text-slate-500 font-medium mt-0.5">${typeBadge} • Frequenza: <b>${r.frequency_days} giorni</b> • Punti: <b>+${r.points} pt</b></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="editRoutine('${r.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 font-bold rounded-lg text-slate-700">Modifica</button>
+                <button onclick="deleteRoutine('${r.id}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 font-bold rounded-lg text-rose-600">Elimina</button>
+              </div>
             </div>
           `;
         });
       }
     }
 
+    // Modal Member Handlers
+    function openMemberModal(mId = null) {
+      const modal = document.getElementById('modal-member');
+      const title = document.getElementById('modal-member-title');
+      const idInput = document.getElementById('member-edit-id');
+      const nameInput = document.getElementById('member-name-input');
+      const iconInput = document.getElementById('member-icon-input');
+      const colorInput = document.getElementById('member-color-input');
+
+      if (mId && appData?.members[mId]) {
+        const m = appData.members[mId];
+        title.textContent = "Modifica Membro";
+        idInput.value = m.id;
+        nameInput.value = m.name;
+        iconInput.value = m.icon || '👤';
+        colorInput.value = m.color || '#6366f1';
+      } else {
+        title.textContent = "Aggiungi Membro";
+        idInput.value = "";
+        nameInput.value = "";
+        iconInput.value = "👤";
+        colorInput.value = "#6366f1";
+      }
+      modal.classList.remove('hidden');
+    }
+    function closeMemberModal() { document.getElementById('modal-member').classList.add('hidden'); }
+    function editMember(mId) { openMemberModal(mId); }
+
+    async function submitMemberForm(e) {
+      e.preventDefault();
+      const id = document.getElementById('member-edit-id').value;
+      const name = document.getElementById('member-name-input').value.trim();
+      const icon = document.getElementById('member-icon-input').value.trim();
+      const color = document.getElementById('member-color-input').value;
+
+      try {
+        await fetch(`${apiBase}/members`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, name, icon, color })
+        });
+        closeMemberModal();
+        showToast("Membro salvato con successo!");
+        await loadStats();
+      } catch (e) {}
+    }
+
+    async function deleteMember(mId) {
+      if (!confirm("Sicuro di voler eliminare questo membro della famiglia?")) return;
+      try {
+        await fetch(`${apiBase}/members/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: mId })
+        });
+        showToast("Membro eliminato", "🗑️");
+        await loadStats();
+      } catch (e) {}
+    }
+
+    // Modal Spontaneous Handlers
+    function openSpontaneousModal(tId = null) {
+      const modal = document.getElementById('modal-spontaneous');
+      const title = document.getElementById('modal-spontaneous-title');
+      const idInput = document.getElementById('spont-edit-id');
+      const nameInput = document.getElementById('spont-edit-name');
+      const ptsInput = document.getElementById('spont-edit-pts');
+      const iconInput = document.getElementById('spont-edit-icon');
+
+      if (tId) {
+        const item = (appData?.spontaneous_tasks || []).find(t => t.id === tId);
+        if (item) {
+          title.textContent = "Modifica Attività Spontanea";
+          idInput.value = item.id;
+          nameInput.value = item.name;
+          ptsInput.value = item.points;
+          iconInput.value = item.icon || '⚡';
+        }
+      } else {
+        title.textContent = "Aggiungi Attività Spontanea";
+        idInput.value = "";
+        nameInput.value = "";
+        ptsInput.value = "15";
+        iconInput.value = "⚡";
+      }
+      modal.classList.remove('hidden');
+    }
+    function closeSpontaneousModal() { document.getElementById('modal-spontaneous').classList.add('hidden'); }
+    function editSpontaneous(tId) { openSpontaneousModal(tId); }
+
+    async function submitSpontaneousForm(e) {
+      e.preventDefault();
+      const id = document.getElementById('spont-edit-id').value;
+      const name = document.getElementById('spont-edit-name').value.trim();
+      const points = parseInt(document.getElementById('spont-edit-pts').value) || 10;
+      const icon = document.getElementById('spont-edit-icon').value.trim() || '⚡';
+
+      try {
+        await fetch(`${apiBase}/spontaneous_tasks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, name, points, icon })
+        });
+        closeSpontaneousModal();
+        showToast("Attività salvata!");
+        await loadStats();
+      } catch (e) {}
+    }
+
+    async function deleteSpontaneous(tId) {
+      try {
+        await fetch(`${apiBase}/spontaneous_tasks/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: tId })
+        });
+        showToast("Attività eliminata", "🗑️");
+        await loadStats();
+      } catch (e) {}
+    }
+
+    // Modal Routine Handlers
+    function openRoutineModal(rId = null) {
+      const modal = document.getElementById('modal-routine');
+      const title = document.getElementById('modal-routine-title');
+      const idInput = document.getElementById('rout-edit-id');
+      const nameInput = document.getElementById('rout-edit-name');
+      const ptsInput = document.getElementById('rout-edit-pts');
+      const freqInput = document.getElementById('rout-edit-freq');
+      const typeSelect = document.getElementById('rout-edit-type');
+      const iconInput = document.getElementById('rout-edit-icon');
+
+      if (rId) {
+        const item = (appData?.routine_tasks || []).find(r => r.id === rId);
+        if (item) {
+          title.textContent = "Modifica Routine";
+          idInput.value = item.id;
+          nameInput.value = item.name;
+          ptsInput.value = item.points;
+          freqInput.value = item.frequency_days;
+          typeSelect.value = item.schedule_type || 'from_last';
+          iconInput.value = item.icon || '🔄';
+        }
+      } else {
+        title.textContent = "Aggiungi Routine";
+        idInput.value = "";
+        nameInput.value = "";
+        ptsInput.value = "25";
+        freqInput.value = "7";
+        typeSelect.value = "from_last";
+        iconInput.value = "🔄";
+      }
+      modal.classList.remove('hidden');
+    }
+    function closeRoutineModal() { document.getElementById('modal-routine').classList.add('hidden'); }
+    function editRoutine(rId) { openRoutineModal(rId); }
+
+    async function submitRoutineForm(e) {
+      e.preventDefault();
+      const id = document.getElementById('rout-edit-id').value;
+      const name = document.getElementById('rout-edit-name').value.trim();
+      const points = parseInt(document.getElementById('rout-edit-pts').value) || 20;
+      const frequency_days = parseInt(document.getElementById('rout-edit-freq').value) || 7;
+      const schedule_type = document.getElementById('rout-edit-type').value;
+      const icon = document.getElementById('rout-edit-icon').value.trim() || '🔄';
+
+      try {
+        await fetch(`${apiBase}/routine_tasks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, name, points, frequency_days, schedule_type, icon })
+        });
+        closeRoutineModal();
+        showToast("Routine salvata!");
+        await loadStats();
+      } catch (e) {}
+    }
+
+    async function deleteRoutine(rId) {
+      try {
+        await fetch(`${apiBase}/routine_tasks/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: rId })
+        });
+        showToast("Routine eliminata", "🗑️");
+        await loadStats();
+      } catch (e) {}
+    }
+
+    // Task Execution Handlers
     async function logTask(taskName, points, taskType = 'spontaneous') {
       const activeMemberObj = (appData && appData.members) ? appData.members[activeMemberId] : null;
       const memberName = activeMemberObj ? activeMemberObj.name : 'Membro 1';
@@ -540,7 +1140,8 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ member: memberName, task_name: taskName, points, task_type: taskType })
         });
-        loadStats();
+        showToast(`+${points} pt assegnati a ${memberName}!`);
+        await loadStats();
       } catch (e) {}
     }
 
@@ -551,6 +1152,7 @@
       if (!txt) return;
       await logTask(txt, pts, 'custom');
       document.getElementById('custom-task-input').value = '';
+      toggleCustomTaskBox();
     }
 
     async function submitAssignTask(e) {
@@ -567,7 +1169,8 @@
           body: JSON.stringify({ from_member: fromMember, to_member: targetMember, task_name: txt, points: 10 })
         });
         document.getElementById('assign-task-input').value = '';
-        loadStats();
+        showToast(`Compito assegnato a ${targetMember}!`);
+        await loadStats();
       } catch (e) {}
     }
 
@@ -579,98 +1182,8 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ task_id: taskId, completed_by: completedBy })
         });
-        loadStats();
-      } catch (e) {}
-    }
-
-    async function deleteMember(mId) {
-      if (!confirm("Sicuro di voler eliminare questo membro?")) return;
-      try {
-        await fetch(`${apiBase}/members/delete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: mId })
-        });
-        loadStats();
-      } catch (e) {}
-    }
-
-    async function submitAddSpontaneous(e) {
-      e.preventDefault();
-      const name = document.getElementById('spont-name').value.trim();
-      const points = parseInt(document.getElementById('spont-pts').value) || 10;
-      if (!name) return;
-      try {
-        await fetch(`${apiBase}/spontaneous_tasks`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, points })
-        });
-        document.getElementById('spont-name').value = '';
-        loadStats();
-      } catch (e) {}
-    }
-
-    async function deleteSpontaneous(tId) {
-      try {
-        await fetch(`${apiBase}/spontaneous_tasks/delete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: tId })
-        });
-        loadStats();
-      } catch (e) {}
-    }
-
-    async function submitAddRoutine(e) {
-      e.preventDefault();
-      const name = document.getElementById('rout-name').value.trim();
-      const points = parseInt(document.getElementById('rout-pts').value) || 20;
-      const freq = parseInt(document.getElementById('rout-freq').value) || 7;
-      if (!name) return;
-      try {
-        await fetch(`${apiBase}/routine_tasks`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, points, frequency_days: freq })
-        });
-        document.getElementById('rout-name').value = '';
-        loadStats();
-      } catch (e) {}
-    }
-
-    async function deleteRoutine(tId) {
-      try {
-        await fetch(`${apiBase}/routine_tasks/delete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: tId })
-        });
-        loadStats();
-      } catch (e) {}
-    }
-
-    function openAddMemberModal() {
-      document.getElementById('modal-member').classList.remove('hidden');
-    }
-    function closeAddMemberModal() {
-      document.getElementById('modal-member').classList.add('hidden');
-    }
-
-    async function submitAddMember(e) {
-      e.preventDefault();
-      const name = document.getElementById('member-name-input').value.trim();
-      const icon = document.getElementById('member-icon-input').value.trim();
-      const color = document.getElementById('member-color-input').value;
-
-      try {
-        await fetch(`${apiBase}/members`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, icon, color })
-        });
-        closeAddMemberModal();
-        loadStats();
+        showToast("Compito completato con successo!");
+        await loadStats();
       } catch (e) {}
     }
   </script>
