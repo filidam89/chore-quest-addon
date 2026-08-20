@@ -21,26 +21,38 @@ function loadData() {
   if (fs.existsSync(DB_FILE)) {
     try {
       const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
-      // Migrations / defaults
       if (!data.members) data.members = {};
       if (!data.spontaneous_tasks) data.spontaneous_tasks = [];
       if (!data.routine_tasks) data.routine_tasks = [];
       if (!data.assigned_tasks) data.assigned_tasks = [];
       if (!data.logs) data.logs = [];
+      if (!data.settings) {
+        data.settings = {
+          leaderboard_period_mode: "calendar" // "calendar" (Oggi, Settimana, Mese, Anno) or "rolling" (Ultimi 1gg, 7gg, 30gg, 365gg)
+        };
+      }
 
-      // Ensure schedule_type exists in routine tasks
+      // Migrations for routine fields
+      const todayIso = new Date().toISOString().split('T')[0];
       data.routine_tasks.forEach(r => {
-        if (!r.schedule_type) r.schedule_type = 'from_last'; // 'from_last' or 'fixed'
+        if (!r.schedule_type) r.schedule_type = 'from_last';
+        if (r.warning_days === undefined) r.warning_days = 1;
+        if (!r.start_date) r.start_date = todayIso;
       });
+
       return data;
     } catch (e) {
       console.error("Error reading database:", e);
     }
   }
-  // Generic initial state
+
+  const todayIso = new Date().toISOString().split('T')[0];
   return {
+    settings: {
+      leaderboard_period_mode: "calendar"
+    },
     members: {
-      "m_1": { id: "m_1", name: "Papà", icon: "👨‍💻", color: "#3b82f6" },
+      "m_1": { id: "m_1", name: "Papà", icon: "👨‍💻", color: "#6366f1" },
       "m_2": { id: "m_2", name: "Mamma", icon: "👩‍🎨", color: "#ec4899" }
     },
     spontaneous_tasks: [
@@ -51,9 +63,9 @@ function loadData() {
       { id: "s_5", name: "Fare la spesa", category: "Casa", points: 25, icon: "🛒" }
     ],
     routine_tasks: [
-      { id: "r_1", name: "Cambio lenzuola", category: "Bucato", points: 25, frequency_days: 7, schedule_type: "from_last", icon: "🛏️" },
-      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia", points: 30, frequency_days: 3, schedule_type: "from_last", icon: "🧹" },
-      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia", points: 35, frequency_days: 5, schedule_type: "from_last", icon: "🧼" }
+      { id: "r_1", name: "Cambio lenzuola", category: "Bucato", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🛏️" },
+      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🧹" },
+      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "🧼" }
     ],
     assigned_tasks: [],
     logs: []
@@ -70,22 +82,43 @@ function saveData(data) {
 
 let appData = loadData();
 
-// Generic Home Assistant Sync via Supervisor API
-async function syncToHomeAssistant() {
-  const supervisorToken = process.env.SUPERVISOR_TOKEN;
-  if (!supervisorToken) return;
-
-  const haBase = "http://supervisor/core/api";
+// Calculate comprehensive period stats
+function calculateStats() {
   const now = new Date();
-  const dayOfWeek = (now.getDay() + 6) % 7;
-  const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const periodMode = appData.settings?.leaderboard_period_mode || "calendar";
+
+  let startDaily, startWeekly, startMonthly, startYearly;
+
+  if (periodMode === "calendar") {
+    startDaily = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dayOfWeek = (now.getDay() + 6) % 7; // Monday = 0
+    startWeekly = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
+    startMonthly = new Date(now.getFullYear(), now.getMonth(), 1);
+    startYearly = new Date(now.getFullYear(), 0, 1);
+  } else {
+    // Rolling mode (Last 24h, Last 7d, Last 30d, Last 365d)
+    startDaily = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+    startWeekly = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+    startMonthly = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
+    startYearly = new Date(now.getTime() - (365 * 24 * 60 * 60 * 1000));
+  }
 
   const stats = {};
   Object.values(appData.members).forEach(m => {
-    stats[m.id] = { ...m, total_points: 0, weekly_points: 0, monthly_points: 0, completed_count: 0, badges: [] };
+    stats[m.id] = {
+      ...m,
+      total_points: 0,
+      daily_points: 0,
+      weekly_points: 0,
+      monthly_points: 0,
+      yearly_points: 0,
+      completed_count: 0,
+      recent_tasks: [],
+      badges: []
+    };
   });
 
+  const memberTaskLogs = {};
   (appData.logs || []).forEach(log => {
     const m = stats[log.member_id];
     if (m) {
@@ -93,22 +126,99 @@ async function syncToHomeAssistant() {
       const created = new Date(log.created_at);
       m.total_points += pts;
       m.completed_count += 1;
-      if (created >= startOfWeek) m.weekly_points += pts;
-      if (created >= startOfMonth) m.monthly_points += pts;
+
+      if (created >= startDaily) m.daily_points += pts;
+      if (created >= startWeekly) m.weekly_points += pts;
+      if (created >= startMonthly) m.monthly_points += pts;
+      if (created >= startYearly) m.yearly_points += pts;
+
+      if (!memberTaskLogs[m.id]) memberTaskLogs[m.id] = [];
+      memberTaskLogs[m.id].push(log);
     }
+  });
+
+  // Attach last 3 tasks for each member
+  Object.keys(stats).forEach(mId => {
+    const logs = memberTaskLogs[mId] || [];
+    stats[mId].recent_tasks = logs.slice(-3).reverse();
   });
 
   const sorted = Object.values(stats).sort((a, b) => b.weekly_points - a.weekly_points || b.total_points - a.total_points);
   sorted.forEach((m, idx) => {
     m.rank = idx + 1;
-    if (m.rank === 1 && m.weekly_points > 0) m.badges.push({ name: "👑 Campione della Settimana" });
+    if (m.rank === 1 && m.weekly_points > 0) m.badges.push({ name: "👑 Campione Settimana" });
     if (m.completed_count >= 10) m.badges.push({ name: "⭐ Super Aiutante" });
+    if (m.total_points >= 100) m.badges.push({ name: "🏆 Master della Casa" });
   });
 
-  // Push member sensors
-  for (const m of sorted) {
+  // Winners per period
+  const getWinner = (key) => {
+    const s = [...sorted].sort((a, b) => b[key] - a[key]);
+    return s[0] && s[0][key] > 0 ? { name: s[0].name, icon: s[0].icon, points: s[0][key] } : null;
+  };
+
+  const winners = {
+    daily: getWinner('daily_points'),
+    weekly: getWinner('weekly_points'),
+    monthly: getWinner('monthly_points'),
+    yearly: getWinner('yearly_points')
+  };
+
+  // Evaluate Routine Due Statuses
+  const routineStatus = (appData.routine_tasks || []).map(r => {
+    const freq = parseInt(r.frequency_days) || 7;
+    const warning = parseInt(r.warning_days) || 1;
+    let baseDate = r.last_completed_at ? new Date(r.last_completed_at) : (r.start_date ? new Date(r.start_date) : now);
+    
+    // Target due date
+    const dueDate = new Date(baseDate.getTime() + (freq * 24 * 60 * 60 * 1000));
+    const diffMs = dueDate - now;
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    let status = "ok"; // "ok", "warning", "overdue"
+    let overdueDays = 0;
+
+    if (diffDays < 0) {
+      status = "overdue";
+      overdueDays = Math.abs(diffDays);
+    } else if (diffDays <= warning) {
+      status = "warning";
+    }
+
+    return {
+      ...r,
+      due_date: dueDate.toISOString(),
+      days_remaining: diffDays,
+      overdue_days: overdueDays,
+      status
+    };
+  });
+
+  return {
+    members: stats,
+    leaderboard: sorted,
+    winners,
+    spontaneous_tasks: appData.spontaneous_tasks,
+    routine_tasks: routineStatus,
+    pending_assigned: (appData.assigned_tasks || []).filter(t => t.status === 'pending'),
+    settings: appData.settings,
+    logs: (appData.logs || [])
+  };
+}
+
+// Generic Home Assistant Sync via Supervisor API
+async function syncToHomeAssistant() {
+  const supervisorToken = process.env.SUPERVISOR_TOKEN;
+  if (!supervisorToken) return;
+
+  const haBase = "http://supervisor/core/api";
+  const data = calculateStats();
+
+  // 1. Member points sensors
+  for (const m of data.leaderboard) {
     const cleanName = m.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    const sensorUrl = `${haBase}/states/sensor.family_${cleanName}_points`;
+    const sensorUrl = `${haBase}/states/sensor.chorequest_${cleanName}_points`;
+    const lastTask = m.recent_tasks[0];
     try {
       await fetch(sensorUrl, {
         method: 'POST',
@@ -116,12 +226,16 @@ async function syncToHomeAssistant() {
         body: JSON.stringify({
           state: String(m.total_points),
           attributes: {
-            friendly_name: `Punti ${m.name}`,
+            friendly_name: `ChoreQuest: Punti ${m.name}`,
+            daily_points: m.daily_points,
             weekly_points: m.weekly_points,
             monthly_points: m.monthly_points,
+            yearly_points: m.yearly_points,
             total_points: m.total_points,
             rank: m.rank,
             badges: m.badges.map(b => b.name),
+            last_task_name: lastTask ? lastTask.task_name : null,
+            last_task_time: lastTask ? lastTask.created_at : null,
             icon: "mdi:star-circle"
           }
         })
@@ -129,17 +243,59 @@ async function syncToHomeAssistant() {
     } catch (err) {}
   }
 
-  // Push leaderboard sensor
+  // 2. Leaderboard & Winners Sensor
   try {
-    await fetch(`${haBase}/states/sensor.family_leaderboard`, {
+    await fetch(`${haBase}/states/sensor.chorequest_leaderboard`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        state: sorted[0] ? sorted[0].name : "Nessuno",
+        state: data.leaderboard[0] ? data.leaderboard[0].name : "Nessuno",
         attributes: {
-          friendly_name: "Classifica Famiglia Punti",
-          leaderboard: sorted.map(m => ({ rank: m.rank, name: m.name, weekly_points: m.weekly_points, total_points: m.total_points })),
+          friendly_name: "ChoreQuest: Classifica",
+          leader: data.leaderboard[0]?.name || "-",
+          daily_winner: data.winners.daily?.name || "-",
+          weekly_winner: data.winners.weekly?.name || "-",
+          monthly_winner: data.winners.monthly?.name || "-",
+          yearly_winner: data.winners.yearly?.name || "-",
+          leaderboard: data.leaderboard.map(m => ({ rank: m.rank, name: m.name, weekly_points: m.weekly_points, total_points: m.total_points })),
           icon: "mdi:trophy"
+        }
+      })
+    });
+  } catch (err) {}
+
+  // 3. Due Routines Sensor
+  const overdueList = data.routine_tasks.filter(r => r.status === 'overdue');
+  const warningList = data.routine_tasks.filter(r => r.status === 'warning');
+  try {
+    await fetch(`${haBase}/states/sensor.chorequest_due_routines`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        state: String(overdueList.length + warningList.length),
+        attributes: {
+          friendly_name: "ChoreQuest: Routine in Scadenza",
+          overdue_count: overdueList.length,
+          warning_count: warningList.length,
+          overdue_routines: overdueList.map(r => ({ name: r.name, overdue_days: r.overdue_days })),
+          warning_routines: warningList.map(r => ({ name: r.name, days_remaining: r.days_remaining })),
+          icon: "mdi:clock-alert-outline"
+        }
+      })
+    });
+  } catch (err) {}
+
+  // 4. Pending Tasks Sensor
+  try {
+    await fetch(`${haBase}/states/sensor.chorequest_pending_tasks`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        state: String(data.pending_assigned.length),
+        attributes: {
+          friendly_name: "ChoreQuest: Compiti Assegnati in Sospeso",
+          pending_tasks: data.pending_assigned.map(t => ({ task_name: t.task_name, from: t.from_member, to: t.to_member, points: t.points })),
+          icon: "mdi:clipboard-check-outline"
         }
       })
     });
@@ -151,45 +307,8 @@ syncToHomeAssistant();
 
 // API: Stats & Data
 app.get('/api/stats', (req, res) => {
-  const now = new Date();
-  const dayOfWeek = (now.getDay() + 6) % 7;
-  const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  const stats = {};
-  Object.values(appData.members).forEach(m => {
-    stats[m.id] = { ...m, total_points: 0, weekly_points: 0, monthly_points: 0, completed_count: 0, badges: [] };
-  });
-
-  (appData.logs || []).forEach(log => {
-    const m = stats[log.member_id];
-    if (m) {
-      const pts = parseInt(log.points) || 0;
-      const created = new Date(log.created_at);
-      m.total_points += pts;
-      m.completed_count += 1;
-      if (created >= startOfWeek) m.weekly_points += pts;
-      if (created >= startOfMonth) m.monthly_points += pts;
-    }
-  });
-
-  const sorted = Object.values(stats).sort((a, b) => b.weekly_points - a.weekly_points || b.total_points - a.total_points);
-  sorted.forEach((m, idx) => {
-    m.rank = idx + 1;
-    if (m.rank === 1 && m.weekly_points > 0) m.badges.push({ name: "👑 Campione della Settimana" });
-    if (m.completed_count >= 10) m.badges.push({ name: "⭐ Super Aiutante" });
-  });
-
-  const pending = (appData.assigned_tasks || []).filter(t => t.status === 'pending');
-
-  res.json({
-    members: stats,
-    leaderboard: sorted,
-    spontaneous_tasks: appData.spontaneous_tasks,
-    routine_tasks: appData.routine_tasks,
-    pending_assigned: pending,
-    logs: (appData.logs || [])
-  });
+  const statsData = calculateStats();
+  res.json(statsData);
 });
 
 // API: Log Task
@@ -296,12 +415,10 @@ app.post('/api/members', (req, res) => {
   let mId = id;
 
   if (mId && appData.members[mId]) {
-    // Update existing member
     appData.members[mId].name = trimmedName;
     appData.members[mId].icon = icon;
     appData.members[mId].color = color;
   } else {
-    // Check if name already exists
     const existing = Object.values(appData.members).find(m => m.name.toLowerCase() === trimmedName.toLowerCase());
     if (existing) {
       existing.icon = icon;
@@ -356,7 +473,7 @@ app.post('/api/spontaneous_tasks/delete', (req, res) => {
 
 // API: Save Routine Task
 app.post('/api/routine_tasks', (req, res) => {
-  const { id, name, points = 20, frequency_days = 7, schedule_type = "from_last", icon = "🔄", category = "Routine" } = req.body;
+  const { id, name, points = 20, frequency_days = 7, warning_days = 1, start_date, schedule_type = "from_last", icon = "🔄", category = "Routine" } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
   const trimmedName = name.trim();
@@ -370,6 +487,8 @@ app.post('/api/routine_tasks', (req, res) => {
     name: trimmedName,
     points: parseInt(points) || 20,
     frequency_days: parseInt(frequency_days) || 7,
+    warning_days: parseInt(warning_days) || 1,
+    start_date: start_date || existingItem.start_date || new Date().toISOString().split('T')[0],
     schedule_type: schedule_type || "from_last",
     icon,
     category
@@ -379,6 +498,7 @@ app.post('/api/routine_tasks', (req, res) => {
   else appData.routine_tasks.push(item);
 
   saveData(appData);
+  syncToHomeAssistant();
   res.json({ status: "saved", item });
 });
 
@@ -387,7 +507,20 @@ app.post('/api/routine_tasks/delete', (req, res) => {
   const { id } = req.body;
   appData.routine_tasks = appData.routine_tasks.filter(t => t.id !== id);
   saveData(appData);
+  syncToHomeAssistant();
   res.json({ status: "deleted" });
+});
+
+// API: Save Settings
+app.post('/api/settings', (req, res) => {
+  const { leaderboard_period_mode } = req.body;
+  if (leaderboard_period_mode) {
+    if (!appData.settings) appData.settings = {};
+    appData.settings.leaderboard_period_mode = leaderboard_period_mode;
+    saveData(appData);
+    syncToHomeAssistant();
+  }
+  res.json({ status: "saved", settings: appData.settings });
 });
 
 // Fallback for SPA routing
