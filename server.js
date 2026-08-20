@@ -30,8 +30,8 @@ function loadData() {
       if (!data.logs) data.logs = [];
       if (!data.settings) {
         data.settings = {
-          leaderboard_period_mode: "calendar", // "calendar" or "rolling"
-          primary_score_display: "weekly" // "weekly", "daily", "monthly", "yearly", "total"
+          leaderboard_period_mode: "calendar",
+          primary_score_display: "weekly"
         };
       }
       if (!data.settings.primary_score_display) data.settings.primary_score_display = "weekly";
@@ -44,6 +44,7 @@ function loadData() {
         if (!r.start_date) r.start_date = todayIso;
         if (r.is_personal === undefined) r.is_personal = false;
         if (r.is_personal) r.points = 0;
+        if (!r.assigned_member) r.assigned_member = 'all';
       });
 
       return data;
@@ -58,7 +59,7 @@ function loadData() {
       primary_score_display: "weekly"
     },
     members: {
-      "m_1": { id: "m_1", name: "Papà", icon: "👨‍💻", color: "#6366f1" },
+      "m_1": { id: "m_1", name: "Papà", icon: "👨‍💻", color: "#3b82f6" },
       "m_2": { id: "m_2", name: "Mamma", icon: "👩‍🎨", color: "#ec4899" }
     },
     spontaneous_tasks: [
@@ -69,10 +70,10 @@ function loadData() {
       { id: "s_5", name: "Fare la spesa", category: "Casa", points: 25, icon: "🛒", is_personal: false }
     ],
     routine_tasks: [
-      { id: "r_1", name: "Cambio lenzuola", category: "Bucato", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🛏️", is_personal: false },
-      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🧹", is_personal: false },
-      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "🧼", is_personal: false },
-      { id: "r_4", name: "Taglio capelli / Barbiere", category: "Personale", points: 0, frequency_days: 21, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "💈", is_personal: true }
+      { id: "r_1", name: "Cambio lenzuola", category: "Bucato", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🛏️", is_personal: false, assigned_member: "all" },
+      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🧹", is_personal: false, assigned_member: "all" },
+      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "🧼", is_personal: false, assigned_member: "all" },
+      { id: "r_4", name: "Taglio capelli / Barbiere", category: "Personale", points: 0, frequency_days: 21, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "💈", is_personal: true, assigned_member: "Papà" }
     ],
     assigned_tasks: [],
     logs: []
@@ -99,12 +100,11 @@ function calculateStats() {
 
   if (periodMode === "calendar") {
     startDaily = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const dayOfWeek = (now.getDay() + 6) % 7; // Monday = 0
+    const dayOfWeek = (now.getDay() + 6) % 7;
     startWeekly = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek);
     startMonthly = new Date(now.getFullYear(), now.getMonth(), 1);
     startYearly = new Date(now.getFullYear(), 0, 1);
   } else {
-    // Rolling mode (Last 24h, Last 7d, Last 30d, Last 365d)
     startDaily = new Date(now.getTime() - (24 * 60 * 60 * 1000));
     startWeekly = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
     startMonthly = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
@@ -133,6 +133,7 @@ function calculateStats() {
       const pts = parseInt(log.points) || 0;
       const created = new Date(log.created_at);
 
+      // STRICTLY EXCLUDE personal tasks from gamification points & rank
       if (!log.is_personal && pts > 0) {
         m.total_points += pts;
         m.completed_count += 1;
@@ -148,13 +149,12 @@ function calculateStats() {
     }
   });
 
-  // Attach last 3 tasks for each member with full ISO timestamp
+  // Attach last 3 tasks for each member
   Object.keys(stats).forEach(mId => {
     const logs = memberTaskLogs[mId] || [];
     stats[mId].recent_tasks = logs.slice(-3).reverse();
   });
 
-  // Determine sorting score key
   const scoreKeyMap = {
     daily: "daily_points",
     weekly: "weekly_points",
@@ -166,7 +166,6 @@ function calculateStats() {
 
   const sorted = Object.values(stats).sort((a, b) => b[activeSortKey] - a[activeSortKey] || b.total_points - a.total_points);
   
-  // Calculate point gaps (diff to leader or to next member)
   const leaderScore = sorted[0] ? sorted[0][activeSortKey] : 0;
   const leaderName = sorted[0] ? sorted[0].name : "-";
 
@@ -175,11 +174,9 @@ function calculateStats() {
     m.is_leader = (idx === 0 && m[activeSortKey] > 0);
 
     if (idx === 0) {
-      // Gap to second place
       const runnerUpScore = sorted[1] ? sorted[1][activeSortKey] : 0;
       m.gap_text = sorted[1] ? `+${leaderScore - runnerUpScore} pt su ${sorted[1].name}` : `In testa`;
     } else {
-      // Gap from leader
       const diff = leaderScore - m[activeSortKey];
       m.gap_text = `-${diff} pt da ${leaderName}`;
     }
@@ -203,7 +200,7 @@ function calculateStats() {
     total: getWinner('total_points')
   };
 
-  // Evaluate Routine Due Statuses
+  // Evaluate Routine Due Statuses & Next Due Dates
   const routineStatus = (appData.routine_tasks || []).map(r => {
     const freq = parseInt(r.frequency_days) || 7;
     const warning = parseInt(r.warning_days) || 1;
@@ -230,7 +227,7 @@ function calculateStats() {
       overdue_days: overdueDays,
       status
     };
-  });
+  }).sort((a, b) => a.days_remaining - b.days_remaining);
 
   return {
     members: stats,
@@ -316,8 +313,8 @@ async function syncToHomeAssistant() {
           friendly_name: "ChoreQuest: Routine in Scadenza",
           overdue_count: overdueList.length,
           warning_count: warningList.length,
-          overdue_routines: overdueList.map(r => ({ name: r.name, overdue_days: r.overdue_days })),
-          warning_routines: warningList.map(r => ({ name: r.name, days_remaining: r.days_remaining })),
+          overdue_routines: overdueList.map(r => ({ name: r.name, overdue_days: r.overdue_days, assigned_to: r.assigned_member })),
+          warning_routines: warningList.map(r => ({ name: r.name, days_remaining: r.days_remaining, assigned_to: r.assigned_member })),
           icon: "mdi:clock-alert-outline"
         }
       })
@@ -341,7 +338,6 @@ async function syncToHomeAssistant() {
   } catch (err) {}
 }
 
-// Initial Sync
 syncToHomeAssistant();
 
 // API: Stats & Data
@@ -350,44 +346,50 @@ app.get('/api/stats', (req, res) => {
   res.json(statsData);
 });
 
-// API: Log Task
+// API: Log Task (Supports single member or multi-members array!)
 app.post('/api/log', (req, res) => {
-  const { member, task_name, points = 10, task_type = "spontaneous", is_personal = false } = req.body;
-  if (!member || !task_name) return res.status(400).json({ error: "Missing parameters" });
-
-  let memberObj = Object.values(appData.members).find(m => m.name.toLowerCase() === member.toLowerCase());
-  if (!memberObj) {
-    const mId = `m_${Date.now()}`;
-    memberObj = { id: mId, name: member, icon: "👤", color: "#6366f1" };
-    appData.members[mId] = memberObj;
-  }
+  const { member, members, task_name, points = 10, task_type = "spontaneous", is_personal = false } = req.body;
+  
+  const targetMembers = Array.isArray(members) && members.length > 0 ? members : (member ? [member] : []);
+  if (targetMembers.length === 0 || !task_name) return res.status(400).json({ error: "Missing parameters" });
 
   const effectivePoints = is_personal ? 0 : (parseInt(points) || 0);
+  const createdLogs = [];
 
-  const logId = `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
-  const newLog = {
-    id: logId,
-    member_id: memberObj.id,
-    member_name: memberObj.name,
-    task_name,
-    task_type,
-    is_personal: !!is_personal,
-    points: effectivePoints,
-    created_at: new Date().toISOString()
-  };
-  appData.logs.push(newLog);
+  targetMembers.forEach(mName => {
+    let memberObj = Object.values(appData.members).find(m => m.name.toLowerCase() === mName.toLowerCase());
+    if (!memberObj) {
+      const mId = `m_${Date.now()}`;
+      memberObj = { id: mId, name: mName, icon: "👤", color: "#6366f1" };
+      appData.members[mId] = memberObj;
+    }
+
+    const logId = `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const newLog = {
+      id: logId,
+      member_id: memberObj.id,
+      member_name: memberObj.name,
+      task_name,
+      task_type,
+      is_personal: !!is_personal,
+      points: effectivePoints,
+      created_at: new Date().toISOString()
+    };
+    appData.logs.push(newLog);
+    createdLogs.push(newLog);
+  });
 
   if (task_type === 'routine') {
     const rout = appData.routine_tasks.find(r => r.name.toLowerCase() === task_name.toLowerCase() || r.id === task_name);
     if (rout) {
       rout.last_completed_at = new Date().toISOString();
-      rout.last_completed_by = memberObj.name;
+      rout.last_completed_by = targetMembers.join(', ');
     }
   }
 
   saveData(appData);
   syncToHomeAssistant();
-  res.status(201).json(newLog);
+  res.status(201).json(createdLogs);
 });
 
 // API: Delete Log Entry (Undo)
@@ -523,7 +525,7 @@ app.post('/api/spontaneous_tasks/delete', (req, res) => {
 
 // API: Save Routine Task
 app.post('/api/routine_tasks', (req, res) => {
-  const { id, name, points = 20, frequency_days = 7, warning_days = 1, start_date, schedule_type = "from_last", icon = "🔄", category = "Routine", is_personal = false } = req.body;
+  const { id, name, points = 20, frequency_days = 7, warning_days = 1, start_date, schedule_type = "from_last", icon = "🔄", category = "Routine", is_personal = false, assigned_member = "all" } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
   const trimmedName = name.trim();
@@ -542,7 +544,8 @@ app.post('/api/routine_tasks', (req, res) => {
     schedule_type: schedule_type || "from_last",
     icon,
     category,
-    is_personal: !!is_personal
+    is_personal: !!is_personal,
+    assigned_member: assigned_member || "all"
   };
 
   if (idx >= 0) appData.routine_tasks[idx] = item;
