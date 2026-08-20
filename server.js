@@ -6,7 +6,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 9006;
 
-// Determine persistent data path (inside HA Add-on, /data is mounted persistently)
+// Persistent data directory
 const DATA_DIR = fs.existsSync('/data') ? '/data' : path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'family_punti.json');
 fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -14,10 +14,12 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 app.use(cors());
 app.use(express.json());
 
-// Serve static frontend files
+// Serve static frontend
 app.use(express.static(path.join(__dirname, 'public')));
 
 function loadData() {
+  const todayIso = new Date().toISOString().split('T')[0];
+
   if (fs.existsSync(DB_FILE)) {
     try {
       const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
@@ -28,16 +30,20 @@ function loadData() {
       if (!data.logs) data.logs = [];
       if (!data.settings) {
         data.settings = {
-          leaderboard_period_mode: "calendar" // "calendar" (Oggi, Settimana, Mese, Anno) or "rolling" (Ultimi 1gg, 7gg, 30gg, 365gg)
+          leaderboard_period_mode: "calendar", // "calendar" or "rolling"
+          primary_score_display: "weekly" // "weekly", "daily", "monthly", "yearly", "total"
         };
       }
+      if (!data.settings.primary_score_display) data.settings.primary_score_display = "weekly";
+      if (!data.settings.leaderboard_period_mode) data.settings.leaderboard_period_mode = "calendar";
 
       // Migrations for routine fields
-      const todayIso = new Date().toISOString().split('T')[0];
       data.routine_tasks.forEach(r => {
         if (!r.schedule_type) r.schedule_type = 'from_last';
         if (r.warning_days === undefined) r.warning_days = 1;
         if (!r.start_date) r.start_date = todayIso;
+        if (r.is_personal === undefined) r.is_personal = false;
+        if (r.is_personal) r.points = 0;
       });
 
       return data;
@@ -46,26 +52,27 @@ function loadData() {
     }
   }
 
-  const todayIso = new Date().toISOString().split('T')[0];
   return {
     settings: {
-      leaderboard_period_mode: "calendar"
+      leaderboard_period_mode: "calendar",
+      primary_score_display: "weekly"
     },
     members: {
       "m_1": { id: "m_1", name: "Papà", icon: "👨‍💻", color: "#6366f1" },
       "m_2": { id: "m_2", name: "Mamma", icon: "👩‍🎨", color: "#ec4899" }
     },
     spontaneous_tasks: [
-      { id: "s_1", name: "Fare la lavatrice", category: "Bucato", points: 15, icon: "🧺" },
-      { id: "s_2", name: "Lavare i piatti / Svuotare lavastoviglie", category: "Cucina", points: 10, icon: "🍽️" },
-      { id: "s_3", name: "Preparare il pranzo / cena", category: "Cucina", points: 20, icon: "🍳" },
-      { id: "s_4", name: "Portare fuori la spazzatura", category: "Pulizia", points: 10, icon: "🗑️" },
-      { id: "s_5", name: "Fare la spesa", category: "Casa", points: 25, icon: "🛒" }
+      { id: "s_1", name: "Fare la lavatrice", category: "Bucato", points: 15, icon: "🧺", is_personal: false },
+      { id: "s_2", name: "Lavare i piatti / Svuotare lavastoviglie", category: "Cucina", points: 10, icon: "🍽️", is_personal: false },
+      { id: "s_3", name: "Preparare il pranzo / cena", category: "Cucina", points: 20, icon: "🍳", is_personal: false },
+      { id: "s_4", name: "Portare fuori la spazzatura", category: "Pulizia", points: 10, icon: "🗑️", is_personal: false },
+      { id: "s_5", name: "Fare la spesa", category: "Casa", points: 25, icon: "🛒", is_personal: false }
     ],
     routine_tasks: [
-      { id: "r_1", name: "Cambio lenzuola", category: "Bucato", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🛏️" },
-      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🧹" },
-      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "🧼" }
+      { id: "r_1", name: "Cambio lenzuola", category: "Bucato", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🛏️", is_personal: false },
+      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🧹", is_personal: false },
+      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "🧼", is_personal: false },
+      { id: "r_4", name: "Taglio capelli / Barbiere", category: "Personale", points: 0, frequency_days: 21, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "💈", is_personal: true }
     ],
     assigned_tasks: [],
     logs: []
@@ -82,10 +89,11 @@ function saveData(data) {
 
 let appData = loadData();
 
-// Calculate comprehensive period stats
+// Calculate comprehensive period stats and diffs
 function calculateStats() {
   const now = new Date();
   const periodMode = appData.settings?.leaderboard_period_mode || "calendar";
+  const primaryDisplay = appData.settings?.primary_score_display || "weekly";
 
   let startDaily, startWeekly, startMonthly, startYearly;
 
@@ -124,34 +132,64 @@ function calculateStats() {
     if (m) {
       const pts = parseInt(log.points) || 0;
       const created = new Date(log.created_at);
-      m.total_points += pts;
-      m.completed_count += 1;
 
-      if (created >= startDaily) m.daily_points += pts;
-      if (created >= startWeekly) m.weekly_points += pts;
-      if (created >= startMonthly) m.monthly_points += pts;
-      if (created >= startYearly) m.yearly_points += pts;
+      if (!log.is_personal && pts > 0) {
+        m.total_points += pts;
+        m.completed_count += 1;
+
+        if (created >= startDaily) m.daily_points += pts;
+        if (created >= startWeekly) m.weekly_points += pts;
+        if (created >= startMonthly) m.monthly_points += pts;
+        if (created >= startYearly) m.yearly_points += pts;
+      }
 
       if (!memberTaskLogs[m.id]) memberTaskLogs[m.id] = [];
       memberTaskLogs[m.id].push(log);
     }
   });
 
-  // Attach last 3 tasks for each member
+  // Attach last 3 tasks for each member with full ISO timestamp
   Object.keys(stats).forEach(mId => {
     const logs = memberTaskLogs[mId] || [];
     stats[mId].recent_tasks = logs.slice(-3).reverse();
   });
 
-  const sorted = Object.values(stats).sort((a, b) => b.weekly_points - a.weekly_points || b.total_points - a.total_points);
+  // Determine sorting score key
+  const scoreKeyMap = {
+    daily: "daily_points",
+    weekly: "weekly_points",
+    monthly: "monthly_points",
+    yearly: "yearly_points",
+    total: "total_points"
+  };
+  const activeSortKey = scoreKeyMap[primaryDisplay] || "weekly_points";
+
+  const sorted = Object.values(stats).sort((a, b) => b[activeSortKey] - a[activeSortKey] || b.total_points - a.total_points);
+  
+  // Calculate point gaps (diff to leader or to next member)
+  const leaderScore = sorted[0] ? sorted[0][activeSortKey] : 0;
+  const leaderName = sorted[0] ? sorted[0].name : "-";
+
   sorted.forEach((m, idx) => {
     m.rank = idx + 1;
-    if (m.rank === 1 && m.weekly_points > 0) m.badges.push({ name: "👑 Campione Settimana" });
+    m.is_leader = (idx === 0 && m[activeSortKey] > 0);
+
+    if (idx === 0) {
+      // Gap to second place
+      const runnerUpScore = sorted[1] ? sorted[1][activeSortKey] : 0;
+      m.gap_text = sorted[1] ? `+${leaderScore - runnerUpScore} pt su ${sorted[1].name}` : `In testa`;
+    } else {
+      // Gap from leader
+      const diff = leaderScore - m[activeSortKey];
+      m.gap_text = `-${diff} pt da ${leaderName}`;
+    }
+
+    if (m.rank === 1 && m[activeSortKey] > 0) m.badges.push({ name: "👑 In Testa" });
     if (m.completed_count >= 10) m.badges.push({ name: "⭐ Super Aiutante" });
     if (m.total_points >= 100) m.badges.push({ name: "🏆 Master della Casa" });
   });
 
-  // Winners per period
+  // Period Winners
   const getWinner = (key) => {
     const s = [...sorted].sort((a, b) => b[key] - a[key]);
     return s[0] && s[0][key] > 0 ? { name: s[0].name, icon: s[0].icon, points: s[0][key] } : null;
@@ -161,7 +199,8 @@ function calculateStats() {
     daily: getWinner('daily_points'),
     weekly: getWinner('weekly_points'),
     monthly: getWinner('monthly_points'),
-    yearly: getWinner('yearly_points')
+    yearly: getWinner('yearly_points'),
+    total: getWinner('total_points')
   };
 
   // Evaluate Routine Due Statuses
@@ -170,12 +209,11 @@ function calculateStats() {
     const warning = parseInt(r.warning_days) || 1;
     let baseDate = r.last_completed_at ? new Date(r.last_completed_at) : (r.start_date ? new Date(r.start_date) : now);
     
-    // Target due date
     const dueDate = new Date(baseDate.getTime() + (freq * 24 * 60 * 60 * 1000));
     const diffMs = dueDate - now;
     const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
-    let status = "ok"; // "ok", "warning", "overdue"
+    let status = "ok";
     let overdueDays = 0;
 
     if (diffDays < 0) {
@@ -233,6 +271,7 @@ async function syncToHomeAssistant() {
             yearly_points: m.yearly_points,
             total_points: m.total_points,
             rank: m.rank,
+            gap: m.gap_text,
             badges: m.badges.map(b => b.name),
             last_task_name: lastTask ? lastTask.task_name : null,
             last_task_time: lastTask ? lastTask.created_at : null,
@@ -243,7 +282,7 @@ async function syncToHomeAssistant() {
     } catch (err) {}
   }
 
-  // 2. Leaderboard & Winners Sensor
+  // 2. Leaderboard Sensor
   try {
     await fetch(`${haBase}/states/sensor.chorequest_leaderboard`, {
       method: 'POST',
@@ -313,7 +352,7 @@ app.get('/api/stats', (req, res) => {
 
 // API: Log Task
 app.post('/api/log', (req, res) => {
-  const { member, task_name, points = 10, task_type = "spontaneous" } = req.body;
+  const { member, task_name, points = 10, task_type = "spontaneous", is_personal = false } = req.body;
   if (!member || !task_name) return res.status(400).json({ error: "Missing parameters" });
 
   let memberObj = Object.values(appData.members).find(m => m.name.toLowerCase() === member.toLowerCase());
@@ -323,6 +362,8 @@ app.post('/api/log', (req, res) => {
     appData.members[mId] = memberObj;
   }
 
+  const effectivePoints = is_personal ? 0 : (parseInt(points) || 0);
+
   const logId = `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
   const newLog = {
     id: logId,
@@ -330,7 +371,8 @@ app.post('/api/log', (req, res) => {
     member_name: memberObj.name,
     task_name,
     task_type,
-    points: parseInt(points) || 10,
+    is_personal: !!is_personal,
+    points: effectivePoints,
     created_at: new Date().toISOString()
   };
   appData.logs.push(newLog);
@@ -396,6 +438,7 @@ app.post('/api/complete_assigned', (req, res) => {
         member_name: memberObj.name,
         task_name: task.task_name,
         task_type: 'assigned',
+        is_personal: false,
         points: task.points,
         created_at: new Date().toISOString()
       });
@@ -448,13 +491,20 @@ app.post('/api/members/delete', (req, res) => {
 
 // API: Save Spontaneous Task
 app.post('/api/spontaneous_tasks', (req, res) => {
-  const { id, name, points = 10, icon = "⚡", category = "Generale" } = req.body;
+  const { id, name, points = 10, icon = "⚡", category = "Generale", is_personal = false } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
   const trimmedName = name.trim();
   const tId = id || `s_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
   const idx = appData.spontaneous_tasks.findIndex(t => t.id === tId || t.name.toLowerCase() === trimmedName.toLowerCase());
-  const item = { id: tId, name: trimmedName, points: parseInt(points) || 10, icon, category };
+  const item = {
+    id: tId,
+    name: trimmedName,
+    points: is_personal ? 0 : (parseInt(points) || 10),
+    icon,
+    category,
+    is_personal: !!is_personal
+  };
 
   if (idx >= 0) appData.spontaneous_tasks[idx] = item;
   else appData.spontaneous_tasks.push(item);
@@ -473,7 +523,7 @@ app.post('/api/spontaneous_tasks/delete', (req, res) => {
 
 // API: Save Routine Task
 app.post('/api/routine_tasks', (req, res) => {
-  const { id, name, points = 20, frequency_days = 7, warning_days = 1, start_date, schedule_type = "from_last", icon = "🔄", category = "Routine" } = req.body;
+  const { id, name, points = 20, frequency_days = 7, warning_days = 1, start_date, schedule_type = "from_last", icon = "🔄", category = "Routine", is_personal = false } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
   const trimmedName = name.trim();
@@ -485,13 +535,14 @@ app.post('/api/routine_tasks', (req, res) => {
     ...existingItem,
     id: tId,
     name: trimmedName,
-    points: parseInt(points) || 20,
+    points: is_personal ? 0 : (parseInt(points) || 20),
     frequency_days: parseInt(frequency_days) || 7,
     warning_days: parseInt(warning_days) || 1,
     start_date: start_date || existingItem.start_date || new Date().toISOString().split('T')[0],
     schedule_type: schedule_type || "from_last",
     icon,
-    category
+    category,
+    is_personal: !!is_personal
   };
 
   if (idx >= 0) appData.routine_tasks[idx] = item;
@@ -513,17 +564,17 @@ app.post('/api/routine_tasks/delete', (req, res) => {
 
 // API: Save Settings
 app.post('/api/settings', (req, res) => {
-  const { leaderboard_period_mode } = req.body;
-  if (leaderboard_period_mode) {
-    if (!appData.settings) appData.settings = {};
-    appData.settings.leaderboard_period_mode = leaderboard_period_mode;
-    saveData(appData);
-    syncToHomeAssistant();
-  }
+  const { leaderboard_period_mode, primary_score_display } = req.body;
+  if (!appData.settings) appData.settings = {};
+  if (leaderboard_period_mode) appData.settings.leaderboard_period_mode = leaderboard_period_mode;
+  if (primary_score_display) appData.settings.primary_score_display = primary_score_display;
+
+  saveData(appData);
+  syncToHomeAssistant();
   res.json({ status: "saved", settings: appData.settings });
 });
 
-// Fallback for SPA routing
+// Fallback for SPA
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
