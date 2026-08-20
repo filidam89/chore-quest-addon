@@ -20,7 +20,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 function loadData() {
   if (fs.existsSync(DB_FILE)) {
     try {
-      return JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+      const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
+      // Migrations / defaults
+      if (!data.members) data.members = {};
+      if (!data.spontaneous_tasks) data.spontaneous_tasks = [];
+      if (!data.routine_tasks) data.routine_tasks = [];
+      if (!data.assigned_tasks) data.assigned_tasks = [];
+      if (!data.logs) data.logs = [];
+
+      // Ensure schedule_type exists in routine tasks
+      data.routine_tasks.forEach(r => {
+        if (!r.schedule_type) r.schedule_type = 'from_last'; // 'from_last' or 'fixed'
+      });
+      return data;
     } catch (e) {
       console.error("Error reading database:", e);
     }
@@ -39,9 +51,9 @@ function loadData() {
       { id: "s_5", name: "Fare la spesa", category: "Casa", points: 25, icon: "🛒" }
     ],
     routine_tasks: [
-      { id: "r_1", name: "Cambio lenzuola", category: "Bucato", points: 25, frequency_days: 7, icon: "🛏️" },
-      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia", points: 30, frequency_days: 3, icon: "🧹" },
-      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia", points: 35, frequency_days: 5, icon: "🧼" }
+      { id: "r_1", name: "Cambio lenzuola", category: "Bucato", points: 25, frequency_days: 7, schedule_type: "from_last", icon: "🛏️" },
+      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia", points: 30, frequency_days: 3, schedule_type: "from_last", icon: "🧹" },
+      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia", points: 35, frequency_days: 5, schedule_type: "from_last", icon: "🧼" }
     ],
     assigned_tasks: [],
     logs: []
@@ -58,12 +70,10 @@ function saveData(data) {
 
 let appData = loadData();
 
-// Generic Home Assistant Sync via Supervisor API (No hardcoded IP / Token!)
+// Generic Home Assistant Sync via Supervisor API
 async function syncToHomeAssistant() {
   const supervisorToken = process.env.SUPERVISOR_TOKEN;
-  if (!supervisorToken) {
-    return; // Running outside HAOS or in development
-  }
+  if (!supervisorToken) return;
 
   const haBase = "http://supervisor/core/api";
   const now = new Date();
@@ -102,10 +112,7 @@ async function syncToHomeAssistant() {
     try {
       await fetch(sensorUrl, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supervisorToken}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           state: String(m.total_points),
           attributes: {
@@ -126,10 +133,7 @@ async function syncToHomeAssistant() {
   try {
     await fetch(`${haBase}/states/sensor.family_leaderboard`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${supervisorToken}`,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         state: sorted[0] ? sorted[0].name : "Nessuno",
         attributes: {
@@ -184,7 +188,7 @@ app.get('/api/stats', (req, res) => {
     spontaneous_tasks: appData.spontaneous_tasks,
     routine_tasks: appData.routine_tasks,
     pending_assigned: pending,
-    logs: (appData.logs || []).slice(-50)
+    logs: (appData.logs || [])
   });
 });
 
@@ -196,11 +200,11 @@ app.post('/api/log', (req, res) => {
   let memberObj = Object.values(appData.members).find(m => m.name.toLowerCase() === member.toLowerCase());
   if (!memberObj) {
     const mId = `m_${Date.now()}`;
-    memberObj = { id: mId, name: member, icon: "👤", color: "#10b981" };
+    memberObj = { id: mId, name: member, icon: "👤", color: "#6366f1" };
     appData.members[mId] = memberObj;
   }
 
-  const logId = `log_${Date.now()}`;
+  const logId = `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
   const newLog = {
     id: logId,
     member_id: memberObj.id,
@@ -225,13 +229,24 @@ app.post('/api/log', (req, res) => {
   res.status(201).json(newLog);
 });
 
+// API: Delete Log Entry (Undo)
+app.post('/api/logs/delete', (req, res) => {
+  const { id } = req.body;
+  if (id) {
+    appData.logs = appData.logs.filter(l => l.id !== id);
+    saveData(appData);
+    syncToHomeAssistant();
+  }
+  res.json({ status: "deleted" });
+});
+
 // API: Assign Task
 app.post('/api/assign', (req, res) => {
   const { from_member, to_member, task_name, points = 10 } = req.body;
   if (!from_member || !to_member || !task_name) return res.status(400).json({ error: "Missing parameters" });
 
   const newTask = {
-    id: `task_${Date.now()}`,
+    id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
     from_member,
     to_member,
     task_name,
@@ -257,7 +272,7 @@ app.post('/api/complete_assigned', (req, res) => {
     let memberObj = Object.values(appData.members).find(m => m.name.toLowerCase() === worker.toLowerCase());
     if (memberObj) {
       appData.logs.push({
-        id: `log_${Date.now()}`,
+        id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
         member_id: memberObj.id,
         member_name: memberObj.name,
         task_name: task.task_name,
@@ -274,14 +289,33 @@ app.post('/api/complete_assigned', (req, res) => {
 
 // API: Save / Add Member
 app.post('/api/members', (req, res) => {
-  const { id, name, icon = "👤", color = "#10b981" } = req.body;
-  if (!name) return res.status(400).json({ error: "Name required" });
+  const { id, name, icon = "👤", color = "#6366f1" } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
-  const mId = id || `m_${Date.now()}`;
-  appData.members[mId] = { id: mId, name: name.trim(), icon, color };
+  const trimmedName = name.trim();
+  let mId = id;
+
+  if (mId && appData.members[mId]) {
+    // Update existing member
+    appData.members[mId].name = trimmedName;
+    appData.members[mId].icon = icon;
+    appData.members[mId].color = color;
+  } else {
+    // Check if name already exists
+    const existing = Object.values(appData.members).find(m => m.name.toLowerCase() === trimmedName.toLowerCase());
+    if (existing) {
+      existing.icon = icon;
+      existing.color = color;
+      mId = existing.id;
+    } else {
+      mId = `m_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+      appData.members[mId] = { id: mId, name: trimmedName, icon, color };
+    }
+  }
+
   saveData(appData);
   syncToHomeAssistant();
-  res.status(201).json(appData.members[mId]);
+  res.status(200).json(appData.members[mId]);
 });
 
 // API: Delete Member
@@ -298,16 +332,18 @@ app.post('/api/members/delete', (req, res) => {
 // API: Save Spontaneous Task
 app.post('/api/spontaneous_tasks', (req, res) => {
   const { id, name, points = 10, icon = "⚡", category = "Generale" } = req.body;
-  if (!name) return res.status(400).json({ error: "Name required" });
+  if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
-  const tId = id || `s_${Date.now()}`;
-  const idx = appData.spontaneous_tasks.findIndex(t => t.id === tId);
-  const item = { id: tId, name: name.trim(), points: parseInt(points) || 10, icon, category };
+  const trimmedName = name.trim();
+  const tId = id || `s_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+  const idx = appData.spontaneous_tasks.findIndex(t => t.id === tId || t.name.toLowerCase() === trimmedName.toLowerCase());
+  const item = { id: tId, name: trimmedName, points: parseInt(points) || 10, icon, category };
+
   if (idx >= 0) appData.spontaneous_tasks[idx] = item;
   else appData.spontaneous_tasks.push(item);
 
   saveData(appData);
-  res.json({ status: "saved" });
+  res.json({ status: "saved", item });
 });
 
 // API: Delete Spontaneous Task
@@ -320,17 +356,30 @@ app.post('/api/spontaneous_tasks/delete', (req, res) => {
 
 // API: Save Routine Task
 app.post('/api/routine_tasks', (req, res) => {
-  const { id, name, points = 20, frequency_days = 7, icon = "🔄", category = "Routine" } = req.body;
-  if (!name) return res.status(400).json({ error: "Name required" });
+  const { id, name, points = 20, frequency_days = 7, schedule_type = "from_last", icon = "🔄", category = "Routine" } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
-  const tId = id || `r_${Date.now()}`;
-  const idx = appData.routine_tasks.findIndex(t => t.id === tId);
-  const item = { id: tId, name: name.trim(), points: parseInt(points) || 20, frequency_days: parseInt(frequency_days) || 7, icon, category };
+  const trimmedName = name.trim();
+  const tId = id || `r_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+  const idx = appData.routine_tasks.findIndex(t => t.id === tId || t.name.toLowerCase() === trimmedName.toLowerCase());
+  
+  const existingItem = idx >= 0 ? appData.routine_tasks[idx] : {};
+  const item = {
+    ...existingItem,
+    id: tId,
+    name: trimmedName,
+    points: parseInt(points) || 20,
+    frequency_days: parseInt(frequency_days) || 7,
+    schedule_type: schedule_type || "from_last",
+    icon,
+    category
+  };
+
   if (idx >= 0) appData.routine_tasks[idx] = item;
   else appData.routine_tasks.push(item);
 
   saveData(appData);
-  res.json({ status: "saved" });
+  res.json({ status: "saved", item });
 });
 
 // API: Delete Routine Task
@@ -347,5 +396,5 @@ app.get('*', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Casa & Famiglia Punti Add-on server attivo su porta ${PORT}`);
+  console.log(`🚀 ChoreQuest Add-on server attivo su porta ${PORT}`);
 });
