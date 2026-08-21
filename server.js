@@ -12,7 +12,7 @@ const DB_FILE = path.join(DATA_DIR, 'family_punti.json');
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 // Serve static frontend
 app.use(express.static(path.join(__dirname, 'public')));
@@ -47,9 +47,10 @@ function loadData() {
       if (!data.settings.primary_score_display) data.settings.primary_score_display = "weekly";
       if (!data.settings.leaderboard_period_mode) data.settings.leaderboard_period_mode = "calendar";
 
-      // Migrations for routine fields
+      // Migrations for routine fields & priorities
       data.routine_tasks.forEach(r => {
         if (!r.category) r.category = "Pulizia & Casa";
+        if (!r.priority) r.priority = "medium";
         if (!r.schedule_type) r.schedule_type = 'from_last';
         if (r.warning_days === undefined) r.warning_days = 1;
         if (!r.start_date) r.start_date = todayIso;
@@ -61,15 +62,21 @@ function loadData() {
       // Migrations for spontaneous tasks
       data.spontaneous_tasks.forEach(s => {
         if (!s.category) s.category = "Generale";
+        if (!s.priority) s.priority = "medium";
         if (s.is_personal === undefined) s.is_personal = false;
       });
 
       // Migrations for single tasks
       data.single_tasks.forEach(st => {
         if (!st.category) st.category = "Varie";
+        if (!st.priority) st.priority = "medium";
         if (!st.notes) st.notes = [];
         if (!st.due_date) st.due_date = st.created_at ? st.created_at.split('T')[0] : todayIso;
       });
+
+      // Ensure categories have clean sequential order without duplicate order numbers
+      data.categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+      data.categories.forEach((c, idx) => { c.order = idx + 1; });
 
       return data;
     } catch (e) {
@@ -88,17 +95,17 @@ function loadData() {
     },
     categories: defaultCategories,
     spontaneous_tasks: [
-      { id: "s_1", name: "Fare la lavatrice", category: "Bucato & Panni", points: 15, icon: "🧺", is_personal: false },
-      { id: "s_2", name: "Lavare i piatti / Svuotare lavastoviglie", category: "Cucina & Spesa", points: 10, icon: "🍽️", is_personal: false },
-      { id: "s_3", name: "Preparare il pranzo / cena", category: "Cucina & Spesa", points: 20, icon: "🍳", is_personal: false },
-      { id: "s_4", name: "Portare fuori la spazzatura", category: "Pulizia & Casa", points: 10, icon: "🗑️", is_personal: false },
-      { id: "s_5", name: "Fare la spesa", category: "Cucina & Spesa", points: 25, icon: "🛒", is_personal: false }
+      { id: "s_1", name: "Fare la lavatrice", category: "Bucato & Panni", points: 15, icon: "🧺", priority: "medium", is_personal: false },
+      { id: "s_2", name: "Lavare i piatti / Svuotare lavastoviglie", category: "Cucina & Spesa", points: 10, icon: "🍽️", priority: "medium", is_personal: false },
+      { id: "s_3", name: "Preparare il pranzo / cena", category: "Cucina & Spesa", points: 20, icon: "🍳", priority: "medium", is_personal: false },
+      { id: "s_4", name: "Portare fuori la spazzatura", category: "Pulizia & Casa", points: 10, icon: "🗑️", priority: "medium", is_personal: false },
+      { id: "s_5", name: "Fare la spesa", category: "Cucina & Spesa", points: 25, icon: "🛒", priority: "medium", is_personal: false }
     ],
     routine_tasks: [
-      { id: "r_1", name: "Cambio lenzuola", category: "Bucato & Panni", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🛏️", is_personal: false, assigned_member: "all" },
-      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia & Casa", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🧹", is_personal: false, assigned_member: "all" },
-      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia & Casa", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "🧼", is_personal: false, assigned_member: "all" },
-      { id: "r_4", name: "Taglio capelli / Barbiere", category: "Cura Personale", points: 0, frequency_days: 21, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "💈", is_personal: true, assigned_member: "Papà" }
+      { id: "r_1", name: "Cambio lenzuola", category: "Bucato & Panni", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🛏️", priority: "medium", is_personal: false, assigned_member: "all" },
+      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia & Casa", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🧹", priority: "medium", is_personal: false, assigned_member: "all" },
+      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia & Casa", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "🧼", priority: "medium", is_personal: false, assigned_member: "all" },
+      { id: "r_4", name: "Taglio capelli / Barbiere", category: "Cura Personale", points: 0, frequency_days: 21, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "💈", priority: "medium", is_personal: true, assigned_member: "Papà" }
     ],
     single_tasks: [],
     assigned_tasks: [],
@@ -284,7 +291,8 @@ function calculateStats() {
       ...t,
       last_executed_text: lastExecText,
       last_executed_days: lastExecDays,
-      last_performer: lastPerformer
+      last_performer: lastPerformer,
+      priority: t.priority || "medium"
     };
   });
 
@@ -319,7 +327,8 @@ function calculateStats() {
       due_date: dueDate.toISOString(),
       days_remaining: diffDays,
       overdue_days: overdueDays,
-      status
+      status,
+      priority: r.priority || "medium"
     };
   }).sort((a, b) => a.days_remaining - b.days_remaining);
 
@@ -349,12 +358,13 @@ function calculateStats() {
         is_future: isFuture,
         days_until: daysUntil,
         status_symbol: isFuture ? '📅' : '⚠️',
+        priority: t.priority || "medium",
         notes: t.notes || []
       };
     })
     .sort((a, b) => (a.due_date || '').localeCompare(b.due_date || ''));
 
-  // Sort categories by order
+  // Sort categories by clean sequential order
   const sortedCategories = [...(appData.categories || [])].sort((a, b) => (a.order || 0) - (b.order || 0));
 
   return {
@@ -474,9 +484,30 @@ app.get('/api/stats', (req, res) => {
   res.json(statsData);
 });
 
-// API: Categories Management (CRUD & Order)
+// API: Backup Download
+app.get('/api/backup', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  res.setHeader('Content-Disposition', `attachment; filename="chorequest_backup_${dateStr}.json"`);
+  res.send(JSON.stringify(appData, null, 2));
+});
+
+// API: Restore Backup
+app.post('/api/restore', (req, res) => {
+  const backupData = req.body;
+  if (!backupData || !backupData.members) {
+    return res.status(400).json({ error: "Backup file non valido o corrotto" });
+  }
+
+  appData = backupData;
+  saveData(appData);
+  syncToHomeAssistant();
+  res.json({ status: "restored", message: "Database ripristinato con successo!" });
+});
+
+// API: Categories Management (CRUD & Order Move Up/Down)
 app.post('/api/categories', (req, res) => {
-  const { id, name, icon = "📁", order = 1 } = req.body;
+  const { id, name, icon = "📁" } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
   const trimmedName = name.trim();
@@ -485,32 +516,62 @@ app.post('/api/categories', (req, res) => {
   if (!appData.categories) appData.categories = [];
   const idx = appData.categories.findIndex(c => c.id === catId || c.name.toLowerCase() === trimmedName.toLowerCase());
 
-  const catObj = {
-    id: catId,
-    name: trimmedName,
-    icon,
-    order: parseInt(order) || 1
-  };
-
-  if (idx >= 0) appData.categories[idx] = catObj;
-  else appData.categories.push(catObj);
+  if (idx >= 0) {
+    appData.categories[idx].name = trimmedName;
+    appData.categories[idx].icon = icon;
+  } else {
+    const nextOrder = appData.categories.length + 1;
+    appData.categories.push({
+      id: catId,
+      name: trimmedName,
+      icon,
+      order: nextOrder
+    });
+  }
 
   saveData(appData);
-  res.json({ status: "saved", category: catObj });
+  res.json({ status: "saved", categories: appData.categories });
+});
+
+// Move category order Up or Down
+app.post('/api/categories/reorder', (req, res) => {
+  const { id, direction } = req.body; // direction: 'up' or 'down'
+  if (!appData.categories) appData.categories = [];
+
+  appData.categories.sort((a, b) => (a.order || 0) - (b.order || 0));
+  const idx = appData.categories.findIndex(c => c.id === id);
+
+  if (idx >= 0) {
+    if (direction === 'up' && idx > 0) {
+      const temp = appData.categories[idx];
+      appData.categories[idx] = appData.categories[idx - 1];
+      appData.categories[idx - 1] = temp;
+    } else if (direction === 'down' && idx < appData.categories.length - 1) {
+      const temp = appData.categories[idx];
+      appData.categories[idx] = appData.categories[idx + 1];
+      appData.categories[idx + 1] = temp;
+    }
+    // Reindex 1 to N
+    appData.categories.forEach((c, i) => { c.order = i + 1; });
+    saveData(appData);
+  }
+
+  res.json({ status: "reordered", categories: appData.categories });
 });
 
 app.post('/api/categories/delete', (req, res) => {
   const { id } = req.body;
   if (id) {
     appData.categories = (appData.categories || []).filter(c => c.id !== id);
+    appData.categories.forEach((c, i) => { c.order = i + 1; });
     saveData(appData);
   }
   res.json({ status: "deleted" });
 });
 
-// API: Log Task (Records task_created_at, created_by, performer, task_type, category)
+// API: Log Task (with priority)
 app.post('/api/log', (req, res) => {
-  const { member, members, task_name, points = 10, task_type = "spontaneous", category = "Generale", is_personal = false, created_by = "Utente", task_created_at } = req.body;
+  const { member, members, task_name, points = 10, task_type = "spontaneous", category = "Generale", priority = "medium", is_personal = false, created_by = "Utente", task_created_at } = req.body;
   
   const targetMembers = Array.isArray(members) && members.length > 0 ? members : (member ? [member] : []);
   if (targetMembers.length === 0 || !task_name) return res.status(400).json({ error: "Missing parameters" });
@@ -537,6 +598,7 @@ app.post('/api/log', (req, res) => {
       task_name,
       task_type,
       category: category || "Generale",
+      priority: priority || "medium",
       created_by: created_by || "Utente",
       task_created_at: task_created_at || nowIso,
       is_personal: !!is_personal,
@@ -571,9 +633,9 @@ app.post('/api/logs/delete', (req, res) => {
   res.json({ status: "deleted" });
 });
 
-// API: Single Task Create (with category, due_date and custom points)
+// API: Single Task Create (with priority & category)
 app.post('/api/single_tasks', (req, res) => {
-  const { title, assigned_to = ["all"], points = 0, due_date, category = "Varie", created_by = "Famiglia" } = req.body;
+  const { title, assigned_to = ["all"], points = 0, due_date, category = "Varie", priority = "medium", created_by = "Famiglia" } = req.body;
   if (!title || !title.trim()) return res.status(400).json({ error: "Title required" });
 
   const assignedList = Array.isArray(assigned_to) ? assigned_to : [assigned_to];
@@ -585,6 +647,7 @@ app.post('/api/single_tasks', (req, res) => {
     points: parseInt(points) || 0,
     due_date: due_date || nowIso.split('T')[0],
     category: category || "Varie",
+    priority: priority || "medium",
     created_by: created_by || "Famiglia",
     status: 'pending',
     notes: [],
@@ -767,7 +830,7 @@ app.post('/api/members/delete', (req, res) => {
 
 // API: Save Spontaneous Task
 app.post('/api/spontaneous_tasks', (req, res) => {
-  const { id, name, points = 10, icon = "⚡", category = "Generale", is_personal = false } = req.body;
+  const { id, name, points = 10, icon = "⚡", category = "Generale", priority = "medium", is_personal = false } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
   const trimmedName = name.trim();
@@ -779,6 +842,7 @@ app.post('/api/spontaneous_tasks', (req, res) => {
     points: is_personal ? 0 : (parseInt(points) || 10),
     icon,
     category: category || "Generale",
+    priority: priority || "medium",
     is_personal: !!is_personal
   };
 
@@ -797,9 +861,9 @@ app.post('/api/spontaneous_tasks/delete', (req, res) => {
   res.json({ status: "deleted" });
 });
 
-// API: Save Routine Task (with Category & Prossima Scadenza)
+// API: Save Routine Task (with Category & Priority)
 app.post('/api/routine_tasks', (req, res) => {
-  const { id, name, points = 20, frequency_days = 7, warning_days = 1, start_date, schedule_type = "from_last", icon = "🔄", category = "Routine", is_personal = false, assigned_member = "all" } = req.body;
+  const { id, name, points = 20, frequency_days = 7, warning_days = 1, start_date, schedule_type = "from_last", icon = "🔄", category = "Routine", priority = "medium", is_personal = false, assigned_member = "all" } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
   const trimmedName = name.trim();
@@ -818,6 +882,7 @@ app.post('/api/routine_tasks', (req, res) => {
     schedule_type: schedule_type || "from_last",
     icon,
     category: category || "Routine",
+    priority: priority || "medium",
     is_personal: !!is_personal,
     assigned_member: assigned_member || "all"
   };
