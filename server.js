@@ -98,7 +98,7 @@ function saveData(data) {
 
 let appData = loadData();
 
-// Calculate comprehensive period stats, diffs, and pending alerts
+// Calculate comprehensive period stats, diffs, pending alerts and shared breakdown
 function calculateStats() {
   const now = new Date();
   const todayStr = now.toISOString().split('T')[0];
@@ -132,27 +132,34 @@ function calculateStats() {
       completed_count: 0,
       completed_single_tasks_count: 0,
       pending_single_tasks_count: 0,
-      urgent_single_tasks_count: 0,
+      exclusive_single_tasks_count: 0,
+      shared_single_tasks_count: 0,
+      last_activity: null,
       badges: []
     };
   });
 
-  // Calculate pending & urgent single tasks per member (taking date into account)
+  // Calculate pending single tasks (exclusive vs shared)
   (appData.single_tasks || []).forEach(st => {
     if (st.status === 'pending') {
-      const isFuture = st.due_date && st.due_date > todayStr;
       const assignedList = Array.isArray(st.assigned_to) ? st.assigned_to : [st.assigned_to];
+      const isShared = assignedList.includes('all') || assignedList.includes('Tutti') || assignedList.includes('Tutta la Famiglia') || assignedList.length > 1;
+
       Object.values(stats).forEach(m => {
         if (assignedList.includes(m.name) || assignedList.includes('all') || assignedList.includes('Tutti') || assignedList.includes('Tutta la Famiglia')) {
           m.pending_single_tasks_count += 1;
-          if (!isFuture) {
-            m.urgent_single_tasks_count += 1;
+          if (isShared) {
+            m.shared_single_tasks_count += 1;
+          } else {
+            m.exclusive_single_tasks_count += 1;
           }
         }
       });
     }
   });
 
+  // Attach last completed activity for each member
+  const memberLastLogs = {};
   (appData.logs || []).forEach(log => {
     const m = stats[log.member_id];
     if (m) {
@@ -163,7 +170,6 @@ function calculateStats() {
         m.completed_single_tasks_count += 1;
       }
 
-      // STRICTLY EXCLUDE personal / zero-point tasks from gamification points & rank
       if (!log.is_personal && pts > 0) {
         m.total_points += pts;
         m.completed_count += 1;
@@ -173,7 +179,15 @@ function calculateStats() {
         if (created >= startMonthly) m.monthly_points += pts;
         if (created >= startYearly) m.yearly_points += pts;
       }
+
+      if (log.task_type !== 'task_note') {
+        memberLastLogs[m.id] = log;
+      }
     }
+  });
+
+  Object.keys(stats).forEach(mId => {
+    stats[mId].last_activity = memberLastLogs[mId] || null;
   });
 
   const scoreKeyMap = {
@@ -258,10 +272,7 @@ function calculateStats() {
     };
   }).sort((a, b) => a.days_remaining - b.days_remaining);
 
-  // Global latest 3 activities
-  const recentGlobalLogs = [...(appData.logs || [])].reverse().slice(0, 3);
-
-  // Pending single tasks with date consideration (future vs overdue/today)
+  // Pending single tasks with date consideration
   const pendingSingleTasks = (appData.single_tasks || [])
     .filter(t => t.status === 'pending')
     .map(t => {
@@ -296,7 +307,6 @@ function calculateStats() {
     members: stats,
     leaderboard: sorted,
     winners,
-    recent_global_logs: recentGlobalLogs,
     pending_single_tasks: pendingSingleTasks,
     spontaneous_tasks: appData.spontaneous_tasks,
     routine_tasks: routineStatus,
@@ -330,11 +340,13 @@ async function syncToHomeAssistant() {
             yearly_points: m.yearly_points,
             total_points: m.total_points,
             pending_tasks_count: m.pending_single_tasks_count,
-            urgent_tasks_count: m.urgent_single_tasks_count,
+            shared_tasks_count: m.shared_single_tasks_count,
+            exclusive_tasks_count: m.exclusive_single_tasks_count,
             completed_single_tasks_count: m.completed_single_tasks_count,
             rank: m.rank,
             gap: m.gap_text,
             badges: m.badges.map(b => b.name),
+            last_activity: m.last_activity ? `${m.last_activity.task_name} (+${m.last_activity.points}pt)` : null,
             icon: "mdi:star-circle"
           }
         })
@@ -525,7 +537,6 @@ app.post('/api/single_tasks/note', (req, res) => {
     historyNoteDetails.push(`Spostata data da ${oldDate} a ${new_due_date}`);
   }
 
-  // Also log into chronological history for audit trail
   if (historyNoteDetails.length > 0) {
     let memberObj = Object.values(appData.members).find(m => m.name.toLowerCase() === (author || '').toLowerCase());
     const mId = memberObj ? memberObj.id : Object.keys(appData.members)[0] || 'm_1';
