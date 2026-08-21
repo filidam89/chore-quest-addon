@@ -48,6 +48,12 @@ function loadData() {
         if (!r.assigned_member) r.assigned_member = 'all';
       });
 
+      // Migrations for single tasks
+      data.single_tasks.forEach(st => {
+        if (!st.notes) st.notes = [];
+        if (!st.due_date) st.due_date = st.created_at ? st.created_at.split('T')[0] : todayIso;
+      });
+
       return data;
     } catch (e) {
       console.error("Error reading database:", e);
@@ -95,6 +101,7 @@ let appData = loadData();
 // Calculate comprehensive period stats, diffs, and pending alerts
 function calculateStats() {
   const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
   const periodMode = appData.settings?.leaderboard_period_mode || "calendar";
   const primaryDisplay = appData.settings?.primary_score_display || "weekly";
 
@@ -125,17 +132,22 @@ function calculateStats() {
       completed_count: 0,
       completed_single_tasks_count: 0,
       pending_single_tasks_count: 0,
+      urgent_single_tasks_count: 0,
       badges: []
     };
   });
 
-  // Calculate pending single tasks per member
+  // Calculate pending & urgent single tasks per member (taking date into account)
   (appData.single_tasks || []).forEach(st => {
     if (st.status === 'pending') {
+      const isFuture = st.due_date && st.due_date > todayStr;
       const assignedList = Array.isArray(st.assigned_to) ? st.assigned_to : [st.assigned_to];
       Object.values(stats).forEach(m => {
         if (assignedList.includes(m.name) || assignedList.includes('all') || assignedList.includes('Tutti') || assignedList.includes('Tutta la Famiglia')) {
           m.pending_single_tasks_count += 1;
+          if (!isFuture) {
+            m.urgent_single_tasks_count += 1;
+          }
         }
       });
     }
@@ -249,18 +261,36 @@ function calculateStats() {
   // Global latest 3 activities
   const recentGlobalLogs = [...(appData.logs || [])].reverse().slice(0, 3);
 
-  // Pending single tasks with elapsed days and date formatting
+  // Pending single tasks with date consideration (future vs overdue/today)
   const pendingSingleTasks = (appData.single_tasks || [])
     .filter(t => t.status === 'pending')
     .map(t => {
       const createdDate = new Date(t.created_at);
       const elapsedDays = Math.floor((now - createdDate) / (1000 * 60 * 60 * 24));
+      
+      let isFuture = false;
+      let daysUntil = 0;
+
+      if (t.due_date) {
+        const dueDateObj = new Date(t.due_date + 'T23:59:59');
+        const diffMs = dueDateObj - now;
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        if (t.due_date > todayStr) {
+          isFuture = true;
+          daysUntil = diffDays;
+        }
+      }
+
       return {
         ...t,
-        elapsed_days: elapsedDays
+        elapsed_days: elapsedDays,
+        is_future: isFuture,
+        days_until: daysUntil,
+        status_symbol: isFuture ? '📅' : '⚠️',
+        notes: t.notes || []
       };
     })
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    .sort((a, b) => (a.due_date || '').localeCompare(b.due_date || ''));
 
   return {
     members: stats,
@@ -300,6 +330,7 @@ async function syncToHomeAssistant() {
             yearly_points: m.yearly_points,
             total_points: m.total_points,
             pending_tasks_count: m.pending_single_tasks_count,
+            urgent_tasks_count: m.urgent_single_tasks_count,
             completed_single_tasks_count: m.completed_single_tasks_count,
             rank: m.rank,
             gap: m.gap_text,
@@ -360,7 +391,7 @@ async function syncToHomeAssistant() {
         attributes: {
           friendly_name: "ChoreQuest: Task Singoli in Sospeso",
           pending_count: data.pending_single_tasks.length,
-          tasks: data.pending_single_tasks.map(t => ({ title: t.title, assigned_to: t.assigned_to, elapsed_days: t.elapsed_days })),
+          tasks: data.pending_single_tasks.map(t => ({ title: t.title, assigned_to: t.assigned_to, elapsed_days: t.elapsed_days, due_date: t.due_date, is_future: t.is_future })),
           icon: "mdi:clipboard-alert-outline"
         }
       })
@@ -453,6 +484,7 @@ app.post('/api/single_tasks', (req, res) => {
     due_date: due_date || nowIso.split('T')[0],
     created_by: created_by || "Famiglia",
     status: 'pending',
+    notes: [],
     created_at: nowIso
   };
 
@@ -462,6 +494,60 @@ app.post('/api/single_tasks', (req, res) => {
   saveData(appData);
   syncToHomeAssistant();
   res.status(201).json(newTask);
+});
+
+// API: Add Note & Update Date on Single Task
+app.post('/api/single_tasks/note', (req, res) => {
+  const { id, note_text, new_due_date, author = "Famiglia" } = req.body;
+  const task = (appData.single_tasks || []).find(t => t.id === id);
+
+  if (!task) return res.status(404).json({ error: "Task not found" });
+
+  const nowIso = new Date().toISOString();
+  if (!task.notes) task.notes = [];
+
+  let historyNoteDetails = [];
+
+  if (note_text && note_text.trim()) {
+    const newNote = {
+      id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 3)}`,
+      text: note_text.trim(),
+      author: author || "Famiglia",
+      created_at: nowIso
+    };
+    task.notes.push(newNote);
+    historyNoteDetails.push(`Nota: "${note_text.trim()}"`);
+  }
+
+  if (new_due_date && new_due_date !== task.due_date) {
+    const oldDate = task.due_date;
+    task.due_date = new_due_date;
+    historyNoteDetails.push(`Spostata data da ${oldDate} a ${new_due_date}`);
+  }
+
+  // Also log into chronological history for audit trail
+  if (historyNoteDetails.length > 0) {
+    let memberObj = Object.values(appData.members).find(m => m.name.toLowerCase() === (author || '').toLowerCase());
+    const mId = memberObj ? memberObj.id : Object.keys(appData.members)[0] || 'm_1';
+    const mName = memberObj ? memberObj.name : (author || 'Famiglia');
+
+    appData.logs.push({
+      id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      member_id: mId,
+      member_name: mName,
+      task_name: `📝 ${task.title} - ${historyNoteDetails.join(' • ')}`,
+      task_type: 'task_note',
+      created_by: mName,
+      task_created_at: nowIso,
+      is_personal: true,
+      points: 0,
+      created_at: nowIso
+    });
+  }
+
+  saveData(appData);
+  syncToHomeAssistant();
+  res.json({ status: "saved", task });
 });
 
 // API: Single Task Complete
