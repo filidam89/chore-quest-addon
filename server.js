@@ -98,7 +98,7 @@ function saveData(data) {
 
 let appData = loadData();
 
-// Calculate comprehensive period stats, diffs, pending alerts and shared breakdown
+// Calculate comprehensive period stats, diffs, pending alerts and spontaneous task execution history
 function calculateStats() {
   const now = new Date();
   const todayStr = now.toISOString().split('T')[0];
@@ -158,8 +158,10 @@ function calculateStats() {
     }
   });
 
-  // Attach last completed activity for each member
+  // Track spontaneous task last execution details
+  const spontLastLogs = {};
   const memberLastLogs = {};
+
   (appData.logs || []).forEach(log => {
     const m = stats[log.member_id];
     if (m) {
@@ -183,6 +185,10 @@ function calculateStats() {
       if (log.task_type !== 'task_note') {
         memberLastLogs[m.id] = log;
       }
+    }
+
+    if (log.task_name) {
+      spontLastLogs[log.task_name.toLowerCase()] = log;
     }
   });
 
@@ -234,6 +240,35 @@ function calculateStats() {
     yearly: getWinner('yearly_points'),
     total: getWinner('total_points')
   };
+
+  // Enhance spontaneous tasks with last execution days ago and executor
+  const enhancedSpontaneousTasks = (appData.spontaneous_tasks || []).map(t => {
+    const lastLog = spontLastLogs[t.name.toLowerCase()];
+    let lastExecText = "Mai eseguita";
+    let lastExecDays = null;
+    let lastPerformer = null;
+
+    if (lastLog) {
+      const logDate = new Date(lastLog.created_at);
+      const daysAgo = Math.floor((now - logDate) / (1000 * 60 * 60 * 24));
+      lastExecDays = daysAgo;
+      lastPerformer = lastLog.member_name;
+      if (daysAgo === 0) {
+        lastExecText = `Oggi (${lastPerformer})`;
+      } else if (daysAgo === 1) {
+        lastExecText = `Ieri (${lastPerformer})`;
+      } else {
+        lastExecText = `${daysAgo}gg fa (${lastPerformer})`;
+      }
+    }
+
+    return {
+      ...t,
+      last_executed_text: lastExecText,
+      last_executed_days: lastExecDays,
+      last_performer: lastPerformer
+    };
+  });
 
   // Evaluate Routine Due Statuses & Next Due Dates
   const routineStatus = (appData.routine_tasks || []).map(r => {
@@ -308,7 +343,7 @@ function calculateStats() {
     leaderboard: sorted,
     winners,
     pending_single_tasks: pendingSingleTasks,
-    spontaneous_tasks: appData.spontaneous_tasks,
+    spontaneous_tasks: enhancedSpontaneousTasks,
     routine_tasks: routineStatus,
     settings: appData.settings,
     logs: (appData.logs || [])
