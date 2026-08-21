@@ -15,7 +15,15 @@
     .podium-step-1 { height: 110px; background: linear-gradient(180deg, #f59e0b, #d97706); }
     .podium-step-2 { height: 85px; background: linear-gradient(180deg, #94a3b8, #64748b); }
     .podium-step-3 { height: 65px; background: linear-gradient(180deg, #b45309, #78350f); }
-    input, textarea, select { cursor: text !important; }
+    
+    /* Solid, rock-stable cursor styles for input fields */
+    input[type="text"], input[type="number"], input[type="date"], textarea {
+      cursor: text !important;
+      caret-color: #4f46e5 !important;
+      color: #0f172a !important;
+      background-color: #f8fafc !important;
+      pointer-events: auto !important;
+    }
     select, button, .clickable { cursor: pointer !important; }
   </style>
 </head>
@@ -37,7 +45,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md">v1.5</span>
+            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md">v1.6</span>
           </h1>
           <p class="text-xs text-slate-500 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -61,25 +69,90 @@
   <!-- ==================== MODE 1: USO QUOTIDIANO ==================== -->
   <main id="mode-use" class="max-w-7xl mx-auto px-4 pt-6 space-y-6">
 
-    <!-- ACTIVE FAMILY MEMBERS BAR (FULL-WIDTH EXPANDED CARDS WITH MULTI-AUTHOR SELECTION) -->
+    <!-- 1. ACTIVE FAMILY MEMBERS CARDS (EXPANDED TO FULL WIDTH WITH PENDING TASK WARNINGS) -->
     <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
       <div class="flex items-center justify-between flex-wrap gap-2">
-        <div class="flex items-center gap-3">
-          <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Chi ha partecipato all'attività?</span>
-          <button onclick="toggleSelectAllMembers()" id="btn-select-all" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-md">
-            Seleziona Tutti
-          </button>
-        </div>
+        <div class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Membri della Famiglia & Punteggi</div>
         <!-- Period Winners Badges Indicator -->
         <div id="period-winners-badge" class="flex items-center gap-2 flex-wrap text-xs">
           <!-- Injected via JS -->
         </div>
       </div>
 
-      <!-- Expanded Full-Width Centered Member Cards Grid -->
+      <!-- Dynamic Full-Width Member Cards Grid -->
       <div id="members-bar" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
         <!-- Injected via JS -->
       </div>
+    </div>
+
+    <!-- 2. QUICK ADD SINGLE TASK / PROMEMORIA ESTEMPORANEO (ACCESSO IMMEDIATO A COLPO D'OCCHIO) -->
+    <div class="bg-gradient-to-r from-indigo-50 via-purple-50 to-slate-50 p-4 sm:p-5 rounded-3xl border border-indigo-100 shadow-sm space-y-3">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+          <span>⚡</span> Assegna Task o Promemoria Rapido
+        </h3>
+        <span class="text-[11px] text-slate-500 font-semibold">Crea un'attività estemporanea assegnata a uno o più membri</span>
+      </div>
+
+      <form onsubmit="submitQuickSingleTask(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+        <input id="quick-task-title" type="text" required placeholder="Cosa c'è da fare? (es. Comprare il latte, Chiamare idraulico...)" class="sm:col-span-6 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
+        
+        <select id="quick-task-assigned" class="sm:col-span-3 px-3 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500">
+          <option value="all">👥 Tutta la Famiglia</option>
+          <!-- Injected dynamically -->
+        </select>
+
+        <div class="sm:col-span-3 flex gap-2">
+          <input id="quick-task-points" type="number" value="0" min="0" max="200" placeholder="Punti (opz.)" title="Punti (default 0)" class="w-20 px-2 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs text-center font-bold focus:ring-2 focus:ring-indigo-500">
+          <button type="submit" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-2xl shadow transition">
+            + Assegna
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- 3. DASHBOARD WIDGETS SECTION: OVERDUE ROUTINES + LATEST 3 ACTIVITIES + PENDING SINGLE TASKS -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- WIDGET A: ROUTINE IN SCADENZA O SCADUTE (1-TAP DIRECT ACTION) -->
+      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3 lg:col-span-1">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+            <span>🚨</span> Routine in Scadenza & Scadute
+          </h3>
+          <span id="due-routines-count-badge" class="text-xs font-extrabold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 hidden">0</span>
+        </div>
+        <div id="home-due-routines-list" class="space-y-2.5 max-h-72 overflow-y-auto custom-scrollbar">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- WIDGET B: ULTIME 3 ATTIVITÀ SVOLTE DALLA FAMIGLIA (COMPREHENSIVE VIEW) -->
+      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3 lg:col-span-1">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+            <span>🕒</span> Ultime Attività Svolte
+          </h3>
+          <span class="text-xs text-slate-400 font-bold">Registro Famiglia</span>
+        </div>
+        <div id="home-latest-activities-list" class="space-y-2.5">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- WIDGET C: TASK SINGOLI NON ANCORA ESEGUITI (CON DATA E GIORNI TRASCORSI) -->
+      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3 lg:col-span-1">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+            <span>📋</span> Task Singoli in Sospeso
+          </h3>
+          <span id="pending-tasks-count-badge" class="text-xs font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 hidden">0</span>
+        </div>
+        <div id="home-pending-tasks-list" class="space-y-2.5 max-h-72 overflow-y-auto custom-scrollbar">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
     </div>
 
     <!-- MAIN NAVIGATION TABS FOR USE MODE -->
@@ -88,12 +161,8 @@
         <span>⚡</span> Spontanee
       </button>
       <button id="tab-btn-routine" onclick="switchTab('routine')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
-        <span>🔄</span> Routine & Calendario
+        <span>🔄</span> Catalogo Routine
         <span id="badge-due-routine-count" class="bg-rose-500 text-white text-[11px] px-2 py-0.5 rounded-full font-bold hidden">0</span>
-      </button>
-      <button id="tab-btn-assigned" onclick="switchTab('assigned')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
-        <span>📌</span> Compiti Assegnati
-        <span id="badge-pending-count" class="bg-rose-500 text-white text-[11px] px-2 py-0.5 rounded-full font-bold hidden">0</span>
       </button>
       <button id="tab-btn-podium" onclick="switchTab('podium')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
         <span>🏆</span> Classifica
@@ -109,11 +178,11 @@
     <!-- TAB 1: SPONTANEE -->
     <div id="section-spontaneous" class="space-y-4">
       <div class="flex items-center justify-between flex-wrap gap-2">
-        <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
-          <span>⚡</span> Attività Spontanee (Al bisogno)
-        </h2>
-        <div id="author-selection-indicator" class="text-xs text-indigo-700 bg-indigo-50 font-bold px-3 py-1 rounded-xl">
-          <!-- Injected via JS -->
+        <div>
+          <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+            <span>⚡</span> Attività Spontanee (Al bisogno)
+          </h2>
+          <p class="text-xs text-slate-500">Tocca un'attività per registrarla e selezionare chi l'ha svolta</p>
         </div>
       </div>
       <div id="spontaneous-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -123,14 +192,14 @@
       <!-- Quick Custom Task Button -->
       <div class="pt-2">
         <button onclick="toggleCustomTaskBox()" class="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5">
-          <span>➕</span> <span>Registra attività estemporanea non in lista</span>
+          <span>➕</span> <span>Registra attività estemporanea non presente nel catalogo</span>
         </button>
         <div id="custom-task-box" class="hidden mt-3 bg-white p-4 rounded-2xl border border-slate-200 space-y-3">
           <form onsubmit="submitCustomTask(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-2">
             <input id="custom-task-input" type="text" required placeholder="Descrizione attività (es. Montato mobile)..." class="sm:col-span-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
             <input id="custom-pts-input" type="number" required value="15" min="0" max="200" placeholder="Punti" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
             <button type="submit" class="py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
-              Assegna
+              Registra
             </button>
           </form>
         </div>
@@ -140,17 +209,16 @@
     <!-- TAB 2: ROUTINE & CALENDARIO PROSSIME SCADENZE -->
     <div id="section-routine" class="hidden space-y-4 max-w-5xl mx-auto">
       
-      <!-- Routine Top Banner & View Filter -->
+      <!-- Routine Top Filter Bar -->
       <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
         <div class="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
-              <span>🔄</span> Routine & Calendario Scadenze
+              <span>🔄</span> Catalogo Routine & Promemoria
             </h2>
             <p class="text-xs text-slate-500">Monitoraggio scadenze, preavvisi, ritardi e promemoria personali</p>
           </div>
           
-          <!-- Filter Buttons for Routine Views -->
           <div class="flex gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200 flex-wrap">
             <button onclick="setRoutineFilter('all')" id="rf-all" class="px-3 py-1.5 text-xs font-extrabold rounded-xl transition bg-indigo-600 text-white shadow">Tutte</button>
             <button onclick="setRoutineFilter('overdue')" id="rf-overdue" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900 flex items-center gap-1">
@@ -160,53 +228,16 @@
               <span>🟡 In Scadenza</span> <span id="count-warning-tag" class="bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
             </button>
             <button onclick="setRoutineFilter('personal')" id="rf-personal" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900">👤 Personali</button>
-            <button onclick="setRoutineFilter('calendar')" id="rf-calendar" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900">📅 Prossime Scadenze</button>
           </div>
-        </div>
-
-        <!-- Overdue Alert Banner (If Any) -->
-        <div id="routine-alert-banner" class="hidden p-3 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-800 font-bold flex items-center gap-2">
-          <span>⚠️</span> <span id="routine-alert-text">Attenzione: ci sono routine scadute da completare!</span>
         </div>
       </div>
 
-      <!-- Routine Cards / Timeline List -->
       <div id="routine-list" class="space-y-3">
         <!-- Injected via JS -->
       </div>
     </div>
 
-    <!-- TAB 3: COMPITI ASSEGNATI -->
-    <div id="section-assigned" class="hidden space-y-6 max-w-3xl mx-auto">
-      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div>
-            <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
-              <span>📌</span> Compiti Assegnati tra Membri
-            </h2>
-            <p class="text-xs text-slate-500 mt-0.5">Assegna un compito e guadagna punti al completamento</p>
-          </div>
-        </div>
-
-        <form onsubmit="submitAssignTask(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
-          <input id="assign-task-input" type="text" required placeholder="Descrizione compito..." class="sm:col-span-2 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
-          <div class="flex gap-2">
-            <select id="assign-target-select" class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500">
-              <!-- Injected via JS -->
-            </select>
-            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
-              Assegna
-            </button>
-          </div>
-        </form>
-
-        <div id="assigned-list" class="space-y-3 pt-2">
-          <!-- Injected via JS -->
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 4: CLASSIFICA & PODIO ADATTIVO -->
+    <!-- TAB 3: CLASSIFICA & PODIO ADATTIVO -->
     <div id="section-podium" class="hidden space-y-6 max-w-2xl mx-auto">
       <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
         <div class="text-center space-y-1">
@@ -225,7 +256,7 @@
       </div>
     </div>
 
-    <!-- TAB 5: STATISTICHE & REPORT -->
+    <!-- TAB 4: STATISTICHE & REPORT -->
     <div id="section-stats" class="hidden space-y-6 max-w-6xl mx-auto">
       
       <!-- Time Range Filter -->
@@ -256,8 +287,8 @@
           <div id="kpi-top-member" class="text-base font-extrabold text-amber-600 mt-1 truncate">-</div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-          <div class="text-xs font-extrabold uppercase text-slate-400">Media Giornaliera</div>
-          <div id="kpi-avg-daily" class="text-2xl font-extrabold text-emerald-600 mt-1">0 pt/g</div>
+          <div class="text-xs font-extrabold uppercase text-slate-400">Task Singoli Completati</div>
+          <div id="kpi-single-tasks" class="text-2xl font-extrabold text-emerald-600 mt-1">0</div>
         </div>
       </div>
 
@@ -296,7 +327,7 @@
 
     </div>
 
-    <!-- TAB 6: STORICO CRONOLOGICO -->
+    <!-- TAB 5: STORICO CRONOLOGICO -->
     <div id="section-history" class="hidden space-y-4 max-w-4xl mx-auto">
       <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-3">
@@ -336,7 +367,6 @@
 
         <!-- Global Settings Controls -->
         <div class="flex items-center gap-3 flex-wrap">
-          <!-- Primary Score Selector -->
           <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 text-xs">
             <span class="font-bold text-slate-600">Punteggio in Primo Piano:</span>
             <select id="cfg-primary-score" onchange="savePrimaryScore(this.value)" class="bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold text-indigo-700">
@@ -348,7 +378,6 @@
             </select>
           </div>
 
-          <!-- Leaderboard Period Mode Selector -->
           <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 text-xs">
             <span class="font-bold text-slate-600">Calcolo Periodi:</span>
             <select id="cfg-period-mode" onchange="savePeriodMode(this.value)" class="bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold text-indigo-700">
@@ -415,16 +444,59 @@
 
   </main>
 
-  <!-- ==================== EMOJI PICKER POPUP MODAL ==================== -->
+  <!-- ==================== MODAL: WHO COMPLETED THE TASK? (CHI HA SVOLTO L'ATTIVITÀ?) ==================== -->
+  <div id="modal-select-performer" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Conferma Completamento</div>
+          <h3 id="modal-performer-task-title" class="font-extrabold text-lg text-slate-900">Chi ha svolto l'attività?</h3>
+        </div>
+        <button onclick="closePerformerModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <!-- Foreground: 1-Tap Single Member Buttons -->
+      <div class="space-y-2">
+        <div class="text-xs font-bold text-slate-500">Tocca il membro che ha completato l'attività da solo:</div>
+        <div id="modal-single-member-buttons" class="grid grid-cols-2 gap-3">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Accordion / Toggle: Multi-author selection with points division -->
+      <div class="pt-3 border-t border-slate-100 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold text-slate-700">👥 Hanno partecipato più persone insieme?</span>
+          <button type="button" onclick="toggleMultiAuthorSection()" id="btn-toggle-multi" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold">
+            Mostra selezione multipla ▼
+          </button>
+        </div>
+
+        <div id="multi-author-section" class="hidden bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+          <div class="text-[11px] text-slate-500 font-medium">I punti totali verranno divisi equamente tra i partecipanti selezionati:</div>
+          <div id="modal-multi-checkboxes" class="grid grid-cols-2 gap-2">
+            <!-- Injected via JS -->
+          </div>
+          <button type="button" onclick="confirmMultiAuthorCompletion()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
+            Conferma e Dividi Punti
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== EMOJI PICKER POPUP MODAL (GENEROUS & COMPREHENSIVE) ==================== -->
   <div id="modal-emoji-picker" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full p-5 space-y-4 shadow-2xl border border-slate-200">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 space-y-4 shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2">
         <h4 class="font-extrabold text-sm text-slate-900">Seleziona un'Emoji</h4>
-        <button onclick="closeEmojiPicker()" class="text-slate-400 hover:text-slate-600">✕</button>
+        <button onclick="closeEmojiPicker()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
       </div>
-      <div class="space-y-3">
+
+      <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
+        <!-- Cat 1: Membri & Persone -->
         <div>
-          <div class="text-[11px] font-extrabold text-slate-400 uppercase mb-1.5">Avatar Membri</div>
+          <div class="text-[11px] font-extrabold text-indigo-600 uppercase mb-1.5">👥 Famiglia, Persone & Professioni</div>
           <div class="grid grid-cols-8 gap-2 text-2xl text-center">
             <span onclick="selectEmoji('👨‍💻')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👨‍💻</span>
             <span onclick="selectEmoji('👩‍🎨')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👩‍🎨</span>
@@ -437,37 +509,102 @@
             <span onclick="selectEmoji('🦸‍♂️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦸‍♂️</span>
             <span onclick="selectEmoji('🦸‍♀️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦸‍♀️</span>
             <span onclick="selectEmoji('🧙‍♂️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧙‍♂️</span>
-            <span onclick="selectEmoji('🐱')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐱</span>
-            <span onclick="selectEmoji('🐶')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐶</span>
-            <span onclick="selectEmoji('🦁')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦁</span>
-            <span onclick="selectEmoji('🐼')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐼</span>
+            <span onclick="selectEmoji('🧙‍♀️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧙‍♀️</span>
+            <span onclick="selectEmoji('👨‍🍳')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👨‍🍳</span>
+            <span onclick="selectEmoji('👩‍🍳')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👩‍🍳</span>
+            <span onclick="selectEmoji('👨‍🌾')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👨‍🌾</span>
+            <span onclick="selectEmoji('🧑‍🚀')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧑‍🚀</span>
+            <span onclick="selectEmoji('👨‍🚒')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👨‍🚒</span>
+            <span onclick="selectEmoji('👩‍⚕️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👩‍⚕️</span>
+            <span onclick="selectEmoji('👨‍🔧')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👨‍🔧</span>
+            <span onclick="selectEmoji('🕵️‍♂️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🕵️‍♂️</span>
+            <span onclick="selectEmoji('🤴')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🤴</span>
+            <span onclick="selectEmoji('👸')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👸</span>
+            <span onclick="selectEmoji('🧔‍♂️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧔‍♂️</span>
             <span onclick="selectEmoji('👑')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👑</span>
           </div>
         </div>
 
+        <!-- Cat 2: Animali -->
         <div>
-          <div class="text-[11px] font-extrabold text-slate-400 uppercase mb-1.5">Attività, Casa & Promemoria</div>
-          <div class="grid grid-cols-8 gap-2 text-2xl text-center max-h-40 overflow-y-auto custom-scrollbar">
+          <div class="text-[11px] font-extrabold text-amber-600 uppercase mb-1.5">🐶 Animali & Mascotte</div>
+          <div class="grid grid-cols-8 gap-2 text-2xl text-center">
+            <span onclick="selectEmoji('🐶')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐶</span>
+            <span onclick="selectEmoji('🐱')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐱</span>
+            <span onclick="selectEmoji('🦊')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦊</span>
+            <span onclick="selectEmoji('🐻')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐻</span>
+            <span onclick="selectEmoji('🐼')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐼</span>
+            <span onclick="selectEmoji('🐨')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐨</span>
+            <span onclick="selectEmoji('🦁')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦁</span>
+            <span onclick="selectEmoji('🐯')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐯</span>
+            <span onclick="selectEmoji('🐰')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐰</span>
+            <span onclick="selectEmoji('🐹')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐹</span>
+            <span onclick="selectEmoji('🦄')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦄</span>
+            <span onclick="selectEmoji('🐲')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐲</span>
+            <span onclick="selectEmoji('🦖')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦖</span>
+            <span onclick="selectEmoji('🦉')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦉</span>
+            <span onclick="selectEmoji('🐝')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐝</span>
+            <span onclick="selectEmoji('🐢')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐢</span>
+          </div>
+        </div>
+
+        <!-- Cat 3: Pulizie & Casa -->
+        <div>
+          <div class="text-[11px] font-extrabold text-emerald-600 uppercase mb-1.5">🧹 Pulizie, Bucato & Manutenzione Casa</div>
+          <div class="grid grid-cols-8 gap-2 text-2xl text-center">
             <span onclick="selectEmoji('🧺')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧺</span>
             <span onclick="selectEmoji('🍽️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🍽️</span>
-            <span onclick="selectEmoji('🍳')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🍳</span>
             <span onclick="selectEmoji('🗑️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🗑️</span>
-            <span onclick="selectEmoji('🛒')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🛒</span>
             <span onclick="selectEmoji('🛏️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🛏️</span>
             <span onclick="selectEmoji('🧹')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧹</span>
             <span onclick="selectEmoji('🧼')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧼</span>
-            <span onclick="selectEmoji('💈')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">💈</span>
-            <span onclick="selectEmoji('🪴')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🪴</span>
-            <span onclick="selectEmoji('🚗')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🚗</span>
-            <span onclick="selectEmoji('📦')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">📦</span>
-            <span onclick="selectEmoji('🚿')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🚿</span>
-            <span onclick="selectEmoji('👕')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👕</span>
-            <span onclick="selectEmoji('🪟')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🪟</span>
-            <span onclick="selectEmoji('🔧')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🔧</span>
+            <span onclick="selectEmoji('🧽')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧽</span>
             <span onclick="selectEmoji('🪣')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🪣</span>
             <span onclick="selectEmoji('🫧')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🫧</span>
+            <span onclick="selectEmoji('🪟')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🪟</span>
+            <span onclick="selectEmoji('🚿')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🚿</span>
+            <span onclick="selectEmoji('🛁')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🛁</span>
+            <span onclick="selectEmoji('👕')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👕</span>
+            <span onclick="selectEmoji('🪴')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🪴</span>
+            <span onclick="selectEmoji('🔧')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🔧</span>
+            <span onclick="selectEmoji('🔨')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🔨</span>
+          </div>
+        </div>
+
+        <!-- Cat 4: Cucina & Cibo -->
+        <div>
+          <div class="text-[11px] font-extrabold text-rose-600 uppercase mb-1.5">🍳 Cucina, Spesa & Cibo</div>
+          <div class="grid grid-cols-8 gap-2 text-2xl text-center">
+            <span onclick="selectEmoji('🍳')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🍳</span>
+            <span onclick="selectEmoji('🛒')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🛒</span>
+            <span onclick="selectEmoji('🛍️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🛍️</span>
+            <span onclick="selectEmoji('🥘')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🥘</span>
             <span onclick="selectEmoji('🍕')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🍕</span>
+            <span onclick="selectEmoji('🍝')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🍝</span>
+            <span onclick="selectEmoji('🥗')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🥗</span>
+            <span onclick="selectEmoji('🥪')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🥪</span>
             <span onclick="selectEmoji('☕')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">☕</span>
+            <span onclick="selectEmoji('🍵')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🍵</span>
+            <span onclick="selectEmoji('🍰')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🍰</span>
+            <span onclick="selectEmoji('🎂')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🎂</span>
+          </div>
+        </div>
+
+        <!-- Cat 5: Cura Personale, Auto & Commissioni -->
+        <div>
+          <div class="text-[11px] font-extrabold text-purple-600 uppercase mb-1.5">💈 Cura Personale, Auto & Commissioni</div>
+          <div class="grid grid-cols-8 gap-2 text-2xl text-center">
+            <span onclick="selectEmoji('💈')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">💈</span>
+            <span onclick="selectEmoji('💇‍♂️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">💇‍♂️</span>
+            <span onclick="selectEmoji('💇‍♀️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">💇‍♀️</span>
+            <span onclick="selectEmoji('🧖‍♂️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧖‍♂️</span>
+            <span onclick="selectEmoji('🩺')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🩺</span>
+            <span onclick="selectEmoji('💊')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">💊</span>
+            <span onclick="selectEmoji('🚗')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🚗</span>
+            <span onclick="selectEmoji('🚙')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🚙</span>
+            <span onclick="selectEmoji('🛵')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🛵</span>
+            <span onclick="selectEmoji('🚲')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🚲</span>
+            <span onclick="selectEmoji('📦')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">📦</span>
             <span onclick="selectEmoji('📚')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">📚</span>
             <span onclick="selectEmoji('⚡')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">⚡</span>
             <span onclick="selectEmoji('🔄')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🔄</span>
@@ -484,7 +621,7 @@
     <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 id="modal-member-title" class="font-extrabold text-lg text-slate-900">Membro Famiglia</h3>
-        <button onclick="closeMemberModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+        <button onclick="closeMemberModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
       </div>
       <form onsubmit="submitMemberForm(event)" class="space-y-4">
         <input id="member-edit-id" type="hidden" value="">
@@ -521,7 +658,7 @@
     <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 id="modal-spontaneous-title" class="font-extrabold text-lg text-slate-900">Attività Spontanea</h3>
-        <button onclick="closeSpontaneousModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+        <button onclick="closeSpontaneousModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
       </div>
       <form onsubmit="submitSpontaneousForm(event)" class="space-y-4">
         <input id="spont-edit-id" type="hidden" value="">
@@ -562,7 +699,7 @@
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 id="modal-routine-title" class="font-extrabold text-lg text-slate-900">Routine / Promemoria Schedulato</h3>
-        <button onclick="closeRoutineModal()" class="text-slate-400 hover:text-slate-600">✕</button>
+        <button onclick="closeRoutineModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
       </div>
       <form onsubmit="submitRoutineForm(event)" class="space-y-4">
         <input id="rout-edit-id" type="hidden" value="">
@@ -595,7 +732,7 @@
             <input id="rout-edit-warning" type="number" required value="1" min="0" max="30" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Data Inizio</label>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Prossima Scadenza</label>
             <input id="rout-edit-start" type="date" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
           </div>
         </div>
@@ -617,9 +754,15 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-2 pt-1">
-          <input id="rout-edit-personal" type="checkbox" onchange="toggleRoutPersonal(this.checked)" class="w-4 h-4 text-indigo-600 rounded">
-          <label for="rout-edit-personal" class="text-xs font-bold text-slate-700 cursor-pointer">Promemoria Personale (0 punti, escluso da classifiche e statistiche - es. barbiere)</label>
+        <div class="space-y-2 pt-1">
+          <div class="flex items-center gap-2">
+            <input id="rout-edit-personal" type="checkbox" onchange="toggleRoutPersonal(this.checked)" class="w-4 h-4 text-indigo-600 rounded">
+            <label for="rout-edit-personal" class="text-xs font-bold text-slate-700 cursor-pointer">Promemoria Personale (0 punti, escluso da classifiche e statistiche - es. barbiere)</label>
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="rout-edit-onetime" type="checkbox" class="w-4 h-4 text-indigo-600 rounded">
+            <label for="rout-edit-onetime" class="text-xs font-bold text-slate-700 cursor-pointer">Promemoria una tantum (singola esecuzione, non si ripete)</label>
+          </div>
         </div>
 
         <div class="flex justify-end gap-2 pt-2">
@@ -631,7 +774,6 @@
   </div>
 
   <script>
-    let selectedMemberIds = new Set();
     let activeTab = 'spontaneous';
     let activeMode = 'use';
     let activeStatsFilter = 'all';
@@ -641,6 +783,9 @@
     let chartTasks = null;
     let currentEmojiTargetInput = null;
     let currentEmojiTargetPreview = null;
+
+    // Active task awaiting performer selection
+    let pendingExecutionTask = null;
 
     const apiBase = './api';
 
@@ -683,7 +828,7 @@
 
     function switchTab(tab) {
       activeTab = tab;
-      const tabs = ['spontaneous', 'routine', 'assigned', 'podium', 'stats', 'history'];
+      const tabs = ['spontaneous', 'routine', 'podium', 'stats', 'history'];
       tabs.forEach(t => {
         const sec = document.getElementById(`section-${t}`);
         const btn = document.getElementById(`tab-btn-${t}`);
@@ -704,51 +849,6 @@
     function toggleCustomTaskBox() {
       const box = document.getElementById('custom-task-box');
       box.classList.toggle('hidden');
-    }
-
-    function toggleSelectMember(mId) {
-      if (selectedMemberIds.has(mId)) {
-        if (selectedMemberIds.size > 1) {
-          selectedMemberIds.delete(mId);
-        }
-      } else {
-        selectedMemberIds.add(mId);
-      }
-      renderMembersBar();
-      updateAuthorIndicator();
-    }
-
-    function toggleSelectAllMembers() {
-      const members = Object.values(appData.members || {});
-      if (selectedMemberIds.size === members.length) {
-        selectedMemberIds.clear();
-        if (members[0]) selectedMemberIds.add(members[0].id);
-      } else {
-        members.forEach(m => selectedMemberIds.add(m.id));
-      }
-      renderMembersBar();
-      updateAuthorIndicator();
-    }
-
-    function updateAuthorIndicator() {
-      const indicator = document.getElementById('author-selection-indicator');
-      const allMembers = appData?.members || {};
-      const selectedNames = Array.from(selectedMemberIds).map(id => allMembers[id]?.name).filter(Boolean);
-      
-      if (indicator) {
-        if (selectedNames.length === 0) {
-          indicator.textContent = 'Seleziona almeno un membro in alto';
-        } else if (selectedNames.length === 1) {
-          indicator.innerHTML = `Assegna punti a: <b>${selectedNames[0]}</b>`;
-        } else {
-          indicator.innerHTML = `Assegna punti a più autori: <b>${selectedNames.join(' + ')}</b>`;
-        }
-      }
-
-      const btnAll = document.getElementById('btn-select-all');
-      if (btnAll) {
-        btnAll.textContent = (selectedMemberIds.size === Object.keys(allMembers).length) ? 'Deseleziona Tutti' : 'Seleziona Tutti';
-      }
     }
 
     // Format Date & Time cleanly: "20/08 21:30" or "Oggi 21:30"
@@ -790,54 +890,34 @@
       }
     }
 
+    // ==================== RENDER FULL-WIDTH MEMBER CARDS ====================
     function renderMembersBar() {
       const bar = document.getElementById('members-bar');
-      const targetSelect = document.getElementById('assign-target-select');
       const histSelect = document.getElementById('history-member-filter');
       const routMemberSelect = document.getElementById('rout-edit-member');
+      const quickAssignedSelect = document.getElementById('quick-task-assigned');
       const winnersBadge = document.getElementById('period-winners-badge');
       if (!bar || !appData) return;
 
       const members = Object.values(appData.members || {});
-      if (selectedMemberIds.size === 0 && members.length > 0) {
-        selectedMemberIds.add(members[0].id);
-      }
-
       const labels = getPeriodLabels();
 
       // Period Winners Header Bar
       if (winnersBadge && appData.winners) {
         winnersBadge.innerHTML = '';
         const w = appData.winners;
-        if (w.daily) winnersBadge.innerHTML += `<span class="bg-amber-100 text-amber-900 px-2 py-0.5 rounded-lg font-bold">🥇 ${labels.daily}: ${w.daily.name} (${w.daily.points}pt)</span>`;
-        if (w.weekly) winnersBadge.innerHTML += `<span class="bg-indigo-100 text-indigo-900 px-2 py-0.5 rounded-lg font-bold">🏆 ${labels.weekly}: ${w.weekly.name} (${w.weekly.points}pt)</span>`;
-        if (w.monthly) winnersBadge.innerHTML += `<span class="bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded-lg font-bold">🌟 ${labels.monthly}: ${w.monthly.name}</span>`;
+        if (w.daily) winnersBadge.innerHTML += `<span class="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-lg font-bold">🥇 ${labels.daily}: ${w.daily.name} (${w.daily.points}pt)</span>`;
+        if (w.weekly) winnersBadge.innerHTML += `<span class="bg-indigo-100 text-indigo-900 px-2.5 py-0.5 rounded-lg font-bold">🏆 ${labels.weekly}: ${w.weekly.name} (${w.weekly.points}pt)</span>`;
+        if (w.monthly) winnersBadge.innerHTML += `<span class="bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-lg font-bold">🌟 ${labels.monthly}: ${w.monthly.name}</span>`;
       }
 
       bar.innerHTML = '';
-      if (targetSelect) targetSelect.innerHTML = '';
       if (histSelect) histSelect.innerHTML = '<option value="all">Tutti i membri</option>';
-      if (routMemberSelect) {
-        routMemberSelect.innerHTML = '<option value="all">👥 Tutta la Famiglia</option>';
-      }
+      if (routMemberSelect) routMemberSelect.innerHTML = '<option value="all">👥 Tutta la Famiglia</option>';
+      if (quickAssignedSelect) quickAssignedSelect.innerHTML = '<option value="all">👥 Tutta la Famiglia</option>';
 
       members.forEach(m => {
-        const isSelected = selectedMemberIds.has(m.id);
         const primary = getPrimaryScore(m);
-
-        let recentHtml = '<div class="text-[11px] text-slate-400 italic">Nessuna attività recente</div>';
-        if (m.recent_tasks && m.recent_tasks.length > 0) {
-          recentHtml = m.recent_tasks.map(t => {
-            const dtFormatted = formatDateTime(t.created_at);
-            const ptsBadge = t.is_personal ? '<span class="text-[10px] text-slate-400 font-bold">promemoria</span>' : `<span class="font-bold text-indigo-600">+${t.points}</span>`;
-            return `
-              <div class="text-[11px] text-slate-700 truncate flex items-center justify-between gap-1 py-0.5">
-                <span class="truncate">⚡ <b>${t.task_name}</b> <span class="text-slate-400 text-[10px]">(${dtFormatted})</span></span>
-                <span class="shrink-0">${ptsBadge}</span>
-              </div>
-            `;
-          }).join('');
-        }
 
         let gapBadge = '';
         if (m.is_leader) {
@@ -846,52 +926,346 @@
           gapBadge = `<span class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">${m.gap_text}</span>`;
         }
 
+        // Pending single tasks attention indicator
+        let pendingWarningBadge = '';
+        if (m.pending_single_tasks_count > 0) {
+          pendingWarningBadge = `
+            <div class="flex items-center gap-1.5 bg-amber-500/15 border border-amber-400 text-amber-900 px-2.5 py-1 rounded-xl text-xs font-extrabold animate-pulse">
+              <span>⚠️</span>
+              <span>${m.pending_single_tasks_count} ${m.pending_single_tasks_count === 1 ? 'task in sospeso' : 'task in sospeso'}</span>
+            </div>
+          `;
+        }
+
         bar.innerHTML += `
-          <div onclick="toggleSelectMember('${m.id}')" class="p-4 sm:p-5 rounded-3xl border-2 cursor-pointer transition flex flex-col justify-between space-y-3 shadow-xs hover:shadow-md ${isSelected ? 'border-indigo-600 bg-indigo-50/80 ring-2 ring-indigo-200' : 'border-slate-200 bg-slate-50/90 hover:bg-slate-100'}">
+          <div class="p-5 rounded-3xl border border-slate-200 bg-slate-50/90 shadow-2xs hover:shadow-md transition flex flex-col justify-between space-y-3.5">
             
             <!-- Member Header & Primary Score -->
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-3">
-                <div class="relative">
-                  <div class="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-3xl shadow-xs">${m.icon || '👤'}</div>
-                  ${isSelected ? '<span class="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow">✓</span>' : ''}
-                </div>
+                <div class="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-3xl shadow-xs shrink-0">${m.icon || '👤'}</div>
                 <div>
-                  <div class="text-base font-extrabold text-slate-900">${m.name}</div>
-                  <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">${primary.label}</div>
+                  <div class="text-lg font-extrabold text-slate-900 leading-tight">${m.name}</div>
+                  <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">${primary.label}</div>
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-2xl font-extrabold text-indigo-600">${primary.value} <span class="text-xs font-bold">pt</span></div>
+                <div class="text-2xl sm:text-3xl font-extrabold text-indigo-600">${primary.value} <span class="text-xs font-bold text-indigo-400">pt</span></div>
               </div>
             </div>
 
-            <!-- Small Sub-bar: Total Score & Gap -->
-            <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-200/60 text-xs">
+            <!-- Attention Warning Badge for Pending Tasks -->
+            ${pendingWarningBadge ? `<div>${pendingWarningBadge}</div>` : ''}
+
+            <!-- Sub-bar: Total Score & Gap -->
+            <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/70 text-xs">
               <span class="font-bold text-slate-500">💎 Totale: <b class="text-slate-900">${m.total_points} pt</b></span>
               <div>${gapBadge}</div>
-            </div>
-
-            <!-- Recent 3 Tasks with Date & Time -->
-            <div class="pt-2 border-t border-slate-200/60 space-y-1 bg-white/80 p-2.5 rounded-2xl">
-              <div class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Ultime 3 attività svolte:</div>
-              ${recentHtml}
             </div>
 
           </div>
         `;
 
-        if (targetSelect) targetSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
         if (histSelect) histSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
         if (routMemberSelect) routMemberSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
+        if (quickAssignedSelect) quickAssignedSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
       });
+    }
 
-      updateAuthorIndicator();
+    // ==================== RENDER HOME WIDGETS ====================
+    function renderHomeWidgets() {
+      if (!appData) return;
+
+      // 1. Overdue & Imminent Routines
+      const dueBox = document.getElementById('home-due-routines-list');
+      const dueCountBadge = document.getElementById('due-routines-count-badge');
+      const dueRoutines = (appData.routine_tasks || []).filter(r => r.status === 'overdue' || r.status === 'warning');
+
+      if (dueCountBadge) {
+        dueCountBadge.textContent = dueRoutines.length;
+        dueCountBadge.classList.toggle('hidden', dueRoutines.length === 0);
+      }
+
+      if (dueBox) {
+        dueBox.innerHTML = '';
+        if (dueRoutines.length === 0) {
+          dueBox.innerHTML = '<div class="text-center py-6 text-xs text-emerald-700 bg-emerald-50 rounded-2xl font-bold flex items-center justify-center gap-1.5"><span>✅</span> Tutte le routine sono in regola!</div>';
+        } else {
+          dueRoutines.forEach(r => {
+            let badge = (r.status === 'overdue')
+              ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800">🔴 Scaduta (${r.overdue_days}gg fa)</span>`
+              : `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800">🟡 ${r.days_remaining === 0 ? 'Scade oggi' : 'Tra ' + r.days_remaining + 'gg'}</span>`;
+
+            dueBox.innerHTML += `
+              <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2.5 overflow-hidden">
+                  <span class="text-xl shrink-0">${r.icon || '🔄'}</span>
+                  <div class="truncate">
+                    <div class="font-extrabold text-slate-900 truncate">${r.name}</div>
+                    <div class="mt-0.5">${badge}</div>
+                  </div>
+                </div>
+                <button onclick="promptPerformerSelection('${r.name}', ${r.points}, 'routine', ${!!r.is_personal})" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] rounded-xl shadow shrink-0">
+                  Fatto ✓
+                </button>
+              </div>
+            `;
+          });
+        }
+      }
+
+      // 2. Latest 3 Activities (Global Family View)
+      const latestBox = document.getElementById('home-latest-activities-list');
+      if (latestBox) {
+        latestBox.innerHTML = '';
+        const logs = appData.recent_global_logs || [];
+        if (logs.length === 0) {
+          latestBox.innerHTML = '<div class="text-center py-6 text-xs text-slate-400 font-medium">Nessuna attività registrata di recente.</div>';
+        } else {
+          logs.forEach(l => {
+            const dtFormatted = formatDateTime(l.created_at);
+            const ptsBadge = l.is_personal ? '<span class="text-[10px] text-slate-400 font-bold">promemoria</span>' : `<span class="font-extrabold text-indigo-600">+${l.points} pt</span>`;
+            latestBox.innerHTML += `
+              <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2.5 overflow-hidden">
+                  <span class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">⚡</span>
+                  <div class="truncate">
+                    <div class="font-extrabold text-slate-900 truncate">${l.task_name}</div>
+                    <div class="text-slate-500 text-[11px] font-medium mt-0.5">👤 <b>${l.member_name}</b> • <span class="text-slate-400">${dtFormatted}</span></div>
+                  </div>
+                </div>
+                <div class="shrink-0 text-right">${ptsBadge}</div>
+              </div>
+            `;
+          });
+        }
+      }
+
+      // 3. Pending Single Tasks
+      const pendingBox = document.getElementById('home-pending-tasks-list');
+      const pendingBadge = document.getElementById('pending-tasks-count-badge');
+      const pendingTasks = appData.pending_single_tasks || [];
+
+      if (pendingBadge) {
+        pendingBadge.textContent = pendingTasks.length;
+        pendingBadge.classList.toggle('hidden', pendingTasks.length === 0);
+      }
+
+      if (pendingBox) {
+        pendingBox.innerHTML = '';
+        if (pendingTasks.length === 0) {
+          pendingBox.innerHTML = '<div class="text-center py-6 text-xs text-slate-400 font-medium">Nessun task estemporaneo in sospeso! ✨</div>';
+        } else {
+          pendingTasks.forEach(t => {
+            const assignedText = Array.isArray(t.assigned_to) ? t.assigned_to.join(', ') : t.assigned_to;
+            const elapsedText = t.elapsed_days === 0 ? 'Oggi' : `${t.elapsed_days}gg fa`;
+            const ptsText = t.points > 0 ? `(+${t.points} pt)` : '';
+
+            pendingBox.innerHTML += `
+              <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2.5 overflow-hidden">
+                  <span class="text-xl shrink-0">⚠️</span>
+                  <div class="truncate">
+                    <div class="font-extrabold text-slate-900 truncate">${t.title} <span class="text-indigo-600">${ptsText}</span></div>
+                    <div class="text-slate-500 text-[11px] font-medium mt-0.5">Assegnato: <b>${assignedText}</b> • <span class="text-slate-400">Inserito ${elapsedText}</span></div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  <button onclick="completeSingleTask('${t.id}')" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] rounded-xl shadow">
+                    ✓ Fatto
+                  </button>
+                  <button onclick="deleteSingleTask('${t.id}')" class="text-slate-400 hover:text-rose-600 p-1">✕</button>
+                </div>
+              </div>
+            `;
+          });
+        }
+      }
+    }
+
+    // ==================== TASK PERFORMER SELECTION POPUP ====================
+    function promptPerformerSelection(taskName, points, taskType = 'spontaneous', isPersonal = false) {
+      pendingExecutionTask = { taskName, points, taskType, isPersonal };
+
+      const titleEl = document.getElementById('modal-performer-task-title');
+      const singleBox = document.getElementById('modal-single-member-buttons');
+      const multiBox = document.getElementById('modal-multi-checkboxes');
+      const modal = document.getElementById('modal-select-performer');
+
+      if (titleEl) {
+        const ptsLabel = isPersonal ? '(Promemoria - 0 pt)' : `(+${points} pt)`;
+        titleEl.textContent = `${taskName} ${ptsLabel}`;
+      }
+
+      const members = Object.values(appData?.members || {});
+
+      // 1-Tap Single Buttons
+      if (singleBox) {
+        singleBox.innerHTML = '';
+        members.forEach(m => {
+          singleBox.innerHTML += `
+            <button onclick="executeTaskWithSingleAuthor('${m.name}')" class="p-3.5 bg-slate-50 hover:bg-indigo-50 border-2 border-slate-200 hover:border-indigo-500 rounded-2xl text-left flex items-center gap-3 transition">
+              <span class="text-3xl">${m.icon || '👤'}</span>
+              <div>
+                <div class="font-extrabold text-sm text-slate-900">${m.name}</div>
+                <div class="text-[11px] font-bold text-indigo-600">${isPersonal ? 'Registra' : '+' + points + ' pt'}</div>
+              </div>
+            </button>
+          `;
+        });
+      }
+
+      // Multi-Author Checkboxes
+      if (multiBox) {
+        multiBox.innerHTML = '';
+        members.forEach(m => {
+          multiBox.innerHTML += `
+            <label class="flex items-center gap-2 p-2 bg-white rounded-xl border border-slate-200 text-xs font-bold text-slate-800 cursor-pointer">
+              <input type="checkbox" value="${m.name}" class="multi-author-chk w-4 h-4 text-indigo-600 rounded">
+              <span>${m.icon || '👤'} ${m.name}</span>
+            </label>
+          `;
+        });
+      }
+
+      // Hide multi-author accordion by default
+      document.getElementById('multi-author-section').classList.add('hidden');
+      document.getElementById('btn-toggle-multi').textContent = 'Mostra selezione multipla ▼';
+
+      modal.classList.remove('hidden');
+    }
+
+    function closePerformerModal() {
+      document.getElementById('modal-select-performer').classList.add('hidden');
+      pendingExecutionTask = null;
+    }
+
+    function toggleMultiAuthorSection() {
+      const sec = document.getElementById('multi-author-section');
+      const btn = document.getElementById('btn-toggle-multi');
+      const isHidden = sec.classList.toggle('hidden');
+      btn.textContent = isHidden ? 'Mostra selezione multipla ▼' : 'Nascondi ▲';
+    }
+
+    async function executeTaskWithSingleAuthor(memberName) {
+      if (!pendingExecutionTask) return;
+      const { taskName, points, taskType, isPersonal } = pendingExecutionTask;
+      closePerformerModal();
+
+      try {
+        await fetch(`${apiBase}/log`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ member: memberName, task_name: taskName, points, task_type: taskType, is_personal: isPersonal })
+        });
+        showToast(isPersonal ? `Promemoria registrato per ${memberName}!` : `+${points} pt assegnati a ${memberName}!`);
+        await loadStats();
+      } catch (e) {}
+    }
+
+    async function confirmMultiAuthorCompletion() {
+      if (!pendingExecutionTask) return;
+      const checkboxes = document.querySelectorAll('.multi-author-chk:checked');
+      const selected = Array.from(checkboxes).map(c => c.value);
+
+      if (selected.length === 0) {
+        showToast("Seleziona almeno un partecipante!", "⚠️");
+        return;
+      }
+
+      const { taskName, points, taskType, isPersonal } = pendingExecutionTask;
+      closePerformerModal();
+
+      try {
+        await fetch(`${apiBase}/log`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ members: selected, task_name: taskName, points, task_type: taskType, is_personal: isPersonal })
+        });
+        
+        const dividedPts = isPersonal ? 0 : Math.max(1, Math.round(points / selected.length));
+        showToast(isPersonal ? `Promemoria registrato per ${selected.join(' e ')}!` : `+${dividedPts} pt a testa assegnati a ${selected.join(' e ')}!`);
+        await loadStats();
+      } catch (e) {}
+    }
+
+    // Single Task Actions
+    async function submitQuickSingleTask(e) {
+      e.preventDefault();
+      const title = document.getElementById('quick-task-title').value.trim();
+      const assigned = document.getElementById('quick-task-assigned').value;
+      const pts = parseInt(document.getElementById('quick-task-points').value) || 0;
+
+      if (!title) return;
+
+      try {
+        await fetch(`${apiBase}/single_tasks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, assigned_to: assigned === 'all' ? ['all'] : [assigned], points: pts })
+        });
+        document.getElementById('quick-task-title').value = '';
+        document.getElementById('quick-task-points').value = '0';
+        showToast("Task rapido assegnato!");
+        await loadStats();
+      } catch (e) {}
+    }
+
+    async function completeSingleTask(taskId) {
+      const task = (appData?.pending_single_tasks || []).find(t => t.id === taskId);
+      promptPerformerSelection(task?.title || 'Task Singolo', task?.points || 0, 'single_task', (task?.points || 0) === 0);
+      
+      // Hook completing after selection
+      const originalConfirm = confirmMultiAuthorCompletion;
+      const originalSingle = executeTaskWithSingleAuthor;
+
+      executeTaskWithSingleAuthor = async function(mName) {
+        executeTaskWithSingleAuthor = originalSingle;
+        closePerformerModal();
+        try {
+          await fetch(`${apiBase}/single_tasks/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: taskId, completed_by: mName })
+          });
+          showToast(`Task completato da ${mName}!`);
+          await loadStats();
+        } catch (e) {}
+      };
+
+      confirmMultiAuthorCompletion = async function() {
+        confirmMultiAuthorCompletion = originalConfirm;
+        const checkboxes = document.querySelectorAll('.multi-author-chk:checked');
+        const selected = Array.from(checkboxes).map(c => c.value);
+        if (selected.length === 0) return;
+        closePerformerModal();
+        try {
+          await fetch(`${apiBase}/single_tasks/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: taskId, completed_by: selected })
+          });
+          showToast(`Task completato da ${selected.join(' e ')}!`);
+          await loadStats();
+        } catch (e) {}
+      };
+    }
+
+    async function deleteSingleTask(taskId) {
+      try {
+        await fetch(`${apiBase}/single_tasks/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: taskId })
+        });
+        showToast("Task rimosso", "🗑️");
+        await loadStats();
+      } catch (e) {}
     }
 
     function setRoutineFilter(flt) {
       activeRoutineFilter = flt;
-      ['all', 'overdue', 'warning', 'personal', 'calendar'].forEach(k => {
+      ['all', 'overdue', 'warning', 'personal'].forEach(k => {
         const btn = document.getElementById(`rf-${k}`);
         if (btn) {
           btn.className = (k === flt) ? 'px-3 py-1.5 text-xs font-extrabold rounded-xl transition bg-indigo-600 text-white shadow' : 'px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900';
@@ -904,8 +1278,6 @@
       if (!appData) return;
 
       const routineList = document.getElementById('routine-list');
-      const banner = document.getElementById('routine-alert-banner');
-      const bannerText = document.getElementById('routine-alert-text');
       const countOverdueTag = document.getElementById('count-overdue-tag');
       const countWarningTag = document.getElementById('count-warning-tag');
 
@@ -924,25 +1296,12 @@
         countWarningTag.classList.toggle('hidden', warningRoutines.length === 0);
       }
 
-      if (banner) {
-        if (overdueRoutines.length > 0) {
-          banner.classList.remove('hidden');
-          bannerText.textContent = `Attenzione: ci sono ${overdueRoutines.length} routine scadute da completare!`;
-        } else {
-          banner.classList.add('hidden');
-        }
-      }
-
       routineList.innerHTML = '';
 
       let filtered = allRoutines;
-      if (activeRoutineFilter === 'overdue') {
-        filtered = overdueRoutines;
-      } else if (activeRoutineFilter === 'warning') {
-        filtered = warningRoutines;
-      } else if (activeRoutineFilter === 'personal') {
-        filtered = allRoutines.filter(r => r.is_personal);
-      }
+      if (activeRoutineFilter === 'overdue') filtered = overdueRoutines;
+      else if (activeRoutineFilter === 'warning') filtered = warningRoutines;
+      else if (activeRoutineFilter === 'personal') filtered = allRoutines.filter(r => r.is_personal);
 
       if (filtered.length === 0) {
         routineList.innerHTML = '<div class="text-center py-10 bg-white rounded-3xl border border-slate-200 text-xs text-slate-400 font-medium">Nessuna routine trovata per questa vista. ✨</div>';
@@ -999,7 +1358,7 @@
                 </div>
               </div>
             </div>
-            <button onclick="logTask('${r.name}', ${r.points}, 'routine', ${!!r.is_personal})" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">
+            <button onclick="promptPerformerSelection('${r.name}', ${r.points}, 'routine', ${!!r.is_personal})" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">
               ${ptsLabel}
             </button>
           </div>
@@ -1011,17 +1370,10 @@
       if (!appData) return;
 
       renderMembersBar();
+      renderHomeWidgets();
       renderRoutines();
 
-      // Badge pending tasks
-      const pendingCount = (appData.pending_assigned || []).length;
-      const pendingBadge = document.getElementById('badge-pending-count');
-      if (pendingBadge) {
-        pendingBadge.textContent = pendingCount;
-        pendingBadge.classList.toggle('hidden', pendingCount === 0);
-      }
-
-      // Badge due routines
+      // Badge due routines in tab
       const dueCount = (appData.routine_tasks || []).filter(r => r.status === 'overdue' || r.status === 'warning').length;
       const dueBadge = document.getElementById('badge-due-routine-count');
       if (dueBadge) {
@@ -1029,46 +1381,22 @@
         dueBadge.classList.toggle('hidden', dueCount === 0);
       }
 
-      // Spontaneous Tasks
+      // Spontaneous Tasks Grid
       const spontGrid = document.getElementById('spontaneous-grid');
       if (spontGrid) {
         spontGrid.innerHTML = '';
         (appData.spontaneous_tasks || []).forEach(t => {
           const ptsBadge = t.is_personal ? '<span class="text-[10px] font-extrabold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-lg self-start">👤 Personale (0 pt)</span>' : `<span class="text-[11px] font-extrabold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-lg self-start">+${t.points} pt</span>`;
           spontGrid.innerHTML += `
-            <div onclick="logTask('${t.name}', ${t.points}, 'spontaneous', ${!!t.is_personal})" class="p-3.5 bg-white border border-slate-200/90 hover:border-indigo-500 rounded-2xl shadow-2xs hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-2">
+            <div onclick="promptPerformerSelection('${t.name}', ${t.points}, 'spontaneous', ${!!t.is_personal})" class="p-4 bg-white border border-slate-200/90 hover:border-indigo-500 rounded-3xl shadow-2xs hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-3">
               <div>
-                <div class="text-2xl mb-1">${t.icon || '⚡'}</div>
-                <div class="text-xs font-bold text-slate-900 leading-snug">${t.name}</div>
+                <div class="text-3xl mb-1.5">${t.icon || '⚡'}</div>
+                <div class="text-xs sm:text-sm font-bold text-slate-900 leading-snug">${t.name}</div>
               </div>
               ${ptsBadge}
             </div>
           `;
         });
-      }
-
-      // Assigned tasks
-      const assignedList = document.getElementById('assigned-list');
-      if (assignedList) {
-        assignedList.innerHTML = '';
-        const pending = appData.pending_assigned || [];
-        if (pending.length === 0) {
-          assignedList.innerHTML = '<div class="text-center py-8 text-xs text-slate-400 font-medium">Nessun compito in sospeso! ✨</div>';
-        } else {
-          pending.forEach(t => {
-            assignedList.innerHTML += `
-              <div class="p-4 bg-white border border-slate-200 rounded-2xl shadow-2xs flex items-center justify-between gap-3">
-                <div>
-                  <h4 class="font-extrabold text-sm text-slate-900">${t.task_name}</h4>
-                  <p class="text-xs text-slate-500">Assegnato da <b>${t.from_member}</b> a <b>${t.to_member}</b> (+${t.points} pt)</p>
-                </div>
-                <button onclick="completeAssignedTask('${t.id}')" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">
-                  ✓ Spunta Completato
-                </button>
-              </div>
-            `;
-          });
-        }
       }
 
       // Adaptive Dynamic Podium & Leaderboard
@@ -1176,38 +1504,38 @@
       const now = new Date();
       let filterStartDate = new Date(0);
 
-      if (activeStatsFilter === 'today') {
-        filterStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      } else if (activeStatsFilter === '7d') {
-        filterStartDate = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
-      } else if (activeStatsFilter === 'month') {
-        filterStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      } else if (activeStatsFilter === 'year') {
-        filterStartDate = new Date(now.getFullYear(), 0, 1);
-      }
+      if (activeStatsFilter === 'today') filterStartDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      else if (activeStatsFilter === '7d') filterStartDate = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+      else if (activeStatsFilter === 'month') filterStartDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      else if (activeStatsFilter === 'year') filterStartDate = new Date(now.getFullYear(), 0, 1);
 
-      // STRICTLY EXCLUDE personal tasks from gamification stats
       const filteredLogs = (appData.logs || []).filter(l => new Date(l.created_at) >= filterStartDate && !l.is_personal && parseInt(l.points) > 0);
 
       let totalPts = 0;
       const memberPoints = {};
       const taskCounts = {};
       const taskPerformers = {};
+      let singleTasksCompletedCount = 0;
 
       Object.values(appData.members || {}).forEach(m => memberPoints[m.name] = 0);
 
-      filteredLogs.forEach(l => {
-        const pts = parseInt(l.points) || 0;
-        totalPts += pts;
-        memberPoints[l.member_name] = (memberPoints[l.member_name] || 0) + pts;
-        taskCounts[l.task_name] = (taskCounts[l.task_name] || 0) + 1;
+      (appData.logs || []).filter(l => new Date(l.created_at) >= filterStartDate).forEach(l => {
+        if (l.task_type === 'single_task') singleTasksCompletedCount++;
+        
+        if (!l.is_personal && parseInt(l.points) > 0) {
+          const pts = parseInt(l.points) || 0;
+          totalPts += pts;
+          memberPoints[l.member_name] = (memberPoints[l.member_name] || 0) + pts;
+          taskCounts[l.task_name] = (taskCounts[l.task_name] || 0) + 1;
 
-        if (!taskPerformers[l.task_name]) taskPerformers[l.task_name] = {};
-        taskPerformers[l.task_name][l.member_name] = (taskPerformers[l.task_name][l.member_name] || 0) + 1;
+          if (!taskPerformers[l.task_name]) taskPerformers[l.task_name] = {};
+          taskPerformers[l.task_name][l.member_name] = (taskPerformers[l.task_name][l.member_name] || 0) + 1;
+        }
       });
 
       document.getElementById('kpi-total-points').textContent = `${totalPts} pt`;
       document.getElementById('kpi-total-tasks').textContent = filteredLogs.length;
+      document.getElementById('kpi-single-tasks').textContent = singleTasksCompletedCount;
 
       let topMember = '-';
       let maxPts = -1;
@@ -1218,9 +1546,6 @@
         }
       });
       document.getElementById('kpi-top-member').textContent = topMember;
-
-      const daysDiff = Math.max(1, Math.round((now - filterStartDate) / (1000 * 60 * 60 * 24)));
-      document.getElementById('kpi-avg-daily').textContent = `${Math.round(totalPts / daysDiff)} pt/g`;
 
       // Chart 1: Members Breakdown
       const ctxM = document.getElementById('chart-members')?.getContext('2d');
@@ -1444,12 +1769,13 @@
           const typeBadge = (r.schedule_type === 'fixed') ? '📅 Fissa' : '🕒 Dall\'ultimo';
           const assignedText = r.assigned_member && r.assigned_member !== 'all' ? `• Assegnato: <b>${r.assigned_member}</b>` : '';
           const personalTag = r.is_personal ? '• 👤 <b class="text-purple-700">Promemoria Personale (0 pt)</b>' : `• Punti: <b>+${r.points} pt</b>`;
+          const oneTimeTag = r.is_one_time ? '• ⏳ Una tantum' : '';
 
           adminRout.innerHTML += `
             <div class="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-slate-200 text-xs">
               <div>
                 <div class="font-extrabold text-sm text-slate-900">${r.icon} ${r.name}</div>
-                <div class="text-slate-500 font-medium mt-0.5">${typeBadge} • Frequenza: <b>${r.frequency_days}gg</b> • Preavviso: <b>${r.warning_days}gg</b> ${assignedText} ${personalTag}</div>
+                <div class="text-slate-500 font-medium mt-0.5">${typeBadge} • Frequenza: <b>${r.frequency_days}gg</b> • Preavviso: <b>${r.warning_days}gg</b> ${assignedText} ${personalTag} ${oneTimeTag}</div>
               </div>
               <div class="flex items-center gap-2">
                 <button onclick="editRoutine('${r.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 font-bold rounded-lg text-slate-700">Modifica</button>
@@ -1655,6 +1981,7 @@
       const iconInput = document.getElementById('rout-edit-icon');
       const iconPreview = document.getElementById('rout-icon-preview');
       const personalCheck = document.getElementById('rout-edit-personal');
+      const onetimeCheck = document.getElementById('rout-edit-onetime');
 
       const todayIso = new Date().toISOString().split('T')[0];
 
@@ -1673,6 +2000,7 @@
           iconInput.value = item.icon || '🔄';
           iconPreview.textContent = item.icon || '🔄';
           personalCheck.checked = !!item.is_personal;
+          onetimeCheck.checked = !!item.is_one_time;
           toggleRoutPersonal(item.is_personal);
         }
       } else {
@@ -1688,6 +2016,7 @@
         iconInput.value = "🔄";
         iconPreview.textContent = "🔄";
         personalCheck.checked = false;
+        onetimeCheck.checked = false;
         toggleRoutPersonal(false);
       }
       modal.classList.remove('hidden');
@@ -1700,6 +2029,7 @@
       const id = document.getElementById('rout-edit-id').value;
       const name = document.getElementById('rout-edit-name').value.trim();
       const is_personal = document.getElementById('rout-edit-personal').checked;
+      const is_one_time = document.getElementById('rout-edit-onetime').checked;
       const points = is_personal ? 0 : (parseInt(document.getElementById('rout-edit-pts').value) || 20);
       const frequency_days = parseInt(document.getElementById('rout-edit-freq').value) || 7;
       const warning_days = parseInt(document.getElementById('rout-edit-warning').value) || 1;
@@ -1712,7 +2042,7 @@
         await fetch(`${apiBase}/routine_tasks`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name, points, frequency_days, warning_days, start_date, schedule_type, icon, is_personal, assigned_member })
+          body: JSON.stringify({ id, name, points, frequency_days, warning_days, start_date, schedule_type, icon, is_personal, assigned_member, is_one_time })
         });
         closeRoutineModal();
         showToast("Routine salvata!");
@@ -1732,75 +2062,14 @@
       } catch (e) {}
     }
 
-    // Task Execution Handlers (Supports Multi-Authors)
-    async function logTask(taskName, points, taskType = 'spontaneous', isPersonal = false) {
-      const allMembers = appData?.members || {};
-      const targetNames = Array.from(selectedMemberIds).map(id => allMembers[id]?.name).filter(Boolean);
-      
-      if (targetNames.length === 0) {
-        showToast("Seleziona almeno un membro in alto!", "⚠️");
-        return;
-      }
-
-      try {
-        await fetch(`${apiBase}/log`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ members: targetNames, task_name: taskName, points, task_type: taskType, is_personal: isPersonal })
-        });
-        
-        if (isPersonal) {
-          showToast(`Promemoria registrato per ${targetNames.join(' e ')}!`, '👤');
-        } else {
-          showToast(`+${points} pt assegnati a ${targetNames.join(' e ')}!`);
-        }
-        await loadStats();
-      } catch (e) {}
-    }
-
     async function submitCustomTask(e) {
       e.preventDefault();
       const txt = document.getElementById('custom-task-input').value.trim();
       const pts = parseInt(document.getElementById('custom-pts-input').value) || 15;
       if (!txt) return;
-      await logTask(txt, pts, 'custom');
       document.getElementById('custom-task-input').value = '';
       toggleCustomTaskBox();
-    }
-
-    async function submitAssignTask(e) {
-      e.preventDefault();
-      const txt = document.getElementById('assign-task-input').value.trim();
-      const targetMember = document.getElementById('assign-target-select').value;
-      if (!txt || !targetMember) return;
-      
-      const firstId = Array.from(selectedMemberIds)[0];
-      const fromMember = (appData?.members[firstId]) ? appData.members[firstId].name : 'Membro';
-
-      try {
-        await fetch(`${apiBase}/assign`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ from_member: fromMember, to_member: targetMember, task_name: txt, points: 10 })
-        });
-        document.getElementById('assign-task-input').value = '';
-        showToast(`Compito assegnato a ${targetMember}!`);
-        await loadStats();
-      } catch (e) {}
-    }
-
-    async function completeAssignedTask(taskId) {
-      const firstId = Array.from(selectedMemberIds)[0];
-      const completedBy = (appData?.members[firstId]) ? appData.members[firstId].name : null;
-      try {
-        await fetch(`${apiBase}/complete_assigned`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ task_id: taskId, completed_by: completedBy })
-        });
-        showToast("Compito completato con successo!");
-        await loadStats();
-      } catch (e) {}
+      promptPerformerSelection(txt, pts, 'custom');
     }
   </script>
 </body>
