@@ -20,10 +20,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 function loadData() {
   const todayIso = new Date().toISOString().split('T')[0];
 
+  const defaultCategories = [
+    { id: "cat_cucina", name: "Cucina & Spesa", icon: "🍳", order: 1 },
+    { id: "cat_pulizia", name: "Pulizia & Casa", icon: "🧹", order: 2 },
+    { id: "cat_bucato", name: "Bucato & Panni", icon: "🧺", order: 3 },
+    { id: "cat_manutenzione", name: "Manutenzione & Auto", icon: "🔧", order: 4 },
+    { id: "cat_personale", name: "Cura Personale", icon: "💈", order: 5 }
+  ];
+
   if (fs.existsSync(DB_FILE)) {
     try {
       const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
       if (!data.members) data.members = {};
+      if (!data.categories || data.categories.length === 0) data.categories = defaultCategories;
       if (!data.spontaneous_tasks) data.spontaneous_tasks = [];
       if (!data.routine_tasks) data.routine_tasks = [];
       if (!data.assigned_tasks) data.assigned_tasks = [];
@@ -40,6 +49,7 @@ function loadData() {
 
       // Migrations for routine fields
       data.routine_tasks.forEach(r => {
+        if (!r.category) r.category = "Pulizia & Casa";
         if (!r.schedule_type) r.schedule_type = 'from_last';
         if (r.warning_days === undefined) r.warning_days = 1;
         if (!r.start_date) r.start_date = todayIso;
@@ -48,8 +58,15 @@ function loadData() {
         if (!r.assigned_member) r.assigned_member = 'all';
       });
 
+      // Migrations for spontaneous tasks
+      data.spontaneous_tasks.forEach(s => {
+        if (!s.category) s.category = "Generale";
+        if (s.is_personal === undefined) s.is_personal = false;
+      });
+
       // Migrations for single tasks
       data.single_tasks.forEach(st => {
+        if (!st.category) st.category = "Varie";
         if (!st.notes) st.notes = [];
         if (!st.due_date) st.due_date = st.created_at ? st.created_at.split('T')[0] : todayIso;
       });
@@ -69,18 +86,19 @@ function loadData() {
       "m_1": { id: "m_1", name: "Papà", icon: "👨‍💻", color: "#3b82f6" },
       "m_2": { id: "m_2", name: "Mamma", icon: "👩‍🎨", color: "#ec4899" }
     },
+    categories: defaultCategories,
     spontaneous_tasks: [
-      { id: "s_1", name: "Fare la lavatrice", category: "Bucato", points: 15, icon: "🧺", is_personal: false },
-      { id: "s_2", name: "Lavare i piatti / Svuotare lavastoviglie", category: "Cucina", points: 10, icon: "🍽️", is_personal: false },
-      { id: "s_3", name: "Preparare il pranzo / cena", category: "Cucina", points: 20, icon: "🍳", is_personal: false },
-      { id: "s_4", name: "Portare fuori la spazzatura", category: "Pulizia", points: 10, icon: "🗑️", is_personal: false },
-      { id: "s_5", name: "Fare la spesa", category: "Casa", points: 25, icon: "🛒", is_personal: false }
+      { id: "s_1", name: "Fare la lavatrice", category: "Bucato & Panni", points: 15, icon: "🧺", is_personal: false },
+      { id: "s_2", name: "Lavare i piatti / Svuotare lavastoviglie", category: "Cucina & Spesa", points: 10, icon: "🍽️", is_personal: false },
+      { id: "s_3", name: "Preparare il pranzo / cena", category: "Cucina & Spesa", points: 20, icon: "🍳", is_personal: false },
+      { id: "s_4", name: "Portare fuori la spazzatura", category: "Pulizia & Casa", points: 10, icon: "🗑️", is_personal: false },
+      { id: "s_5", name: "Fare la spesa", category: "Cucina & Spesa", points: 25, icon: "🛒", is_personal: false }
     ],
     routine_tasks: [
-      { id: "r_1", name: "Cambio lenzuola", category: "Bucato", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🛏️", is_personal: false, assigned_member: "all" },
-      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🧹", is_personal: false, assigned_member: "all" },
-      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "🧼", is_personal: false, assigned_member: "all" },
-      { id: "r_4", name: "Taglio capelli / Barbiere", category: "Personale", points: 0, frequency_days: 21, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "💈", is_personal: true, assigned_member: "Papà" }
+      { id: "r_1", name: "Cambio lenzuola", category: "Bucato & Panni", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🛏️", is_personal: false, assigned_member: "all" },
+      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia & Casa", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🧹", is_personal: false, assigned_member: "all" },
+      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia & Casa", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "🧼", is_personal: false, assigned_member: "all" },
+      { id: "r_4", name: "Taglio capelli / Barbiere", category: "Cura Personale", points: 0, frequency_days: 21, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "💈", is_personal: true, assigned_member: "Papà" }
     ],
     single_tasks: [],
     assigned_tasks: [],
@@ -98,7 +116,7 @@ function saveData(data) {
 
 let appData = loadData();
 
-// Calculate comprehensive period stats, diffs, pending alerts and spontaneous task execution history
+// Calculate comprehensive period stats, diffs, categories and ADHD candidate weights
 function calculateStats() {
   const now = new Date();
   const todayStr = now.toISOString().split('T')[0];
@@ -158,8 +176,8 @@ function calculateStats() {
     }
   });
 
-  // Track spontaneous task last execution details
-  const spontLastLogs = {};
+  // Track task execution details (for spontaneous, routine and single tasks)
+  const taskLastLogs = {};
   const memberLastLogs = {};
 
   (appData.logs || []).forEach(log => {
@@ -182,13 +200,13 @@ function calculateStats() {
         if (created >= startYearly) m.yearly_points += pts;
       }
 
-      if (log.task_type !== 'task_note') {
+      if (log.task_type !== 'task_note' && log.task_type !== 'task_deleted') {
         memberLastLogs[m.id] = log;
       }
     }
 
-    if (log.task_name) {
-      spontLastLogs[log.task_name.toLowerCase()] = log;
+    if (log.task_name && log.task_type !== 'task_note' && log.task_type !== 'task_deleted') {
+      taskLastLogs[log.task_name.toLowerCase()] = log;
     }
   });
 
@@ -241,11 +259,11 @@ function calculateStats() {
     total: getWinner('total_points')
   };
 
-  // Enhance spontaneous tasks with last execution days ago and executor
+  // Enhance spontaneous tasks with last execution details & days ago
   const enhancedSpontaneousTasks = (appData.spontaneous_tasks || []).map(t => {
-    const lastLog = spontLastLogs[t.name.toLowerCase()];
+    const lastLog = taskLastLogs[t.name.toLowerCase()];
     let lastExecText = "Mai eseguita";
-    let lastExecDays = null;
+    let lastExecDays = 999;
     let lastPerformer = null;
 
     if (lastLog) {
@@ -274,8 +292,6 @@ function calculateStats() {
   const routineStatus = (appData.routine_tasks || []).map(r => {
     const freq = parseInt(r.frequency_days) || 7;
     const warning = parseInt(r.warning_days) || 1;
-    let baseDate = r.last_completed_at ? new Date(r.last_completed_at) : (r.start_date ? new Date(r.start_date) : now);
-    
     let dueDate;
     if (r.schedule_type === 'from_last' && r.last_completed_at) {
       dueDate = new Date(new Date(r.last_completed_at).getTime() + (freq * 24 * 60 * 60 * 1000));
@@ -338,10 +354,14 @@ function calculateStats() {
     })
     .sort((a, b) => (a.due_date || '').localeCompare(b.due_date || ''));
 
+  // Sort categories by order
+  const sortedCategories = [...(appData.categories || [])].sort((a, b) => (a.order || 0) - (b.order || 0));
+
   return {
     members: stats,
     leaderboard: sorted,
     winners,
+    categories: sortedCategories,
     pending_single_tasks: pendingSingleTasks,
     spontaneous_tasks: enhancedSpontaneousTasks,
     routine_tasks: routineStatus,
@@ -454,9 +474,43 @@ app.get('/api/stats', (req, res) => {
   res.json(statsData);
 });
 
-// API: Log Task (Records task_created_at, created_by, performer, task_type)
+// API: Categories Management (CRUD & Order)
+app.post('/api/categories', (req, res) => {
+  const { id, name, icon = "📁", order = 1 } = req.body;
+  if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
+
+  const trimmedName = name.trim();
+  const catId = id || `cat_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+
+  if (!appData.categories) appData.categories = [];
+  const idx = appData.categories.findIndex(c => c.id === catId || c.name.toLowerCase() === trimmedName.toLowerCase());
+
+  const catObj = {
+    id: catId,
+    name: trimmedName,
+    icon,
+    order: parseInt(order) || 1
+  };
+
+  if (idx >= 0) appData.categories[idx] = catObj;
+  else appData.categories.push(catObj);
+
+  saveData(appData);
+  res.json({ status: "saved", category: catObj });
+});
+
+app.post('/api/categories/delete', (req, res) => {
+  const { id } = req.body;
+  if (id) {
+    appData.categories = (appData.categories || []).filter(c => c.id !== id);
+    saveData(appData);
+  }
+  res.json({ status: "deleted" });
+});
+
+// API: Log Task (Records task_created_at, created_by, performer, task_type, category)
 app.post('/api/log', (req, res) => {
-  const { member, members, task_name, points = 10, task_type = "spontaneous", is_personal = false, created_by = "Utente", task_created_at } = req.body;
+  const { member, members, task_name, points = 10, task_type = "spontaneous", category = "Generale", is_personal = false, created_by = "Utente", task_created_at } = req.body;
   
   const targetMembers = Array.isArray(members) && members.length > 0 ? members : (member ? [member] : []);
   if (targetMembers.length === 0 || !task_name) return res.status(400).json({ error: "Missing parameters" });
@@ -482,6 +536,7 @@ app.post('/api/log', (req, res) => {
       member_name: memberObj.name,
       task_name,
       task_type,
+      category: category || "Generale",
       created_by: created_by || "Utente",
       task_created_at: task_created_at || nowIso,
       is_personal: !!is_personal,
@@ -516,9 +571,9 @@ app.post('/api/logs/delete', (req, res) => {
   res.json({ status: "deleted" });
 });
 
-// API: Single Task Create (with due_date and custom points)
+// API: Single Task Create (with category, due_date and custom points)
 app.post('/api/single_tasks', (req, res) => {
-  const { title, assigned_to = ["all"], points = 0, due_date, created_by = "Famiglia" } = req.body;
+  const { title, assigned_to = ["all"], points = 0, due_date, category = "Varie", created_by = "Famiglia" } = req.body;
   if (!title || !title.trim()) return res.status(400).json({ error: "Title required" });
 
   const assignedList = Array.isArray(assigned_to) ? assigned_to : [assigned_to];
@@ -529,6 +584,7 @@ app.post('/api/single_tasks', (req, res) => {
     assigned_to: assignedList.length > 0 ? assignedList : ["all"],
     points: parseInt(points) || 0,
     due_date: due_date || nowIso.split('T')[0],
+    category: category || "Varie",
     created_by: created_by || "Famiglia",
     status: 'pending',
     notes: [],
@@ -583,6 +639,7 @@ app.post('/api/single_tasks/note', (req, res) => {
       member_name: mName,
       task_name: `📝 ${task.title} - ${historyNoteDetails.join(' • ')}`,
       task_type: 'task_note',
+      category: task.category || "Varie",
       created_by: mName,
       task_created_at: nowIso,
       is_personal: true,
@@ -619,6 +676,7 @@ app.post('/api/single_tasks/complete', (req, res) => {
           member_name: memberObj.name,
           task_name: task.title,
           task_type: 'single_task',
+          category: task.category || "Varie",
           created_by: task.created_by || "Famiglia",
           task_created_at: task.created_at || nowIso,
           is_personal: totalPts === 0,
@@ -634,11 +692,33 @@ app.post('/api/single_tasks/complete', (req, res) => {
   res.json({ status: "completed" });
 });
 
-// API: Single Task Delete
+// API: Single Task Delete with confirmation & audit log
 app.post('/api/single_tasks/delete', (req, res) => {
-  const { id } = req.body;
-  if (id) {
-    appData.single_tasks = (appData.single_tasks || []).filter(t => t.id !== id);
+  const { id, author = "Famiglia" } = req.body;
+  const task = (appData.single_tasks || []).find(t => t.id === id);
+
+  if (task) {
+    const nowIso = new Date().toISOString();
+    appData.single_tasks = appData.single_tasks.filter(t => t.id !== id);
+
+    let memberObj = Object.values(appData.members).find(m => m.name.toLowerCase() === (author || '').toLowerCase());
+    const mId = memberObj ? memberObj.id : Object.keys(appData.members)[0] || 'm_1';
+    const mName = memberObj ? memberObj.name : (author || 'Famiglia');
+
+    appData.logs.push({
+      id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      member_id: mId,
+      member_name: mName,
+      task_name: `🗑️ Eliminato task singolo: "${task.title}"`,
+      task_type: 'task_deleted',
+      category: task.category || "Varie",
+      created_by: mName,
+      task_created_at: task.created_at || nowIso,
+      is_personal: true,
+      points: 0,
+      created_at: nowIso
+    });
+
     saveData(appData);
     syncToHomeAssistant();
   }
@@ -698,7 +778,7 @@ app.post('/api/spontaneous_tasks', (req, res) => {
     name: trimmedName,
     points: is_personal ? 0 : (parseInt(points) || 10),
     icon,
-    category,
+    category: category || "Generale",
     is_personal: !!is_personal
   };
 
@@ -717,7 +797,7 @@ app.post('/api/spontaneous_tasks/delete', (req, res) => {
   res.json({ status: "deleted" });
 });
 
-// API: Save Routine Task (with Prossima Scadenza)
+// API: Save Routine Task (with Category & Prossima Scadenza)
 app.post('/api/routine_tasks', (req, res) => {
   const { id, name, points = 20, frequency_days = 7, warning_days = 1, start_date, schedule_type = "from_last", icon = "🔄", category = "Routine", is_personal = false, assigned_member = "all" } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
@@ -737,7 +817,7 @@ app.post('/api/routine_tasks', (req, res) => {
     start_date: start_date || existingItem.start_date || new Date().toISOString().split('T')[0],
     schedule_type: schedule_type || "from_last",
     icon,
-    category,
+    category: category || "Routine",
     is_personal: !!is_personal,
     assigned_member: assigned_member || "all"
   };
