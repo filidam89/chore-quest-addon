@@ -27,7 +27,6 @@
     .podium-step-2 { height: 85px; background: linear-gradient(180deg, #94a3b8, #64748b); }
     .podium-step-3 { height: 65px; background: linear-gradient(180deg, #b45309, #78350f); }
     
-    /* Native, sharp cursor styles for input fields with high contrast */
     input, textarea, select {
       cursor: text !important;
       caret-color: #4f46e5 !important;
@@ -58,7 +57,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md">v1.7</span>
+            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md">v1.8</span>
           </h1>
           <p class="text-xs text-slate-500 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -113,7 +112,6 @@
         <input id="quick-task-date" type="date" title="Data di scadenza / inserimento" class="sm:col-span-3 px-3 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500">
 
         <div class="sm:col-span-3 flex gap-2 items-center">
-          <!-- Punti con suffisso grigio "pt" -->
           <div class="flex items-center bg-white border border-slate-200 rounded-2xl px-3 py-2 focus-within:ring-2 focus-within:ring-indigo-500 w-24">
             <input id="quick-task-points" type="number" value="0" min="0" max="200" title="Punti assegnati (default 0)" class="w-full bg-transparent text-xs text-center font-extrabold outline-none text-slate-800">
             <span class="text-xs font-bold text-slate-400 select-none ml-1">pt</span>
@@ -125,44 +123,57 @@
       </form>
     </div>
 
-    <!-- 3. DASHBOARD WIDGETS SECTION: OVERDUE ROUTINES + LATEST 3 ACTIVITIES + PENDING SINGLE TASKS -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- 3. DASHBOARD WIDGETS SECTION (ALLARGATI IN 2 COLONNE: 50% / 50% CON FILTRO TESTO & ASSEGNATARIO) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
 
-      <!-- WIDGET A: ROUTINE IN SCADENZA O SCADUTE (1-TAP DIRECT ACTION) -->
-      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3 lg:col-span-1">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+      <!-- WIDGET A: ROUTINE IN SCADENZA O SCADUTE (CON FILTRI DINAMICI) -->
+      <div id="widget-routines-container" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3.5">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 flex-wrap gap-2">
           <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
             <span>🚨</span> Routine in Scadenza & Scadute
           </h3>
-          <span id="due-routines-count-badge" class="text-xs font-extrabold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 hidden">0</span>
+          <span id="due-routines-count-badge" class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 hidden">0</span>
         </div>
-        <div id="home-due-routines-list" class="space-y-2.5 max-h-72 overflow-y-auto custom-scrollbar">
+
+        <!-- Filtri Testo Libero & Assegnatario -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+          <input id="filter-routine-search" type="text" oninput="renderHomeWidgets()" placeholder="🔍 Filtra per nome routine..." class="sm:col-span-7 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 font-medium">
+          <div class="sm:col-span-5 flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1">
+            <span class="text-slate-400 text-xs">👤</span>
+            <select id="filter-routine-member" onchange="renderHomeWidgets()" class="bg-transparent text-xs font-bold text-slate-700 w-full outline-none">
+              <option value="all">Tutti gli assegnatari</option>
+              <!-- Injected dynamically -->
+            </select>
+          </div>
+        </div>
+
+        <div id="home-due-routines-list" class="space-y-2.5 max-h-80 overflow-y-auto custom-scrollbar">
           <!-- Injected via JS -->
         </div>
       </div>
 
-      <!-- WIDGET B: ULTIME 3 ATTIVITÀ SVOLTE DALLA FAMIGLIA (COMPREHENSIVE VIEW) -->
-      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3 lg:col-span-1">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-          <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-            <span>🕒</span> Ultime Attività Svolte
-          </h3>
-          <span class="text-xs text-slate-400 font-bold">Registro Famiglia</span>
-        </div>
-        <div id="home-latest-activities-list" class="space-y-2.5">
-          <!-- Injected via JS -->
-        </div>
-      </div>
-
-      <!-- WIDGET C: TASK SINGOLI NON ANCORA ESEGUITI (CON DATA, NOTE E GIORNI TRASCORSI) -->
-      <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3 lg:col-span-1">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+      <!-- WIDGET B: TASK SINGOLI IN SOSPESO (CON FILTRI DINAMICI) -->
+      <div id="widget-pending-tasks-container" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3.5">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 flex-wrap gap-2">
           <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
             <span>📋</span> Task Singoli in Sospeso
           </h3>
-          <span id="pending-tasks-count-badge" class="text-xs font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 hidden">0</span>
+          <span id="pending-tasks-count-badge" class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 hidden">0</span>
         </div>
-        <div id="home-pending-tasks-list" class="space-y-2.5 max-h-72 overflow-y-auto custom-scrollbar">
+
+        <!-- Filtri Testo Libero & Assegnatario -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+          <input id="filter-single-search" type="text" oninput="renderHomeWidgets()" placeholder="🔍 Filtra descrizione task..." class="sm:col-span-7 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 font-medium">
+          <div class="sm:col-span-5 flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1">
+            <span class="text-slate-400 text-xs">👤</span>
+            <select id="filter-single-member" onchange="renderHomeWidgets()" class="bg-transparent text-xs font-bold text-slate-700 w-full outline-none">
+              <option value="all">Tutti gli assegnatari</option>
+              <!-- Injected dynamically -->
+            </select>
+          </div>
+        </div>
+
+        <div id="home-pending-tasks-list" class="space-y-2.5 max-h-80 overflow-y-auto custom-scrollbar">
           <!-- Injected via JS -->
         </div>
       </div>
@@ -469,7 +480,6 @@
         <button onclick="closePerformerModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
       </div>
 
-      <!-- Foreground: 1-Tap Single Member Buttons -->
       <div class="space-y-2">
         <div class="text-xs font-bold text-slate-500">Tocca il membro che ha completato l'attività da solo:</div>
         <div id="modal-single-member-buttons" class="grid grid-cols-2 gap-3">
@@ -477,7 +487,6 @@
         </div>
       </div>
 
-      <!-- Accordion / Toggle: Multi-author selection with points division -->
       <div class="pt-3 border-t border-slate-100 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-xs font-extrabold text-slate-700">👥 Hanno partecipato più persone insieme?</span>
@@ -502,7 +511,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: CHOOSE WHO TO ASSIGN QUICK TASK TO (WITH ACCORDION FOR MULTI) ==================== -->
+  <!-- ==================== MODAL: CHOOSE WHO TO ASSIGN QUICK TASK TO ==================== -->
   <div id="modal-assign-task" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -513,7 +522,6 @@
         <button onclick="closeAssignModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
       </div>
 
-      <!-- Foreground 1-tap buttons -->
       <div class="space-y-2">
         <div class="text-xs font-bold text-slate-500">Assegna rapidamente con 1 tap:</div>
         <button onclick="confirmTaskAssignment(['all'])" class="w-full p-3 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-2xl text-left flex items-center gap-3 transition">
@@ -528,7 +536,6 @@
         </div>
       </div>
 
-      <!-- Accordion: Assign to multiple people -->
       <div class="pt-3 border-t border-slate-100 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-xs font-extrabold text-slate-700">👥 Assegnare a più persone?</span>
@@ -550,7 +557,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: TASK NOTES & DATE RESCHEDULING (INSERIMENTO NOTE E SPOSTAMENTO DATA) ==================== -->
+  <!-- ==================== MODAL: TASK NOTES & DATE RESCHEDULING ==================== -->
   <div id="modal-task-notes" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -563,7 +570,6 @@
 
       <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
         
-        <!-- Task Info & Date Rescheduling Form -->
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
           <div class="text-xs text-slate-500 font-medium flex items-center justify-between">
             <span>Assegnato a: <b id="modal-notes-assigned" class="text-slate-800">-</b></span>
@@ -576,7 +582,6 @@
           </div>
         </div>
 
-        <!-- History of Notes on this Task -->
         <div class="space-y-2">
           <div class="text-xs font-extrabold text-slate-700 uppercase">💬 Cronologia Note e Commenti:</div>
           <div id="modal-notes-history-list" class="space-y-2 max-h-44 overflow-y-auto custom-scrollbar">
@@ -584,7 +589,6 @@
           </div>
         </div>
 
-        <!-- Add New Note Form -->
         <div class="pt-2 border-t border-slate-100 space-y-2">
           <label class="block text-xs font-extrabold text-slate-700 uppercase">Aggiungi una nuova nota:</label>
           <textarea id="modal-new-note-text" rows="2" placeholder="Es. Lo farò domani dopo lavoro, ordinato il pezzo di ricambio..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 font-medium"></textarea>
@@ -606,7 +610,7 @@
     </div>
   </div>
 
-  <!-- ==================== EMOJI PICKER POPUP (DYNAMIC LIVE SEARCH + 200+ EMOJIS) ==================== -->
+  <!-- ==================== EMOJI PICKER POPUP ==================== -->
   <div id="modal-emoji-picker" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-xl w-full p-5 space-y-4 shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -614,14 +618,12 @@
         <button onclick="closeEmojiPicker()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
       </div>
 
-      <!-- Dynamic Search Input -->
       <div>
         <input id="emoji-search-input" type="text" oninput="filterEmojiLibrary(this.value)" placeholder="🔍 Cerca emoji (es. lavatrice, pizza, cane, auto, bagno, denti, spesa, bimbo)..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 font-medium">
       </div>
 
-      <!-- Emoji Container -->
       <div id="emoji-library-container" class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
-        <!-- Rendered dynamically with live search filter -->
+        <!-- Rendered dynamically -->
       </div>
     </div>
   </div>
@@ -1022,13 +1024,14 @@
       const histSelect = document.getElementById('history-member-filter');
       const routMemberSelect = document.getElementById('rout-edit-member');
       const noteAuthorSelect = document.getElementById('modal-note-author');
+      const filterRoutMember = document.getElementById('filter-routine-member');
+      const filterSingleMember = document.getElementById('filter-single-member');
       const winnersBadge = document.getElementById('period-winners-badge');
       if (!bar || !appData) return;
 
       const members = Object.values(appData.members || {});
       const labels = getPeriodLabels();
 
-      // Period Winners Header Bar
       if (winnersBadge && appData.winners) {
         winnersBadge.innerHTML = '';
         const w = appData.winners;
@@ -1040,6 +1043,8 @@
       if (histSelect) histSelect.innerHTML = '<option value="all">Tutti gli esecutori</option>';
       if (routMemberSelect) routMemberSelect.innerHTML = '<option value="all">👥 Tutta la Famiglia</option>';
       if (noteAuthorSelect) noteAuthorSelect.innerHTML = '';
+      if (filterRoutMember) filterRoutMember.innerHTML = '<option value="all">Tutti gli assegnatari</option>';
+      if (filterSingleMember) filterSingleMember.innerHTML = '<option value="all">Tutti gli assegnatari</option>';
 
       let gridColsClass = 'grid grid-cols-1 gap-4 w-full';
       if (members.length === 2) gridColsClass = 'grid grid-cols-1 sm:grid-cols-2 gap-4 w-full';
@@ -1058,26 +1063,42 @@
           gapBadge = `<span class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-lg">${m.gap_text}</span>`;
         }
 
-        // Urgent single tasks indicator (today / overdue)
+        // Pending task alert text with shared count e.g. "4 task in sospeso (2 comuni)" (NO ANIMATION, CLICKABLE)
         let pendingWarningBadge = '';
-        if (m.urgent_single_tasks_count > 0) {
+        if (m.pending_single_tasks_count > 0) {
+          const sharedSuffix = m.shared_single_tasks_count > 0 ? ` (${m.shared_single_tasks_count} comuni)` : '';
+          const taskWord = m.pending_single_tasks_count === 1 ? 'task in sospeso' : 'task in sospeso';
           pendingWarningBadge = `
-            <div class="flex items-center gap-2 bg-amber-500/15 border border-amber-400 text-amber-900 px-3 py-1.5 rounded-xl text-xs font-extrabold animate-pulse">
-              <span>⚠️</span>
-              <span>${m.urgent_single_tasks_count} ${m.urgent_single_tasks_count === 1 ? 'task in sospeso' : 'task in sospeso'}</span>
+            <div onclick="filterPendingTasksForMember('${m.name}')" title="Clicca per visualizzare i task di ${m.name}" class="flex items-center justify-between bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400 text-amber-950 px-3 py-1.5 rounded-2xl text-xs font-extrabold cursor-pointer transition">
+              <span class="flex items-center gap-1.5">
+                <span>⚠️</span>
+                <span>${m.pending_single_tasks_count} ${taskWord}${sharedSuffix}</span>
+              </span>
+              <span class="text-[10px] text-amber-800 uppercase tracking-wider font-bold">Vedi ➔</span>
             </div>
           `;
-        } else if (m.pending_single_tasks_count > 0) {
-          pendingWarningBadge = `
-            <div class="flex items-center gap-2 bg-sky-50 border border-sky-200 text-sky-800 px-3 py-1.5 rounded-xl text-xs font-bold">
-              <span>📅</span>
-              <span>${m.pending_single_tasks_count} task programmato</span>
+        }
+
+        // Last completed activity text
+        let lastActivityHtml = '';
+        if (m.last_activity) {
+          const dt = formatDateTime(m.last_activity.created_at);
+          const ptsText = m.last_activity.is_personal ? '' : `(+${m.last_activity.points} pt)`;
+          lastActivityHtml = `
+            <div class="text-[11px] text-slate-500 truncate pt-1">
+              <span>🕒 Ultima: <b class="text-slate-700">${m.last_activity.task_name}</b> <span class="text-indigo-600 font-bold">${ptsText}</span> • <span class="text-slate-400">${dt}</span></span>
+            </div>
+          `;
+        } else {
+          lastActivityHtml = `
+            <div class="text-[11px] text-slate-400 truncate pt-1">
+              <span>🕒 Nessuna attività recente registrata</span>
             </div>
           `;
         }
 
         cardsHtml += `
-          <div class="p-5 rounded-3xl border border-slate-200 bg-slate-50/90 shadow-2xs hover:shadow-md transition flex flex-col justify-between space-y-4 w-full">
+          <div class="p-5 rounded-3xl border border-slate-200 bg-slate-50/90 shadow-2xs hover:shadow-md transition flex flex-col justify-between space-y-3.5 w-full">
             
             <!-- Member Header & Primary Score -->
             <div class="flex items-center justify-between gap-3">
@@ -1093,7 +1114,10 @@
               </div>
             </div>
 
-            <!-- Attention Warning Badge for Pending Tasks -->
+            <!-- Last completed task for this member -->
+            ${lastActivityHtml}
+
+            <!-- Attention Warning Badge for Pending Tasks (No animation, clickable) -->
             ${pendingWarningBadge ? `<div>${pendingWarningBadge}</div>` : ''}
 
             <!-- Sub-bar: Total Score & Gap -->
@@ -1108,45 +1132,73 @@
         if (histSelect) histSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
         if (routMemberSelect) routMemberSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
         if (noteAuthorSelect) noteAuthorSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
+        if (filterRoutMember) filterRoutMember.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
+        if (filterSingleMember) filterSingleMember.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
       });
 
       bar.innerHTML = `<div class="${gridColsClass}">${cardsHtml}</div>`;
     }
 
-    // ==================== RENDER HOME WIDGETS ====================
+    function filterPendingTasksForMember(memberName) {
+      const singleMemberSelect = document.getElementById('filter-single-member');
+      if (singleMemberSelect) {
+        singleMemberSelect.value = memberName;
+        renderHomeWidgets();
+        document.getElementById('widget-pending-tasks-container')?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    // ==================== RENDER EXPANDED 2-COLUMN DASHBOARD WIDGETS ====================
     function renderHomeWidgets() {
       if (!appData) return;
 
-      // 1. Overdue & Imminent Routines
+      // 1. Overdue & Imminent Routines with Free Text & Member Filter
       const dueBox = document.getElementById('home-due-routines-list');
       const dueCountBadge = document.getElementById('due-routines-count-badge');
-      const dueRoutines = (appData.routine_tasks || []).filter(r => r.status === 'overdue' || r.status === 'warning');
+      const routineSearch = (document.getElementById('filter-routine-search')?.value || '').toLowerCase().trim();
+      const routineMemberFilter = document.getElementById('filter-routine-member')?.value || 'all';
+
+      const allDueRoutines = (appData.routine_tasks || []).filter(r => r.status === 'overdue' || r.status === 'warning');
 
       if (dueCountBadge) {
-        dueCountBadge.textContent = dueRoutines.length;
-        dueCountBadge.classList.toggle('hidden', dueRoutines.length === 0);
+        dueCountBadge.textContent = allDueRoutines.length;
+        dueCountBadge.classList.toggle('hidden', allDueRoutines.length === 0);
       }
+
+      const filteredDueRoutines = allDueRoutines.filter(r => {
+        const matchText = (r.name || '').toLowerCase().includes(routineSearch);
+        const matchMember = (routineMemberFilter === 'all') || 
+                            (r.assigned_member === 'all') || 
+                            (r.assigned_member === routineMemberFilter);
+        return matchText && matchMember;
+      });
 
       if (dueBox) {
         dueBox.innerHTML = '';
-        if (dueRoutines.length === 0) {
-          dueBox.innerHTML = '<div class="text-center py-6 text-xs text-emerald-700 bg-emerald-50 rounded-2xl font-bold flex items-center justify-center gap-1.5"><span>✅</span> Tutte le routine sono in regola!</div>';
+        if (filteredDueRoutines.length === 0) {
+          dueBox.innerHTML = '<div class="text-center py-8 text-xs text-emerald-700 bg-emerald-50 rounded-2xl font-bold flex items-center justify-center gap-1.5"><span>✅</span> Nessuna routine in scadenza per questi filtri!</div>';
         } else {
-          dueRoutines.forEach(r => {
+          filteredDueRoutines.forEach(r => {
             let badge = (r.status === 'overdue')
-              ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800">🔴 Scaduta (${r.overdue_days}gg fa)</span>`
-              : `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800">🟡 ${r.days_remaining === 0 ? 'Scade oggi' : 'Tra ' + r.days_remaining + 'gg'}</span>`;
+              ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800">🔴 Scaduta (${r.overdue_days}gg fa)</span>`
+              : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800">🟡 ${r.days_remaining === 0 ? 'Scade oggi' : 'Tra ' + r.days_remaining + 'gg'}</span>`;
+
+            const assignedText = r.assigned_member && r.assigned_member !== 'all' ? `👤 ${r.assigned_member}` : '👥 Famiglia';
 
             dueBox.innerHTML += `
-              <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-2 text-xs">
-                <div class="flex items-center gap-2.5 overflow-hidden">
-                  <span class="text-xl shrink-0">${r.icon || '🔄'}</span>
+              <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs hover:border-indigo-300 transition">
+                <div class="flex items-center gap-3 overflow-hidden">
+                  <span class="text-2xl shrink-0">${r.icon || '🔄'}</span>
                   <div class="truncate">
                     <div class="font-extrabold text-slate-900 truncate">${r.name}</div>
-                    <div class="mt-0.5">${badge}</div>
+                    <div class="text-slate-500 text-[11px] font-medium mt-0.5 flex items-center gap-2">
+                      <span>${badge}</span>
+                      <span>•</span>
+                      <span>${assignedText}</span>
+                    </div>
                   </div>
                 </div>
-                <button onclick="promptPerformerSelection('${r.name}', ${r.points}, 'routine', ${!!r.is_personal})" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] rounded-xl shadow shrink-0">
+                <button onclick="promptPerformerSelection('${r.name}', ${r.points}, 'routine', ${!!r.is_personal})" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow shrink-0">
                   Fatto ✓
                 </button>
               </div>
@@ -1155,53 +1207,39 @@
         }
       }
 
-      // 2. Latest 3 Activities (Global Family View)
-      const latestBox = document.getElementById('home-latest-activities-list');
-      if (latestBox) {
-        latestBox.innerHTML = '';
-        const logs = appData.recent_global_logs || [];
-        if (logs.length === 0) {
-          latestBox.innerHTML = '<div class="text-center py-6 text-xs text-slate-400 font-medium">Nessuna attività registrata di recente.</div>';
-        } else {
-          logs.forEach(l => {
-            const dtFormatted = formatDateTime(l.created_at);
-            const ptsBadge = l.is_personal ? '<span class="text-[10px] text-slate-400 font-bold">promemoria</span>' : `<span class="font-extrabold text-indigo-600">+${l.points} pt</span>`;
-            latestBox.innerHTML += `
-              <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-2 text-xs">
-                <div class="flex items-center gap-2.5 overflow-hidden">
-                  <span class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">⚡</span>
-                  <div class="truncate">
-                    <div class="font-extrabold text-slate-900 truncate">${l.task_name}</div>
-                    <div class="text-slate-500 text-[11px] font-medium mt-0.5">👤 <b>${l.member_name}</b> • <span class="text-slate-400">${dtFormatted}</span></div>
-                  </div>
-                </div>
-                <div class="shrink-0 text-right">${ptsBadge}</div>
-              </div>
-            `;
-          });
-        }
-      }
-
-      // 3. Pending Single Tasks (Date-aware icon: 📅 for future, ⚠️ for today/overdue)
+      // 2. Pending Single Tasks with Free Text & Member Filter
       const pendingBox = document.getElementById('home-pending-tasks-list');
       const pendingBadge = document.getElementById('pending-tasks-count-badge');
-      const pendingTasks = appData.pending_single_tasks || [];
+      const singleSearch = (document.getElementById('filter-single-search')?.value || '').toLowerCase().trim();
+      const singleMemberFilter = document.getElementById('filter-single-member')?.value || 'all';
+
+      const allPendingTasks = appData.pending_single_tasks || [];
 
       if (pendingBadge) {
-        pendingBadge.textContent = pendingTasks.length;
-        pendingBadge.classList.toggle('hidden', pendingTasks.length === 0);
+        pendingBadge.textContent = allPendingTasks.length;
+        pendingBadge.classList.toggle('hidden', allPendingTasks.length === 0);
       }
+
+      const filteredPendingTasks = allPendingTasks.filter(t => {
+        const matchText = (t.title || '').toLowerCase().includes(singleSearch);
+        const assignedList = Array.isArray(t.assigned_to) ? t.assigned_to : [t.assigned_to];
+        const matchMember = (singleMemberFilter === 'all') || 
+                            (assignedList.includes('all')) || 
+                            (assignedList.includes('Tutti')) || 
+                            (assignedList.includes('Tutta la Famiglia')) || 
+                            (assignedList.includes(singleMemberFilter));
+        return matchText && matchMember;
+      });
 
       if (pendingBox) {
         pendingBox.innerHTML = '';
-        if (pendingTasks.length === 0) {
-          pendingBox.innerHTML = '<div class="text-center py-6 text-xs text-slate-400 font-medium">Nessun task estemporaneo in sospeso! ✨</div>';
+        if (filteredPendingTasks.length === 0) {
+          pendingBox.innerHTML = '<div class="text-center py-8 text-xs text-slate-400 font-medium">Nessun task in sospeso per questi filtri! ✨</div>';
         } else {
-          pendingTasks.forEach(t => {
+          filteredPendingTasks.forEach(t => {
             const assignedText = Array.isArray(t.assigned_to) ? (t.assigned_to.includes('all') ? 'Famiglia' : t.assigned_to.join(', ')) : t.assigned_to;
             const ptsText = t.points > 0 ? `(+${t.points} pt)` : '';
             
-            // Date-aware icon and badge
             const statusIcon = t.is_future ? '📅' : '⚠️';
             let dateBadge = '';
             if (t.is_future) {
@@ -1215,9 +1253,9 @@
             const notesCountBadge = (t.notes && t.notes.length > 0) ? `<span class="bg-indigo-100 text-indigo-800 text-[10px] font-extrabold px-1.5 py-0.2 rounded-md">💬 ${t.notes.length}</span>` : '';
 
             pendingBox.innerHTML += `
-              <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-2 text-xs hover:border-indigo-300 transition">
-                <div onclick="openTaskNotesModal('${t.id}')" class="flex items-center gap-2.5 overflow-hidden cursor-pointer flex-1" title="Clicca per aggiungere note o spostare data">
-                  <span class="text-xl shrink-0">${statusIcon}</span>
+              <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs hover:border-indigo-300 transition">
+                <div onclick="openTaskNotesModal('${t.id}')" class="flex items-center gap-3 overflow-hidden cursor-pointer flex-1" title="Clicca per aggiungere note o spostare data">
+                  <span class="text-2xl shrink-0">${statusIcon}</span>
                   <div class="truncate">
                     <div class="font-extrabold text-slate-900 truncate flex items-center gap-1.5">
                       <span>${t.title}</span>
@@ -1229,14 +1267,14 @@
                     </div>
                   </div>
                 </div>
-                <div class="flex items-center gap-1 shrink-0">
-                  <button onclick="openTaskNotesModal('${t.id}')" title="Aggiungi Note o Sposta Data" class="p-1.5 bg-slate-200 hover:bg-slate-300 rounded-xl text-slate-700 font-bold text-xs transition">
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button onclick="openTaskNotesModal('${t.id}')" title="Aggiungi Note o Sposta Data" class="p-2 bg-slate-200 hover:bg-slate-300 rounded-xl text-slate-700 font-bold text-xs transition">
                     📝
                   </button>
-                  <button onclick="completeSingleTask('${t.id}')" title="Completa Task" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] rounded-xl shadow">
+                  <button onclick="completeSingleTask('${t.id}')" title="Completa Task" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow">
                     ✓ Fatto
                   </button>
-                  <button onclick="deleteSingleTask('${t.id}')" title="Elimina Task" class="text-slate-400 hover:text-rose-600 p-1">✕</button>
+                  <button onclick="deleteSingleTask('${t.id}')" title="Elimina Task" class="text-slate-400 hover:text-rose-600 p-1.5">✕</button>
                 </div>
               </div>
             `;
@@ -1261,7 +1299,6 @@
 
       const members = Object.values(appData?.members || {});
 
-      // 1-Tap Single Buttons
       if (singleBox) {
         singleBox.innerHTML = '';
         members.forEach(m => {
@@ -1277,7 +1314,6 @@
         });
       }
 
-      // Multi-Author Checkboxes (CHECKED BY DEFAULT FOR EVERYONE!)
       if (multiBox) {
         multiBox.innerHTML = '';
         members.forEach(m => {
@@ -1290,7 +1326,6 @@
         });
       }
 
-      // Hide multi-author accordion by default
       document.getElementById('multi-author-section').classList.add('hidden');
       document.getElementById('btn-toggle-multi').textContent = 'Mostra selezione multipla ▼';
 
@@ -1415,7 +1450,6 @@
         });
       }
 
-      // Hide accordion by default
       document.getElementById('assign-multi-section').classList.add('hidden');
       document.getElementById('btn-toggle-assign-multi').textContent = 'Mostra selezione multipla ▼';
 
