@@ -68,7 +68,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md">v2.1</span>
+            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md">v2.2</span>
           </h1>
           <p class="text-xs text-slate-500 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -142,7 +142,7 @@
         <span class="text-3xl group-hover:scale-110 transition">🔄</span>
         <div>
           <div class="font-extrabold text-xs sm:text-sm text-slate-900">Catalogo Routine</div>
-          <div class="text-[10px] text-slate-500 font-medium">Routine per categoria</div>
+          <div class="text-[10px] text-slate-500 font-medium">Scadenze e categorie</div>
         </div>
       </button>
 
@@ -236,117 +236,166 @@
 
   </main>
 
-  <!-- ==================== MODE 2: GESTIONE & ADMIN ==================== -->
+  <!-- ==================== MODE 2: GESTIONE & ADMIN (RIORGANIZZATA IN SEZIONI COMPLETE) ==================== -->
   <main id="mode-admin" class="hidden max-w-6xl mx-auto px-4 pt-6 space-y-6">
 
-    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-4 flex-wrap gap-4">
+    <!-- SEZIONE 1: IMPOSTAZIONI GENERALI -->
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-3">
         <div>
-          <h2 class="font-extrabold text-xl text-slate-900 flex items-center gap-2">
-            <span>⚙️</span> Gestione & Configurazione Sistema
+          <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+            <span>⚙️</span> Impostazioni Generali ChoreQuest
           </h2>
-          <p class="text-xs text-slate-500">Configura categorie, membri, cataloghi, punteggio in primo piano e calcolo periodi.</p>
-        </div>
-
-        <!-- Global Settings Controls -->
-        <div class="flex items-center gap-3 flex-wrap">
-          <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 text-xs">
-            <span class="font-bold text-slate-600">Punteggio in Primo Piano:</span>
-            <select id="cfg-primary-score" onchange="savePrimaryScore(this.value)" class="bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold text-indigo-700">
-              <option value="weekly">🏆 Settimanale / 7 Giorni (Default)</option>
-              <option value="daily">🥇 Oggi / 24 Ore</option>
-              <option value="monthly">🌟 Mensile / 30 Giorni</option>
-              <option value="yearly">📊 Annuale / 365 Giorni</option>
-              <option value="total">💎 Totale di Sempre</option>
-            </select>
-          </div>
-
-          <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200 text-xs">
-            <span class="font-bold text-slate-600">Calcolo Periodi:</span>
-            <select id="cfg-period-mode" onchange="savePeriodMode(this.value)" class="bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold text-indigo-700">
-              <option value="calendar">📅 Calendario (Oggi, Settimana, Mese, Anno)</option>
-              <option value="rolling">⏳ Mobile (Ultime 24h, 7gg, 30gg, 365gg)</option>
-            </select>
-          </div>
+          <p class="text-xs text-slate-500">Configurazione punteggio e periodi di calcolo classifiche</p>
         </div>
       </div>
 
-      <!-- ADMIN SECTIONS -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        <!-- 1. GESTIONE CATEGORIE CON ORDINAMENTO -->
-        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                <span>📁</span> Categorie Faccende & Routine
-              </h3>
-              <p class="text-[11px] text-slate-500 font-medium">Organizza e ordina le categorie</p>
-            </div>
-            <button onclick="openCategoryModal()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow transition">
-              + Categoria
-            </button>
-          </div>
-          <div id="admin-categories-list" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-            <!-- Injected via JS -->
-          </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
+          <label class="block text-xs font-bold text-slate-700 uppercase">Punteggio in Primo Piano</label>
+          <select id="cfg-primary-score" onchange="savePrimaryScore(this.value)" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-700">
+            <option value="weekly">🏆 Settimanale / 7 Giorni (Default)</option>
+            <option value="daily">🥇 Oggi / 24 Ore</option>
+            <option value="monthly">🌟 Mensile / 30 Giorni</option>
+            <option value="yearly">📊 Annuale / 365 Giorni</option>
+            <option value="total">💎 Totale di Sempre</option>
+          </select>
         </div>
 
-        <!-- 2. GESTIONE MEMBRI -->
-        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-1.5">
+          <label class="block text-xs font-bold text-slate-700 uppercase">Modalità Calcolo Periodi</label>
+          <select id="cfg-period-mode" onchange="savePeriodMode(this.value)" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-700">
+            <option value="calendar">📅 Calendario (Oggi, Settimana, Mese, Anno)</option>
+            <option value="rolling">⏳ Mobile (Ultime 24h, 7gg, 30gg, 365gg)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEZIONE 2: BACKUP & RIPRISTINO DATABASE -->
+    <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+        <div>
+          <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+            <span>💾</span> Backup & Ripristino Database
+          </h2>
+          <p class="text-xs text-slate-500">Scarica una copia di sicurezza completa del database o ripristina da un file JSON precedentemente salvato</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Download Backup -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col justify-between space-y-3">
+          <div>
+            <div class="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+              <span>📥</span> Scarica Backup Database
+            </div>
+            <div class="text-xs text-slate-500 mt-1">Esporta tutti i punteggi, membri, categorie, routine e storico in formato JSON.</div>
+          </div>
+          <button onclick="downloadBackup()" class="py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center justify-center gap-2">
+            <span>⬇️</span> Scarica File Backup (.json)
+          </button>
+        </div>
+
+        <!-- Upload Restore -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col justify-between space-y-3">
+          <div>
+            <div class="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+              <span>📤</span> Ripristina Database da File
+            </div>
+            <div class="text-xs text-slate-500 mt-1">Carica un file JSON di backup per ripristinare interamente il sistema.</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="restore-file-input" type="file" accept=".json" class="text-xs file:mr-2 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-200 file:text-slate-800 hover:file:bg-slate-300 w-full">
+            <button onclick="restoreBackupFromFile()" class="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">
+              Ripristina
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEZIONE 3: GESTIONE CATEGORIE & MEMBRI -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- GESTIONE CATEGORIE CON PULSANTI 🔼 / 🔽 -->
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
+              <span>📁</span> Categorie Faccende & Routine
+            </h3>
+            <p class="text-xs text-slate-500">Ordina con le frecce 🔼 / 🔽</p>
+          </div>
+          <button onclick="openCategoryModal()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition">
+            + Categoria
+          </button>
+        </div>
+        <div id="admin-categories-list" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
+          <!-- Injected via JS with Up/Down buttons -->
+        </div>
+      </div>
+
+      <!-- GESTIONE MEMBRI -->
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
               <span>👥</span> Membri Famiglia
             </h3>
-            <button onclick="openMemberModal()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow transition">
-              + Membro
-            </button>
+            <p class="text-xs text-slate-500">Avatar, colori e nomi</p>
           </div>
-          <div id="admin-members-list" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-            <!-- Injected via JS -->
-          </div>
+          <button onclick="openMemberModal()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition">
+            + Membro
+          </button>
         </div>
-
-        <!-- 3. CATALOGO ATTIVITÀ SPONTANEE -->
-        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-              <span>⚡</span> Catalogo Attività Spontanee
-            </h3>
-            <button onclick="openSpontaneousModal()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow transition">
-              + Aggiungi
-            </button>
-          </div>
-          <div id="admin-spontaneous-list" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-            <!-- Injected via JS -->
-          </div>
+        <div id="admin-members-list" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
+          <!-- Injected via JS -->
         </div>
-
-        <!-- 4. CATALOGO ROUTINE & PROMEMORIA SCHEDULATI -->
-        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
-          <div class="flex items-center justify-between flex-wrap gap-2">
-            <div>
-              <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-                <span>🔄</span> Catalogo Routine & Promemoria
-              </h3>
-            </div>
-            <button onclick="openRoutineModal()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg shadow transition">
-              + Routine
-            </button>
-          </div>
-          <div id="admin-routine-list" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
-            <!-- Injected via JS -->
-          </div>
-        </div>
-
       </div>
+
+    </div>
+
+    <!-- SEZIONE 4: CATALOGO ATTIVITÀ SPONTANEE & ROUTINE -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- SPONTANEE ADMIN -->
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
+            <span>⚡</span> Catalogo Attività Spontanee
+          </h3>
+          <button onclick="openSpontaneousModal()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition">
+            + Aggiungi
+          </button>
+        </div>
+        <div id="admin-spontaneous-list" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- ROUTINE ADMIN -->
+      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
+            <span>🔄</span> Catalogo Routine & Promemoria
+          </h3>
+          <button onclick="openRoutineModal()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow transition">
+            + Routine
+          </button>
+        </div>
+        <div id="admin-routine-list" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
     </div>
 
   </main>
 
   <!-- ==================== MODAL: ADHD DICE / ROULETTE ATTIVITÀ A CASO ==================== -->
   <div id="modal-adhd" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl border border-slate-200 text-center">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-6 shadow-2xl border border-slate-200 text-center">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2">
         <span class="text-xs font-extrabold text-amber-600 uppercase tracking-wider flex items-center gap-1">
           <span>🎲</span> ADHD Dice Task Picker
@@ -354,7 +403,6 @@
         <button onclick="closeAdhdModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
       </div>
 
-      <!-- Animated Dice Graphic Area -->
       <div class="py-2 space-y-3">
         <div id="adhd-dice-icon" class="text-7xl select-none transition cursor-pointer" onclick="rollAdhdTask()">
           🎲
@@ -372,12 +420,11 @@
         </div>
       </div>
 
-      <!-- ADHD Actions -->
       <div class="space-y-2">
-        <button id="btn-adhd-accept" onclick="acceptAdhdTask()" class="hidden w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-2xl shadow transition flex items-center justify-center gap-2">
-          <span>✓</span> Accetta & Completa Faccenda!
+        <button id="btn-adhd-accept" onclick="acceptAdhdTask()" class="hidden w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm rounded-2xl shadow transition flex items-center justify-center gap-2">
+          <span>✓</span> Accetta & Svolgi Faccenda!
         </button>
-        <button onclick="rollAdhdTask()" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-sm rounded-2xl shadow transition flex items-center justify-center gap-2">
+        <button onclick="rollAdhdTask()" class="w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-sm rounded-2xl shadow transition flex items-center justify-center gap-2">
           <span>🎲</span> <span id="adhd-roll-btn-label">Tira il dado ADHD!</span>
         </button>
       </div>
@@ -386,11 +433,11 @@
 
   <!-- ==================== MODAL 1: ATTIVITÀ SPONTANEE (CON ICONE GIGANTI IN PRIMO PIANO) ==================== -->
   <div id="modal-spontaneous-catalog" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-5xl w-full p-6 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+    <div class="bg-white rounded-3xl max-w-5xl w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
           <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Catalogo Faccende al Bisogno</div>
-          <h3 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+          <h3 class="font-extrabold text-xl text-slate-900 flex items-center gap-2">
             <span>⚡</span> Attività Spontanee della Casa
           </h3>
         </div>
@@ -408,10 +455,10 @@
             <span>➕</span> <span>Registra attività estemporanea non presente nel catalogo</span>
           </button>
           <div id="custom-task-box" class="hidden mt-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-            <form onsubmit="submitCustomTask(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-              <input id="custom-task-input" type="text" required placeholder="Descrizione attività (es. Montato mobile)..." class="sm:col-span-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
-              <input id="custom-pts-input" type="number" required value="15" min="0" max="200" placeholder="Punti" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
-              <button type="submit" class="py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
+            <form onsubmit="submitCustomTask(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+              <input id="custom-task-input" type="text" required placeholder="Descrizione attività (es. Montato mobile)..." class="sm:col-span-2 px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
+              <input id="custom-pts-input" type="number" required value="15" min="0" max="200" placeholder="Punti" class="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
+              <button type="submit" class="py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
                 Registra
               </button>
             </form>
@@ -421,13 +468,13 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 2: ASSEGNA TASK RAPIDO / PROMEMORIA ==================== -->
+  <!-- ==================== MODAL 2: ASSEGNA TASK RAPIDO / PROMEMORIA (CON STELLINA PRIORITÀ) ==================== -->
   <div id="modal-quick-task" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
           <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Nuovo Compito</div>
-          <h3 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+          <h3 class="font-extrabold text-xl text-slate-900 flex items-center gap-2">
             <span>➕</span> Assegna Task o Promemoria Rapido
           </h3>
         </div>
@@ -436,32 +483,44 @@
 
       <form onsubmit="initiateQuickTaskAssignment(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cosa c'è da fare?</label>
-          <input id="quick-task-title" type="text" required placeholder="Es. Comprare il latte, Chiamare idraulico, Pulire filtri..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Cosa c'è da fare?</label>
+          <input id="quick-task-title" type="text" required placeholder="Es. Comprare il latte, Chiamare idraulico, Pulire filtri..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">📅 Data Scadenza</label>
-            <input id="quick-task-date" type="date" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500">
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">📅 Data Scadenza</label>
+            <input id="quick-task-date" type="date" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500">
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Punti (Opzionali)</label>
-            <div class="flex items-center bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 focus-within:ring-2 focus-within:ring-indigo-500">
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">Punti (Opzionali)</label>
+            <div class="flex items-center bg-slate-50 border border-slate-200 rounded-2xl px-3.5 py-2 focus-within:ring-2 focus-within:ring-indigo-500">
               <input id="quick-task-points" type="number" value="0" min="0" max="200" class="w-full bg-transparent text-xs text-center font-extrabold outline-none text-slate-800">
               <span class="text-xs font-bold text-slate-400 select-none ml-1">pt</span>
             </div>
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">📁 Categoria</label>
-          <select id="quick-task-category" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800">
-            <!-- Injected dynamically from categories -->
-          </select>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">📁 Categoria</label>
+            <select id="quick-task-category" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800">
+              <!-- Injected dynamically from categories -->
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">⭐ Priorità (Opzionale)</label>
+            <select id="quick-task-priority" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800">
+              <option value="medium">Media (Default)</option>
+              <option value="high">⭐ Alta</option>
+              <option value="urgent">🔥 Urgente</option>
+              <option value="low">🟢 Bassa</option>
+            </select>
+          </div>
         </div>
 
-        <div class="pt-2 flex justify-end gap-2">
+        <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
           <button type="button" onclick="closeQuickTaskModal()" class="px-4 py-2.5 bg-slate-100 font-bold text-xs rounded-xl">Annulla</button>
           <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
             Continua e Assegna ➔
@@ -471,20 +530,20 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL 3: CATALOGO ROUTINE CON CATEGORIE & ORDINAMENTO ==================== -->
+  <!-- ==================== MODAL 3: CATALOGO ROUTINE (DEFAULT: SCADENZA / PIÙ URGENTI) ==================== -->
   <div id="modal-routine-catalog" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-5xl w-full p-6 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+    <div class="bg-white rounded-3xl max-w-5xl w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
         <div>
           <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Monitor Scadenze per Categoria</div>
-          <h3 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+          <h3 class="font-extrabold text-xl text-slate-900 flex items-center gap-2">
             <span>🔄</span> Catalogo Completo Routine & Promemoria
           </h3>
         </div>
         <button onclick="closeRoutineCatalogModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
       </div>
 
-      <!-- Routine Filters & Sort Selector -->
+      <!-- Routine Filters & Sort Selector (Default: due_date) -->
       <div class="flex items-center justify-between flex-wrap gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
         <div class="flex gap-1.5 flex-wrap">
           <button onclick="setRoutineFilter('all')" id="rf-all" class="px-3 py-1.5 text-xs font-extrabold rounded-xl transition bg-indigo-600 text-white shadow">Tutte</button>
@@ -500,9 +559,9 @@
         <div class="flex items-center gap-2 text-xs">
           <span class="font-bold text-slate-600">Ordina per:</span>
           <select id="routine-sort-selector" onchange="changeRoutineSort(this.value)" class="bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-indigo-700">
-            <option value="cat_alpha">🔤 Categoria & Nome A-Z (Default)</option>
+            <option value="due_date" selected>🚨 Scadenza / Più Urgenti (Default)</option>
             <option value="cat_order">📁 Ordine Categorie Definito</option>
-            <option value="due_date">🚨 Scadenza / Più Urgenti</option>
+            <option value="cat_alpha">🔤 Categoria & Nome A-Z</option>
             <option value="points">⭐ Più Punti</option>
             <option value="alpha">📝 Nome A-Z</option>
           </select>
@@ -510,7 +569,7 @@
       </div>
 
       <div id="routine-list" class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
-        <!-- Injected via JS grouped or sorted by Category -->
+        <!-- Injected via JS -->
       </div>
     </div>
   </div>
@@ -600,11 +659,11 @@
 
   <!-- ==================== MODAL 5: STORICO CRONOLOGICO ==================== -->
   <div id="modal-history-view" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-5xl w-full p-6 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+    <div class="bg-white rounded-3xl max-w-5xl w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
         <div>
           <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Registro Completo</div>
-          <h3 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+          <h3 class="font-extrabold text-xl text-slate-900 flex items-center gap-2">
             <span>📜</span> Storico Cronologico Attività, Note & Cancellazioni
           </h3>
         </div>
@@ -626,11 +685,11 @@
 
   <!-- ==================== MODAL: TASK NOTES, RESCHEDULING & DELETE BUTTON (CONFERMA) ==================== -->
   <div id="modal-task-notes" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
           <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Dettagli & Note Task</div>
-          <h3 id="modal-notes-task-title" class="font-extrabold text-base sm:text-lg text-slate-900 truncate">Nome Task</h3>
+          <h3 id="modal-notes-task-title" class="font-extrabold text-lg text-slate-900 truncate">Nome Task</h3>
         </div>
         <button onclick="closeTaskNotesModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
       </div>
@@ -684,7 +743,7 @@
 
   <!-- ==================== MODAL: WHO COMPLETED THE TASK? ==================== -->
   <div id="modal-select-performer" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
           <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Conferma Esecuzione</div>
@@ -772,7 +831,7 @@
 
   <!-- ==================== GIGANTIC 700+ EMOJI PICKER MODAL ==================== -->
   <div id="modal-emoji-picker" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 sm:p-7 space-y-4 shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2">
         <h4 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
           <span>✨</span> Catalogo Emoji ChoreQuest (700+ Emoji)
@@ -792,7 +851,7 @@
 
   <!-- MODAL: ADD / EDIT CATEGORY -->
   <div id="modal-category" class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 space-y-4 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 id="modal-category-title" class="font-extrabold text-lg text-slate-900">Categoria</h3>
         <button onclick="closeCategoryModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
@@ -803,20 +862,14 @@
           <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nome Categoria</label>
           <input id="cat-name-input" type="text" required placeholder="Es. Cucina & Spesa, Pulizia..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Icona Emoji</label>
-            <div class="flex items-center gap-2">
-              <input id="cat-icon-input" type="hidden" value="📁">
-              <button type="button" onclick="openEmojiPicker('cat-icon-input', 'cat-icon-preview')" class="flex-1 py-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-100 transition">
-                <span id="cat-icon-preview" class="text-2xl">📁</span>
-                <span class="text-xs font-bold text-slate-500">Scegli</span>
-              </button>
-            </div>
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Ordine Visualizzazione</label>
-            <input id="cat-order-input" type="number" required value="1" min="1" max="99" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Icona Emoji</label>
+          <div class="flex items-center gap-2">
+            <input id="cat-icon-input" type="hidden" value="📁">
+            <button type="button" onclick="openEmojiPicker('cat-icon-input', 'cat-icon-preview')" class="flex-1 py-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-100 transition">
+              <span id="cat-icon-preview" class="text-2xl">📁</span>
+              <span class="text-xs font-bold text-slate-500">Scegli Emoji</span>
+            </button>
           </div>
         </div>
         <div class="flex justify-end gap-2 pt-2">
@@ -829,7 +882,7 @@
 
   <!-- MODAL: ADD / EDIT MEMBER -->
   <div id="modal-member" class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 space-y-4 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 id="modal-member-title" class="font-extrabold text-lg text-slate-900">Membro Famiglia</h3>
         <button onclick="closeMemberModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
@@ -866,7 +919,7 @@
 
   <!-- MODAL: ADD / EDIT SPONTANEOUS TASK -->
   <div id="modal-spontaneous" class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-7 space-y-4 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 id="modal-spontaneous-title" class="font-extrabold text-lg text-slate-900">Attività Spontanea</h3>
         <button onclick="closeSpontaneousModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
@@ -892,11 +945,22 @@
           </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Categoria</label>
-          <select id="spont-edit-category" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
-            <!-- Injected via JS -->
-          </select>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Categoria</label>
+            <select id="spont-edit-category" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+              <!-- Injected via JS -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Priorità</label>
+            <select id="spont-edit-priority" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+              <option value="medium">Media (Default)</option>
+              <option value="high">⭐ Alta</option>
+              <option value="urgent">🔥 Urgente</option>
+              <option value="low">🟢 Bassa</option>
+            </select>
+          </div>
         </div>
 
         <div class="flex items-center gap-2 pt-1">
@@ -914,7 +978,7 @@
 
   <!-- MODAL: ADD / EDIT ROUTINE TASK -->
   <div id="modal-routine" class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-4 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 id="modal-routine-title" class="font-extrabold text-lg text-slate-900">Routine / Promemoria Schedulato</h3>
         <button onclick="closeRoutineModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
@@ -978,6 +1042,16 @@
           </div>
         </div>
 
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Priorità</label>
+          <select id="rout-edit-priority" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
+            <option value="medium">Media (Default)</option>
+            <option value="high">⭐ Alta</option>
+            <option value="urgent">🔥 Urgente</option>
+            <option value="low">🟢 Bassa</option>
+          </select>
+        </div>
+
         <div class="pt-1">
           <div class="flex items-center gap-2">
             <input id="rout-edit-personal" type="checkbox" onchange="toggleRoutPersonal(this.checked)" class="w-4 h-4 text-indigo-600 rounded">
@@ -998,7 +1072,7 @@
     let activeStatsFilter = 'all';
     let activeRoutineFilter = 'all';
     let activeHomeRoutineFilter = 'due_default';
-    let activeRoutineSort = 'cat_alpha';
+    let activeRoutineSort = 'due_date'; // Default: Scadenza / Più Urgenti
     let appData = null;
     let chartMembers = null;
     let chartTasks = null;
@@ -1009,13 +1083,46 @@
     let pendingQuickTaskPayload = null;
     let activeEditingTaskId = null;
     let currentAdhdExtractedTask = null;
+    let lastAdhdExtractedTaskName = null;
 
     const apiBase = './api';
 
-    // Mega Emoji Database (700+ diverse Emojis with Italian search tags)
+    // Massive 700+ Unicode Emoji Database
     const EMOJI_DATABASE = [
+      { category: "😀 Faccine, Emozioni & Simboli", emojis: [
+        { e: "😀", t: "faccia felice sorriso allegro contento" },
+        { e: "😃", t: "faccia aperta sorriso felice allegria" },
+        { e: "😄", t: "occhi ridenti sorriso risata gioia" },
+        { e: "😁", t: "sorriso denti allegro raggiante" },
+        { e: "😆", t: "risata occhi chiusi divertimento" },
+        { e: "😂", t: "piangere dal ridere risate comico" },
+        { e: "🤣", t: "rotolarsi dal ridere divertente" },
+        { e: "😊", t: "sorriso dolce guance rosse timido" },
+        { e: "😇", t: "angelo aureola buono innocente" },
+        { e: "🙂", t: "sorriso lieve tranquillo sereno" },
+        { e: "😉", t: "occhiolino ammiccare intesa furbetto" },
+        { e: "😍", t: "occhi cuore innamorato amore" },
+        { e: "🥰", t: "cuori affetto tenerezza dolcezza" },
+        { e: "😘", t: "bacio cuore affetto bacetto" },
+        { e: "😋", t: "linguaccia cibo buono saporito gnam" },
+        { e: "😜", t: "occhiolino linguaccia scherzo buffo" },
+        { e: "🤪", t: "pazzia buffo risate stravagante" },
+        { e: "😎", t: "occhiali sole fico figo stile relax" },
+        { e: "🤓", t: "occhiali nerd studio preciso compiti" },
+        { e: "🧐", t: "monocolo controllo ispezione lente attento" },
+        { e: "🥳", t: "festa cappellino party compleanno trombetta" },
+        { e: "🤩", t: "occhi stella wow entusiasta ammirazione" },
+        { e: "🤠", t: "cowboy cappello avventura west" },
+        { e: "😴", t: "dormire sonno zzz letto stanco notte" },
+        { e: "🤤", t: "bava fame cibo desiderare" },
+        { e: "😮‍💨", t: "sospiro sollievo fatica respiro" },
+        { e: "😵‍💫", t: "confuso stordito vortice capogiro" },
+        { e: "🤐", t: "bocca cerniera silenzio segreto muto" },
+        { e: "🤫", t: "dito bocca silenzio piano piano" },
+        { e: "🤔", t: "pensare dubbio riflettere idea mano mento" }
+      ]},
       { category: "👥 Famiglia, Persone, Mestieri & Ruoli", emojis: [
-        { e: "👨‍💻", t: "papà uomo lavoro computer tech informatico" },
+        { e: "👨‍💻", t: "papà uomo lavoro computer tech informatico ufficio" },
         { e: "👩‍🎨", t: "mamma donna arte creativa disegno pittura" },
         { e: "👦", t: "ragazzo bimbo figlio maschio bambino piccolo" },
         { e: "👧", t: "ragazza bimba figlia femmina bambina" },
@@ -1046,7 +1153,7 @@
         { e: "👑", t: "corona re vincitore oro primo premio imperatore" },
         { e: "⭐", t: "stella super premio stella oro successo" },
         { e: "🌟", t: "scintilla stella splendente bagliore" },
-        { e: "🔥", t: "fuoco fiamma caldo record forza super" }
+        { e: "🔥", t: "fuoco fiamma caldo record forza super urgente" }
       ]},
       { category: "🐶 Animali, Cuccioli, Mascotte & Natura", emojis: [
         { e: "🐶", t: "cane cucciolo cagnolino animale pet pappa veterinario spasso" },
@@ -1081,7 +1188,7 @@
         { e: "🦜", t: "pappagallo uccellino volare piume becco gabbia" },
         { e: "🦆", t: "anatra papera stagno piume laghetto" }
       ]},
-      { category: "🧹 Pulizie, Faccende, Bucato & Arredo Casa", emojis: [
+      { category: "🧹 Pulizie, Faccende, Bucato & Casa", emojis: [
         { e: "🧺", t: "bucato lavatrice cesto panni vestiti stendere stendino" },
         { e: "🍽️", t: "piatti stoviglie lavastoviglie cucina posate forchetta bicchiere" },
         { e: "🗑️", t: "spazzatura immondizia bidone differenziata buttare sacchetto umido secco" },
@@ -1332,7 +1439,7 @@
       document.getElementById('custom-task-box').classList.toggle('hidden');
     }
 
-    // ==================== ADHD WEIGHTED RANDOM TASK EXTRACTOR ====================
+    // ==================== ADHD WEIGHTED RANDOM TASK EXTRACTOR (DIFFERENT ON RE-ROLL) ====================
     function rollAdhdTask() {
       if (!appData) return;
 
@@ -1341,8 +1448,7 @@
       void diceEl.offsetWidth; // trigger reflow
       diceEl.classList.add('animate-dice');
 
-      // Candidate tasks: all spontaneous, routine and pending tasks, strictly excluding is_personal tasks!
-      const candidates = [];
+      let candidates = [];
 
       (appData.spontaneous_tasks || []).forEach(s => {
         if (!s.is_personal) {
@@ -1408,6 +1514,12 @@
         return;
       }
 
+      // Filter out last extracted task to ensure a different task on re-roll
+      if (lastAdhdExtractedTaskName && candidates.length > 1) {
+        const filteredCandidates = candidates.filter(c => c.name !== lastAdhdExtractedTaskName);
+        if (filteredCandidates.length > 0) candidates = filteredCandidates;
+      }
+
       // Weighted lottery calculation
       const totalWeight = candidates.reduce((acc, c) => acc + c.weight, 0);
       let rand = Math.random() * totalWeight;
@@ -1422,6 +1534,7 @@
       }
 
       currentAdhdExtractedTask = chosen;
+      lastAdhdExtractedTaskName = chosen.name;
 
       setTimeout(() => {
         document.getElementById('adhd-task-icon').textContent = chosen.icon;
@@ -1476,6 +1589,13 @@
         case 'total': return { value: m.total_points, label: `Punti ${labels.total}` };
         default: return { value: m.weekly_points, label: `Punti ${labels.weekly}` };
       }
+    }
+
+    function getPriorityBadge(priority) {
+      if (priority === 'high') return `<span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-1.5 py-0.2 rounded-md">⭐ Alta</span>`;
+      if (priority === 'urgent') return `<span class="bg-rose-100 text-rose-800 text-[10px] font-extrabold px-1.5 py-0.2 rounded-md">🔥 Urgente</span>`;
+      if (priority === 'low') return `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-1.5 py-0.2 rounded-md">🟢 Bassa</span>`;
+      return ''; // Medium (default): hidden!
     }
 
     // ==================== RENDER DYNAMIC FULL-WIDTH MEMBER CARDS ====================
@@ -1681,6 +1801,7 @@
 
             const assignedText = r.assigned_member && r.assigned_member !== 'all' ? `👤 ${r.assigned_member}` : '👥 Famiglia';
             const catBadge = r.category ? `<span class="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-1.5 py-0.2 rounded-md">${r.category}</span>` : '';
+            const prioBadge = getPriorityBadge(r.priority);
 
             dueBox.innerHTML += `
               <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs hover:border-indigo-300 transition">
@@ -1690,6 +1811,7 @@
                     <div class="font-extrabold text-slate-900 truncate flex items-center gap-1.5">
                       <span>${r.name}</span>
                       ${catBadge}
+                      ${prioBadge}
                     </div>
                     <div class="text-slate-500 text-[11px] font-medium mt-0.5 flex items-center gap-2">
                       <span>${badge}</span>
@@ -1752,6 +1874,7 @@
 
             const notesCountBadge = (t.notes && t.notes.length > 0) ? `<span class="bg-indigo-100 text-indigo-800 text-[10px] font-extrabold px-1.5 py-0.2 rounded-md">💬 ${t.notes.length}</span>` : '';
             const catTag = t.category ? `<span class="text-[10px] font-semibold text-slate-400 bg-white border border-slate-200 px-1 rounded">${t.category}</span>` : '';
+            const prioBadge = getPriorityBadge(t.priority);
 
             pendingBox.innerHTML += `
               <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs hover:border-indigo-300 transition">
@@ -1762,6 +1885,7 @@
                       <span>${t.title}</span>
                       <span class="text-indigo-600">${ptsText}</span>
                       ${catTag}
+                      ${prioBadge}
                       ${notesCountBadge}
                     </div>
                     <div class="text-slate-500 text-[11px] font-medium mt-0.5 truncate">
@@ -1800,6 +1924,7 @@
           : '<div class="text-[11px] text-slate-400 font-medium text-center">🕒 Mai eseguita</div>';
 
         const catTag = t.category ? `<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center mt-0.5">${t.category}</div>` : '';
+        const prioBadge = getPriorityBadge(t.priority);
 
         spontGrid.innerHTML += `
           <div onclick="promptPerformerSelection('${t.name}', ${t.points}, 'spontaneous', ${!!t.is_personal}, '${t.category || 'Generale'}')" class="p-5 bg-slate-50 hover:bg-indigo-50/70 border-2 border-slate-200 hover:border-indigo-500 rounded-3xl shadow-2xs hover:shadow-md transition cursor-pointer flex flex-col justify-between items-center text-center space-y-3 group">
@@ -1810,7 +1935,10 @@
             </div>
 
             <div>
-              <div class="text-sm font-extrabold text-slate-900 leading-snug">${t.name}</div>
+              <div class="text-sm font-extrabold text-slate-900 leading-snug flex items-center justify-center gap-1">
+                <span>${t.name}</span>
+                ${prioBadge}
+              </div>
               ${catTag}
             </div>
             
@@ -1841,13 +1969,11 @@
     }
 
     function renderRoutines() {
-      if (!appData) return;
-
       const routineList = document.getElementById('routine-list');
       const countOverdueTag = document.getElementById('count-overdue-tag');
       const countWarningTag = document.getElementById('count-warning-tag');
 
-      if (!routineList) return;
+      if (!routineList || !appData) return;
 
       const allRoutines = appData.routine_tasks || [];
       const overdueRoutines = allRoutines.filter(r => r.status === 'overdue');
@@ -1874,22 +2000,22 @@
         return;
       }
 
-      // Sort routines based on selected mode
+      // Sort routines based on selected mode (Default: due_date)
       const catOrderMap = {};
       (appData.categories || []).forEach((c, idx) => catOrderMap[c.name.toLowerCase()] = c.order || (idx + 1));
 
       const sortedRoutines = [...filtered].sort((a, b) => {
-        if (activeRoutineSort === 'cat_alpha') {
-          const cComp = (a.category || '').localeCompare(b.category || '');
-          if (cComp !== 0) return cComp;
-          return (a.name || '').localeCompare(b.name || '');
+        if (activeRoutineSort === 'due_date') {
+          return a.days_remaining - b.days_remaining;
         } else if (activeRoutineSort === 'cat_order') {
           const ordA = catOrderMap[(a.category || '').toLowerCase()] || 99;
           const ordB = catOrderMap[(b.category || '').toLowerCase()] || 99;
           if (ordA !== ordB) return ordA - ordB;
           return (a.name || '').localeCompare(b.name || '');
-        } else if (activeRoutineSort === 'due_date') {
-          return a.days_remaining - b.days_remaining;
+        } else if (activeRoutineSort === 'cat_alpha') {
+          const cComp = (a.category || '').localeCompare(b.category || '');
+          if (cComp !== 0) return cComp;
+          return (a.name || '').localeCompare(b.name || '');
         } else if (activeRoutineSort === 'points') {
           return (b.points || 0) - (a.points || 0);
         } else if (activeRoutineSort === 'alpha') {
@@ -1898,7 +2024,6 @@
         return 0;
       });
 
-      // Group by Category if sorting by category
       let lastCatHeader = null;
 
       sortedRoutines.forEach(r => {
@@ -1931,6 +2056,7 @@
         }
 
         const ptsLabel = r.is_personal ? 'Fatto ✓' : `+${r.points} pt (Fatto)`;
+        const prioBadge = getPriorityBadge(r.priority);
 
         // Category Header when sorting by category
         if ((activeRoutineSort === 'cat_alpha' || activeRoutineSort === 'cat_order') && r.category !== lastCatHeader) {
@@ -1954,6 +2080,7 @@
                 <div class="flex items-center gap-2 flex-wrap">
                   <h4 class="font-extrabold text-sm sm:text-base text-slate-900">${r.name}</h4>
                   <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">📁 ${r.category || 'Varie'}</span>
+                  ${prioBadge}
                   ${assignedBadge}
                   ${statusBadge}
                 </div>
@@ -2108,11 +2235,12 @@
       const date = document.getElementById('quick-task-date').value;
       const pts = parseInt(document.getElementById('quick-task-points').value) || 0;
       const category = document.getElementById('quick-task-category').value || 'Varie';
+      const priority = document.getElementById('quick-task-priority').value || 'medium';
 
       if (!title) return;
 
       closeQuickTaskModal();
-      pendingQuickTaskPayload = { title, date, points: pts, category };
+      pendingQuickTaskPayload = { title, date, points: pts, category, priority };
 
       const titleEl = document.getElementById('modal-assign-task-title');
       const singleBox = document.getElementById('modal-assign-single-buttons');
@@ -2167,7 +2295,7 @@
 
     async function confirmTaskAssignment(assignedList) {
       if (!pendingQuickTaskPayload) return;
-      const { title, date, points, category } = pendingQuickTaskPayload;
+      const { title, date, points, category, priority } = pendingQuickTaskPayload;
       closeAssignModal();
 
       try {
@@ -2180,6 +2308,7 @@
             points, 
             due_date: date,
             category: category || "Varie",
+            priority: priority || "medium",
             created_by: "Famiglia" 
           })
         });
@@ -2556,13 +2685,11 @@
 
     // ==================== CHRONOLOGICAL HISTORY ====================
     function renderHistory() {
-      if (!appData) return;
-
       const timeline = document.getElementById('history-timeline');
       const search = (document.getElementById('history-search')?.value || '').toLowerCase();
       const memberFilter = document.getElementById('history-member-filter')?.value || 'all';
 
-      if (!timeline) return;
+      if (!timeline || !appData) return;
       timeline.innerHTML = '';
 
       const logs = [...(appData.logs || [])].reverse();
@@ -2704,7 +2831,7 @@
 
     function filterEmojiLibrary(val) { renderEmojiLibrary(val); }
 
-    // ==================== ADMIN CRUD & CATEGORY MANAGEMENT ====================
+    // ==================== ADMIN CRUD, CATEGORY REORDERING & BACKUP ====================
     function renderAdmin() {
       if (!appData) return;
 
@@ -2718,19 +2845,34 @@
         primaryScoreSelect.value = appData.settings.primary_score_display;
       }
 
-      // 1. Categories
+      // 1. Categories with Up/Down Buttons
       const adminCats = document.getElementById('admin-categories-list');
       if (adminCats) {
         adminCats.innerHTML = '';
-        (appData.categories || []).forEach(c => {
+        const cats = appData.categories || [];
+        cats.forEach((c, idx) => {
+          const isFirst = (idx === 0);
+          const isLast = (idx === cats.length - 1);
+
           adminCats.innerHTML += `
-            <div class="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-200 text-xs">
-              <div class="flex items-center gap-2 font-extrabold text-sm">
-                <span>${c.icon || '📁'}</span> <span>${c.name}</span> <span class="text-[10px] text-slate-400 font-bold">(Ord. ${c.order || 1})</span>
+            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
+              <div class="flex items-center gap-2.5 font-extrabold text-sm text-slate-900">
+                <span class="text-xl">${c.icon || '📁'}</span>
+                <span>${c.name}</span>
               </div>
-              <div class="flex items-center gap-2">
-                <button onclick="editCategory('${c.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 font-bold rounded-lg text-slate-700">Modifica</button>
-                <button onclick="deleteCategory('${c.id}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 font-bold rounded-lg text-rose-600">Elimina</button>
+              <div class="flex items-center gap-1.5">
+                <button onclick="reorderCategory('${c.id}', 'up')" ${isFirst ? 'disabled' : ''} class="w-8 h-8 rounded-xl bg-white border border-slate-200 font-bold text-xs flex items-center justify-center hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                  🔼
+                </button>
+                <button onclick="reorderCategory('${c.id}', 'down')" ${isLast ? 'disabled' : ''} class="w-8 h-8 rounded-xl bg-white border border-slate-200 font-bold text-xs flex items-center justify-center hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                  🔽
+                </button>
+                <button onclick="editCategory('${c.id}')" class="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 font-bold rounded-xl text-slate-700">
+                  Modifica
+                </button>
+                <button onclick="deleteCategory('${c.id}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 font-bold rounded-xl text-rose-600 border border-rose-100">
+                  Elimina
+                </button>
               </div>
             </div>
           `;
@@ -2743,13 +2885,13 @@
         adminMembers.innerHTML = '';
         Object.values(appData.members || {}).forEach(m => {
           adminMembers.innerHTML += `
-            <div class="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-200 text-xs">
-              <div class="flex items-center gap-2 font-extrabold text-sm">
-                <span>${m.icon}</span> <span>${m.name}</span>
+            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
+              <div class="flex items-center gap-2.5 font-extrabold text-sm text-slate-900">
+                <span class="text-xl">${m.icon}</span> <span>${m.name}</span>
               </div>
-              <div class="flex items-center gap-2">
-                <button onclick="editMember('${m.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 font-bold rounded-lg text-slate-700">Modifica</button>
-                <button onclick="deleteMember('${m.id}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 font-bold rounded-lg text-rose-600">Elimina</button>
+              <div class="flex items-center gap-1.5">
+                <button onclick="editMember('${m.id}')" class="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 font-bold rounded-xl text-slate-700">Modifica</button>
+                <button onclick="deleteMember('${m.id}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 font-bold rounded-xl text-rose-600 border border-rose-100">Elimina</button>
               </div>
             </div>
           `;
@@ -2763,11 +2905,11 @@
         (appData.spontaneous_tasks || []).forEach(t => {
           const ptsText = t.is_personal ? '<span class="text-purple-700 font-bold">(Personale - 0 pt)</span>' : `<span class="text-indigo-600 font-extrabold">(+${t.points} pt)</span>`;
           adminSpont.innerHTML += `
-            <div class="flex items-center justify-between p-3 bg-white rounded-2xl border border-slate-200 text-xs">
+            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
               <div class="font-bold text-slate-900">${t.icon} ${t.name} ${ptsText} <span class="text-slate-400 font-normal">(${t.category || 'Generale'})</span></div>
-              <div class="flex items-center gap-2">
-                <button onclick="editSpontaneous('${t.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 font-bold rounded-lg text-slate-700">Modifica</button>
-                <button onclick="deleteSpontaneous('${t.id}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 font-bold rounded-lg text-rose-600">Elimina</button>
+              <div class="flex items-center gap-1.5">
+                <button onclick="editSpontaneous('${t.id}')" class="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 font-bold rounded-xl text-slate-700">Modifica</button>
+                <button onclick="deleteSpontaneous('${t.id}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 font-bold rounded-xl text-rose-600 border border-rose-100">Elimina</button>
               </div>
             </div>
           `;
@@ -2784,19 +2926,73 @@
           const personalTag = r.is_personal ? '• 👤 <b class="text-purple-700">Personale (0 pt)</b>' : `• Punti: <b>+${r.points} pt</b>`;
 
           adminRout.innerHTML += `
-            <div class="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-slate-200 text-xs">
+            <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
               <div>
                 <div class="font-extrabold text-sm text-slate-900">${r.icon} ${r.name} <span class="text-indigo-600 font-semibold">[${r.category || 'Routine'}]</span></div>
                 <div class="text-slate-500 font-medium mt-0.5">${typeBadge} • Frequenza: <b>${r.frequency_days}gg</b> • Preavviso: <b>${r.warning_days}gg</b> ${assignedText} ${personalTag}</div>
               </div>
-              <div class="flex items-center gap-2">
-                <button onclick="editRoutine('${r.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 font-bold rounded-lg text-slate-700">Modifica</button>
-                <button onclick="deleteRoutine('${r.id}')" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 font-bold rounded-lg text-rose-600">Elimina</button>
+              <div class="flex items-center gap-1.5">
+                <button onclick="editRoutine('${r.id}')" class="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 font-bold rounded-xl text-slate-700">Modifica</button>
+                <button onclick="deleteRoutine('${r.id}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 font-bold rounded-xl text-rose-600 border border-rose-100">Elimina</button>
               </div>
             </div>
           `;
         });
       }
+    }
+
+    async function reorderCategory(catId, direction) {
+      try {
+        const res = await fetch(`${apiBase}/categories/reorder`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: catId, direction })
+        });
+        const data = await res.json();
+        if (appData) appData.categories = data.categories;
+        renderAdmin();
+        showToast("Ordine categorie aggiornato!");
+      } catch (e) {}
+    }
+
+    function downloadBackup() {
+      window.location.href = `${apiBase}/backup`;
+    }
+
+    function restoreBackupFromFile() {
+      const fileInput = document.getElementById('restore-file-input');
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        showToast("Seleziona un file JSON di backup!", "⚠️");
+        return;
+      }
+
+      if (!confirm("Sei sicuro di voler ripristinare il database? Tutti i dati correnti verranno sovrascritti con quelli del backup selezionato.")) return;
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = async function(e) {
+        try {
+          const jsonContent = JSON.parse(e.target.result);
+          const res = await fetch(`${apiBase}/restore`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(jsonContent)
+          });
+
+          const result = await res.json();
+          if (res.ok) {
+            showToast("Database ripristinato con successo!", "✅");
+            await loadStats();
+          } else {
+            showToast(result.error || "Errore durante il ripristino", "❌");
+          }
+        } catch (err) {
+          showToast("File di backup non valido o danneggiato", "❌");
+        }
+      };
+
+      reader.readAsText(file);
     }
 
     async function savePeriodMode(mode) {
@@ -2831,7 +3027,6 @@
       const nameInput = document.getElementById('cat-name-input');
       const iconInput = document.getElementById('cat-icon-input');
       const iconPreview = document.getElementById('cat-icon-preview');
-      const orderInput = document.getElementById('cat-order-input');
 
       if (cId) {
         const c = (appData?.categories || []).find(x => x.id === cId);
@@ -2841,7 +3036,6 @@
           nameInput.value = c.name;
           iconInput.value = c.icon || '📁';
           iconPreview.textContent = c.icon || '📁';
-          orderInput.value = c.order || 1;
         }
       } else {
         title.textContent = "Aggiungi Categoria";
@@ -2849,7 +3043,6 @@
         nameInput.value = "";
         iconInput.value = "📁";
         iconPreview.textContent = "📁";
-        orderInput.value = (appData?.categories?.length || 0) + 1;
       }
       modal.classList.remove('hidden');
     }
@@ -2861,13 +3054,12 @@
       const id = document.getElementById('cat-edit-id').value;
       const name = document.getElementById('cat-name-input').value.trim();
       const icon = document.getElementById('cat-icon-input').value.trim() || '📁';
-      const order = parseInt(document.getElementById('cat-order-input').value) || 1;
 
       try {
         await fetch(`${apiBase}/categories`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name, icon, order })
+          body: JSON.stringify({ id, name, icon })
         });
         closeCategoryModal();
         showToast("Categoria salvata!");
@@ -2972,6 +3164,7 @@
       const iconInput = document.getElementById('spont-edit-icon');
       const iconPreview = document.getElementById('spont-icon-preview');
       const catSelect = document.getElementById('spont-edit-category');
+      const prioritySelect = document.getElementById('spont-edit-priority');
       const personalCheck = document.getElementById('spont-edit-personal');
 
       if (tId) {
@@ -2984,6 +3177,7 @@
           iconInput.value = item.icon || '⚡';
           iconPreview.textContent = item.icon || '⚡';
           catSelect.value = item.category || 'Generale';
+          prioritySelect.value = item.priority || 'medium';
           personalCheck.checked = !!item.is_personal;
           toggleSpontPersonal(item.is_personal);
         }
@@ -2995,6 +3189,7 @@
         iconInput.value = "⚡";
         iconPreview.textContent = "⚡";
         catSelect.value = appData?.categories[0]?.name || 'Generale';
+        prioritySelect.value = "medium";
         personalCheck.checked = false;
         toggleSpontPersonal(false);
       }
@@ -3011,12 +3206,13 @@
       const points = is_personal ? 0 : (parseInt(document.getElementById('spont-edit-pts').value) || 10);
       const icon = document.getElementById('spont-edit-icon').value.trim() || '⚡';
       const category = document.getElementById('spont-edit-category').value || 'Generale';
+      const priority = document.getElementById('spont-edit-priority').value || 'medium';
 
       try {
         await fetch(`${apiBase}/spontaneous_tasks`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name, points, icon, category, is_personal })
+          body: JSON.stringify({ id, name, points, icon, category, priority, is_personal })
         });
         closeSpontaneousModal();
         showToast("Attività salvata!");
@@ -3059,6 +3255,7 @@
       const startInput = document.getElementById('rout-edit-start');
       const typeSelect = document.getElementById('rout-edit-type');
       const catSelect = document.getElementById('rout-edit-category');
+      const prioritySelect = document.getElementById('rout-edit-priority');
       const memberSelect = document.getElementById('rout-edit-member');
       const iconInput = document.getElementById('rout-edit-icon');
       const iconPreview = document.getElementById('rout-icon-preview');
@@ -3078,6 +3275,7 @@
           startInput.value = item.start_date ? item.start_date.split('T')[0] : todayIso;
           typeSelect.value = item.schedule_type || 'from_last';
           catSelect.value = item.category || 'Pulizia & Casa';
+          prioritySelect.value = item.priority || 'medium';
           memberSelect.value = item.assigned_member || 'all';
           iconInput.value = item.icon || '🔄';
           iconPreview.textContent = item.icon || '🔄';
@@ -3094,6 +3292,7 @@
         startInput.value = todayIso;
         typeSelect.value = "from_last";
         catSelect.value = appData?.categories[0]?.name || 'Pulizia & Casa';
+        prioritySelect.value = "medium";
         memberSelect.value = "all";
         iconInput.value = "🔄";
         iconPreview.textContent = "🔄";
@@ -3116,6 +3315,7 @@
       const start_date = document.getElementById('rout-edit-start').value;
       const schedule_type = document.getElementById('rout-edit-type').value;
       const category = document.getElementById('rout-edit-category').value || 'Pulizia & Casa';
+      const priority = document.getElementById('rout-edit-priority').value || 'medium';
       const assigned_member = document.getElementById('rout-edit-member').value;
       const icon = document.getElementById('rout-edit-icon').value.trim() || '🔄';
 
@@ -3123,7 +3323,7 @@
         await fetch(`${apiBase}/routine_tasks`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name, points, frequency_days, warning_days, start_date, schedule_type, category, icon, is_personal, assigned_member })
+          body: JSON.stringify({ id, name, points, frequency_days, warning_days, start_date, schedule_type, category, priority, icon, is_personal, assigned_member })
         });
         closeRoutineModal();
         showToast("Routine salvata!");
