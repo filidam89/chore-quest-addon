@@ -1,7 +1,7 @@
 name: "ChoreQuest"
-version: "1.8.0"
+version: "1.9.0"
 slug: "chorequest"
-description: "Gamified family chore, routine and task management for Home Assistant with interactive task notes, date rescheduling, date-aware status icons, and multi-assignment accordions."
+description: "Gamified family chore, routine and task management for Home Assistant with dual 50% wide dashboard widgets, free text and member filters, clickable pending task alerts, and last activity tracking."
 url: "https://github.com/filidam89/chore-quest-addon"
 startup: application
 boot: auto
