@@ -57,10 +57,10 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md">v1.8</span>
+            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md">v2.0</span>
           </h1>
           <p class="text-xs text-slate-500 font-semibold flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span>Home Assistant Add-on</span>
           </p>
         </div>
@@ -85,7 +85,6 @@
     <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
       <div class="flex items-center justify-between flex-wrap gap-2">
         <div class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Membri della Famiglia & Punteggi</div>
-        <!-- Period Winners Badges Indicator -->
         <div id="period-winners-badge" class="flex items-center gap-2 flex-wrap text-xs">
           <!-- Injected via JS -->
         </div>
@@ -93,69 +92,113 @@
 
       <!-- Dynamic Adaptive Width Member Cards Container -->
       <div id="members-bar" class="w-full">
-        <!-- Injected via JS with dynamic responsive columns matching member count -->
+        <!-- Injected via JS -->
       </div>
     </div>
 
-    <!-- 2. QUICK ADD SINGLE TASK / PROMEMORIA ESTEMPORANEO (CON DATA E PT IN GRIGIO) -->
-    <div class="bg-gradient-to-r from-indigo-50 via-purple-50 to-slate-50 p-4 sm:p-5 rounded-3xl border border-indigo-100 shadow-sm space-y-3">
-      <div class="flex items-center justify-between flex-wrap gap-2">
-        <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
-          <span>⚡</span> Assegna Task o Promemoria Rapido
-        </h3>
-        <span class="text-[11px] text-slate-500 font-semibold">Crea un'attività estemporanea e assegnala a chi vuoi con un click</span>
-      </div>
-
-      <form onsubmit="initiateQuickTaskAssignment(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
-        <input id="quick-task-title" type="text" required placeholder="Cosa c'è da fare? (es. Comprare il latte, Chiamare idraulico...)" class="sm:col-span-6 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
-        
-        <input id="quick-task-date" type="date" title="Data di scadenza / inserimento" class="sm:col-span-3 px-3 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500">
-
-        <div class="sm:col-span-3 flex gap-2 items-center">
-          <div class="flex items-center bg-white border border-slate-200 rounded-2xl px-3 py-2 focus-within:ring-2 focus-within:ring-indigo-500 w-24">
-            <input id="quick-task-points" type="number" value="0" min="0" max="200" title="Punti assegnati (default 0)" class="w-full bg-transparent text-xs text-center font-extrabold outline-none text-slate-800">
-            <span class="text-xs font-bold text-slate-400 select-none ml-1">pt</span>
-          </div>
-          <button type="submit" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-2xl shadow transition">
-            + Assegna
-          </button>
+    <!-- 2. ACTION GRID / DOCK DEI PULSANTI PRINCIPALI CON ICONA E DESCRIZIONE SOTTO -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 w-full">
+      
+      <!-- PULSANTE ORDINE 1: ATTIVITÀ SPONTANEE -->
+      <button onclick="openSpontaneousCatalogModal()" class="p-4 bg-gradient-to-br from-indigo-500 to-indigo-700 hover:from-indigo-600 hover:to-indigo-800 text-white rounded-3xl shadow-md hover:shadow-lg transition flex flex-col items-center justify-center text-center space-y-1.5 group">
+        <span class="text-3xl group-hover:scale-110 transition">⚡</span>
+        <div>
+          <div class="font-extrabold text-xs sm:text-sm">Attività Spontanee</div>
+          <div class="text-[10px] text-indigo-100 font-medium">Registra faccende al bisogno</div>
         </div>
-      </form>
+      </button>
+
+      <!-- PULSANTE ORDINE 2: ASSEGNA TASK RAPIDO / PROMEMORIA -->
+      <button onclick="openQuickTaskModal()" class="p-4 bg-gradient-to-br from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white rounded-3xl shadow-md hover:shadow-lg transition flex flex-col items-center justify-center text-center space-y-1.5 group">
+        <span class="text-3xl group-hover:scale-110 transition">➕</span>
+        <div>
+          <div class="font-extrabold text-xs sm:text-sm">Assegna Task Rapido</div>
+          <div class="text-[10px] text-purple-100 font-medium">Nuovo compito o promemoria</div>
+        </div>
+      </button>
+
+      <!-- PULSANTE ORDINE 3: CATALOGO ROUTINE & CALENDARIO -->
+      <button onclick="openRoutineCatalogModal()" class="p-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 rounded-3xl shadow-2xs hover:shadow-md transition flex flex-col items-center justify-center text-center space-y-1.5 group">
+        <span class="text-3xl group-hover:scale-110 transition">🔄</span>
+        <div>
+          <div class="font-extrabold text-xs sm:text-sm text-slate-900">Catalogo Routine</div>
+          <div class="text-[10px] text-slate-500 font-medium">Tutte le routine e scadenze</div>
+        </div>
+      </button>
+
+      <!-- PULSANTE ORDINE 4: CLASSIFICA & PODIO -->
+      <button onclick="openPodiumModal()" class="p-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 rounded-3xl shadow-2xs hover:shadow-md transition flex flex-col items-center justify-center text-center space-y-1.5 group">
+        <span class="text-3xl group-hover:scale-110 transition">🏆</span>
+        <div>
+          <div class="font-extrabold text-xs sm:text-sm text-slate-900">Classifica & Podio</div>
+          <div class="text-[10px] text-slate-500 font-medium">Podio e punti in tempo reale</div>
+        </div>
+      </button>
+
+      <!-- PULSANTE ORDINE 5: STATISTICHE & REPORT -->
+      <button onclick="openStatsModal()" class="p-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 rounded-3xl shadow-2xs hover:shadow-md transition flex flex-col items-center justify-center text-center space-y-1.5 group">
+        <span class="text-3xl group-hover:scale-110 transition">📊</span>
+        <div>
+          <div class="font-extrabold text-xs sm:text-sm text-slate-900">Statistiche & Report</div>
+          <div class="text-[10px] text-slate-500 font-medium">Grafici e analisi attività</div>
+        </div>
+      </button>
+
+      <!-- PULSANTE ORDINE 6: STORICO CRONOLOGICO -->
+      <button onclick="openHistoryModal()" class="p-4 bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 rounded-3xl shadow-2xs hover:shadow-md transition flex flex-col items-center justify-center text-center space-y-1.5 group">
+        <span class="text-3xl group-hover:scale-110 transition">📜</span>
+        <div>
+          <div class="font-extrabold text-xs sm:text-sm text-slate-900">Storico Cronologico</div>
+          <div class="text-[10px] text-slate-500 font-medium">Registro dettagliato con note</div>
+        </div>
+      </button>
+
     </div>
 
-    <!-- 3. DASHBOARD WIDGETS SECTION (ALLARGATI IN 2 COLONNE: 50% / 50% CON FILTRO TESTO & ASSEGNATARIO) -->
+    <!-- 3. DASHBOARD WIDGETS SECTION (2 GRANDI COLONNE: 50% / 50%) -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
 
-      <!-- WIDGET A: ROUTINE IN SCADENZA O SCADUTE (CON FILTRI DINAMICI) -->
-      <div id="widget-routines-container" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3.5">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 flex-wrap gap-2">
-          <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+      <!-- WIDGET A: ROUTINE IN SCADENZA O SCADUTE -->
+      <div id="widget-routines-container" class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+          <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
             <span>🚨</span> Routine in Scadenza & Scadute
           </h3>
           <span id="due-routines-count-badge" class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 hidden">0</span>
         </div>
 
-        <!-- Filtri Testo Libero & Assegnatario -->
-        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
-          <input id="filter-routine-search" type="text" oninput="renderHomeWidgets()" placeholder="🔍 Filtra per nome routine..." class="sm:col-span-7 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 font-medium">
-          <div class="sm:col-span-5 flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1">
-            <span class="text-slate-400 text-xs">👤</span>
-            <select id="filter-routine-member" onchange="renderHomeWidgets()" class="bg-transparent text-xs font-bold text-slate-700 w-full outline-none">
-              <option value="all">Tutti gli assegnatari</option>
-              <!-- Injected dynamically -->
-            </select>
+        <!-- Filtri Testo Libero & Pill Filtri (Default: Scadute & In Scadenza) -->
+        <div class="space-y-2.5">
+          <input id="filter-routine-search" type="text" oninput="renderHomeWidgets()" placeholder="🔍 Cerca routine per nome..." class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:ring-2 focus:ring-indigo-500 font-medium">
+          
+          <div class="flex items-center gap-1.5 flex-wrap text-xs">
+            <button onclick="setHomeRoutineFilter('due_default')" id="hrf-due_default" class="px-2.5 py-1 rounded-xl font-extrabold transition bg-indigo-600 text-white shadow-2xs">
+              🚨 Scadute + In Scadenza
+            </button>
+            <button onclick="setHomeRoutineFilter('overdue')" id="hrf-overdue" class="px-2.5 py-1 rounded-xl font-bold transition text-slate-600 hover:text-slate-900 bg-slate-100">
+              🔴 Scadute
+            </button>
+            <button onclick="setHomeRoutineFilter('warning')" id="hrf-warning" class="px-2.5 py-1 rounded-xl font-bold transition text-slate-600 hover:text-slate-900 bg-slate-100">
+              🟡 In Scadenza
+            </button>
+            <button onclick="setHomeRoutineFilter('personal')" id="hrf-personal" class="px-2.5 py-1 rounded-xl font-bold transition text-slate-600 hover:text-slate-900 bg-slate-100">
+              👤 Personali
+            </button>
+            <button onclick="setHomeRoutineFilter('all')" id="hrf-all" class="px-2.5 py-1 rounded-xl font-bold transition text-slate-600 hover:text-slate-900 bg-slate-100">
+              Tutte
+            </button>
           </div>
         </div>
 
-        <div id="home-due-routines-list" class="space-y-2.5 max-h-80 overflow-y-auto custom-scrollbar">
+        <div id="home-due-routines-list" class="space-y-2.5 max-h-[380px] overflow-y-auto custom-scrollbar">
           <!-- Injected via JS -->
         </div>
       </div>
 
-      <!-- WIDGET B: TASK SINGOLI IN SOSPESO (CON FILTRI DINAMICI) -->
-      <div id="widget-pending-tasks-container" class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3.5">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 flex-wrap gap-2">
-          <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
+      <!-- WIDGET B: TASK SINGOLI IN SOSPESO -->
+      <div id="widget-pending-tasks-container" class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+          <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
             <span>📋</span> Task Singoli in Sospeso
           </h3>
           <span id="pending-tasks-count-badge" class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 hidden">0</span>
@@ -163,8 +206,8 @@
 
         <!-- Filtri Testo Libero & Assegnatario -->
         <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
-          <input id="filter-single-search" type="text" oninput="renderHomeWidgets()" placeholder="🔍 Filtra descrizione task..." class="sm:col-span-7 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 font-medium">
-          <div class="sm:col-span-5 flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1">
+          <input id="filter-single-search" type="text" oninput="renderHomeWidgets()" placeholder="🔍 Filtra descrizione task..." class="sm:col-span-7 px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:ring-2 focus:ring-indigo-500 font-medium">
+          <div class="sm:col-span-5 flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-2xl px-2.5 py-1">
             <span class="text-slate-400 text-xs">👤</span>
             <select id="filter-single-member" onchange="renderHomeWidgets()" class="bg-transparent text-xs font-bold text-slate-700 w-full outline-none">
               <option value="all">Tutti gli assegnatari</option>
@@ -173,207 +216,11 @@
           </div>
         </div>
 
-        <div id="home-pending-tasks-list" class="space-y-2.5 max-h-80 overflow-y-auto custom-scrollbar">
+        <div id="home-pending-tasks-list" class="space-y-2.5 max-h-[380px] overflow-y-auto custom-scrollbar">
           <!-- Injected via JS -->
         </div>
       </div>
 
-    </div>
-
-    <!-- MAIN NAVIGATION TABS FOR USE MODE -->
-    <div class="flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar p-1.5 bg-slate-200/80 rounded-2xl">
-      <button id="tab-btn-spontaneous" onclick="switchTab('spontaneous')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition shadow-sm bg-white text-slate-900 flex items-center justify-center gap-1.5">
-        <span>⚡</span> Spontanee
-      </button>
-      <button id="tab-btn-routine" onclick="switchTab('routine')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
-        <span>🔄</span> Catalogo Routine
-        <span id="badge-due-routine-count" class="bg-rose-500 text-white text-[11px] px-2 py-0.5 rounded-full font-bold hidden">0</span>
-      </button>
-      <button id="tab-btn-podium" onclick="switchTab('podium')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
-        <span>🏆</span> Classifica
-      </button>
-      <button id="tab-btn-stats" onclick="switchTab('stats')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
-        <span>📊</span> Statistiche
-      </button>
-      <button id="tab-btn-history" onclick="switchTab('history')" class="flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5">
-        <span>📜</span> Storico
-      </button>
-    </div>
-
-    <!-- TAB 1: SPONTANEE -->
-    <div id="section-spontaneous" class="space-y-4">
-      <div class="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
-            <span>⚡</span> Attività Spontanee (Al bisogno)
-          </h2>
-          <p class="text-xs text-slate-500">Tocca un'attività per registrarla e scegliere chi l'ha svolta</p>
-        </div>
-      </div>
-      <div id="spontaneous-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-        <!-- Injected via JS -->
-      </div>
-
-      <!-- Quick Custom Task Button -->
-      <div class="pt-2">
-        <button onclick="toggleCustomTaskBox()" class="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5">
-          <span>➕</span> <span>Registra attività estemporanea non presente nel catalogo</span>
-        </button>
-        <div id="custom-task-box" class="hidden mt-3 bg-white p-4 rounded-2xl border border-slate-200 space-y-3">
-          <form onsubmit="submitCustomTask(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-            <input id="custom-task-input" type="text" required placeholder="Descrizione attività (es. Montato mobile)..." class="sm:col-span-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
-            <input id="custom-pts-input" type="number" required value="15" min="0" max="200" placeholder="Punti" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
-            <button type="submit" class="py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
-              Registra
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 2: ROUTINE & CALENDARIO PROSSIME SCADENZE -->
-    <div id="section-routine" class="hidden space-y-4 max-w-5xl mx-auto">
-      
-      <!-- Routine Top Filter Bar -->
-      <div class="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
-        <div class="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
-              <span>🔄</span> Catalogo Routine & Promemoria
-            </h2>
-            <p class="text-xs text-slate-500">Monitoraggio scadenze, preavvisi, ritardi e promemoria personali</p>
-          </div>
-          
-          <div class="flex gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200 flex-wrap">
-            <button onclick="setRoutineFilter('all')" id="rf-all" class="px-3 py-1.5 text-xs font-extrabold rounded-xl transition bg-indigo-600 text-white shadow">Tutte</button>
-            <button onclick="setRoutineFilter('overdue')" id="rf-overdue" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900 flex items-center gap-1">
-              <span>🔴 Scadute</span> <span id="count-overdue-tag" class="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
-            </button>
-            <button onclick="setRoutineFilter('warning')" id="rf-warning" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900 flex items-center gap-1">
-              <span>🟡 In Scadenza</span> <span id="count-warning-tag" class="bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
-            </button>
-            <button onclick="setRoutineFilter('personal')" id="rf-personal" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900">👤 Personali</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="routine-list" class="space-y-3">
-        <!-- Injected via JS -->
-      </div>
-    </div>
-
-    <!-- TAB 3: CLASSIFICA & PODIO ADATTIVO -->
-    <div id="section-podium" class="hidden space-y-6 max-w-2xl mx-auto">
-      <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
-        <div class="text-center space-y-1">
-          <h2 class="font-extrabold text-xl text-slate-900">🏆 Classifica ChoreQuest</h2>
-          <p id="podium-subtitle" class="text-xs text-slate-500">Punti sincronizzati in tempo reale con Home Assistant</p>
-        </div>
-
-        <!-- Adaptive Podium Graphic -->
-        <div id="podium-graphic" class="flex items-end justify-center gap-3 pt-6 pb-2">
-          <!-- Injected via JS -->
-        </div>
-
-        <div id="leaderboard-table" class="space-y-3 pt-4 border-t border-slate-100">
-          <!-- Injected via JS -->
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 4: STATISTICHE & REPORT -->
-    <div id="section-stats" class="hidden space-y-6 max-w-6xl mx-auto">
-      
-      <!-- Time Range Filter -->
-      <div class="flex items-center justify-between flex-wrap gap-3 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
-        <div>
-          <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
-            <span>📊</span> Report & Analisi Statistiche
-          </h2>
-          <p class="text-xs text-slate-500">Confronto tra membri, grafici e record per singola attività (esclusi promemoria personali)</p>
-        </div>
-        <div id="stats-filter-container" class="flex gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200">
-          <!-- Injected dynamically based on period mode -->
-        </div>
-      </div>
-
-      <!-- KPI Summary Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-          <div class="text-xs font-extrabold uppercase text-slate-400">Punti Totali Periodo</div>
-          <div id="kpi-total-points" class="text-2xl font-extrabold text-indigo-600 mt-1">0 pt</div>
-        </div>
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-          <div class="text-xs font-extrabold uppercase text-slate-400">Attività di Punteggio Svolte</div>
-          <div id="kpi-total-tasks" class="text-2xl font-extrabold text-slate-900 mt-1">0</div>
-        </div>
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-          <div class="text-xs font-extrabold uppercase text-slate-400">Top Contributore</div>
-          <div id="kpi-top-member" class="text-base font-extrabold text-amber-600 mt-1 truncate">-</div>
-        </div>
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
-          <div class="text-xs font-extrabold uppercase text-slate-400">Task Singoli Completati</div>
-          <div id="kpi-single-tasks" class="text-2xl font-extrabold text-emerald-600 mt-1">0</div>
-        </div>
-      </div>
-
-      <!-- Charts Section -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Chart 1: Members Comparison -->
-        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
-          <h3 class="font-extrabold text-sm text-slate-900">👥 Punti per Membro della Famiglia</h3>
-          <div class="h-64 relative">
-            <canvas id="chart-members"></canvas>
-          </div>
-        </div>
-
-        <!-- Chart 2: Task Breakdown -->
-        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-3">
-          <h3 class="font-extrabold text-sm text-slate-900">⚡ Top Attività più Eseguite</h3>
-          <div class="h-64 relative">
-            <canvas id="chart-tasks"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- Detailed Task Analysis & Single Activity Charts -->
-      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-        <div>
-          <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
-            <span>🏅</span> Analisi & Grafici per Singola Attività
-          </h3>
-          <p class="text-xs text-slate-500">Ripartizione dettagliata di chi ha svolto ciascuna faccenda della casa.</p>
-        </div>
-
-        <div id="task-breakdown-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-          <!-- Injected via JS with mini progress charts -->
-        </div>
-      </div>
-
-    </div>
-
-    <!-- TAB 5: STORICO CRONOLOGICO DETTAGLIATO -->
-    <div id="section-history" class="hidden space-y-4 max-w-5xl mx-auto">
-      <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-        <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-3">
-          <div>
-            <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
-              <span>📜</span> Storico Cronologico Attività & Note
-            </h2>
-            <p class="text-xs text-slate-500">Registro dettagliato con momento di inserimento, note, autore esecuzione e tipologia task</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <input id="history-search" type="text" oninput="renderHistory()" placeholder="Cerca attività, note o autore..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500">
-            <select id="history-member-filter" onchange="renderHistory()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
-              <option value="all">Tutti gli esecutori</option>
-            </select>
-          </div>
-        </div>
-
-        <div id="history-timeline" class="space-y-3 max-h-[550px] overflow-y-auto custom-scrollbar">
-          <!-- Injected via JS -->
-        </div>
-      </div>
     </div>
 
   </main>
@@ -469,12 +316,238 @@
 
   </main>
 
+  <!-- ==================== MODAL 1: MASCHERA ATTIVITÀ SPONTANEE (ORDINE 1) ==================== -->
+  <div id="modal-spontaneous-catalog" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-4xl w-full p-6 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Catalogo Faccende al Bisogno</div>
+          <h3 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+            <span>⚡</span> Attività Spontanee della Casa
+          </h3>
+        </div>
+        <button onclick="closeSpontaneousCatalogModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
+        <p class="text-xs text-slate-500 font-medium">Tocca qualsiasi attività per registrarla e assegnare i punti:</p>
+        
+        <div id="spontaneous-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          <!-- Injected via JS with last completed days ago and executor! -->
+        </div>
+
+        <!-- Custom Task Section -->
+        <div class="pt-3 border-t border-slate-100">
+          <button onclick="toggleCustomTaskBox()" class="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5">
+            <span>➕</span> <span>Registra attività estemporanea non presente nel catalogo</span>
+          </button>
+          <div id="custom-task-box" class="hidden mt-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+            <form onsubmit="submitCustomTask(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+              <input id="custom-task-input" type="text" required placeholder="Descrizione attività (es. Montato mobile)..." class="sm:col-span-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
+              <input id="custom-pts-input" type="number" required value="15" min="0" max="200" placeholder="Punti" class="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
+              <button type="submit" class="py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
+                Registra
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 2: MASCHERA ASSEGNA TASK RAPIDO / PROMEMORIA (ORDINE 2) ==================== -->
+  <div id="modal-quick-task" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Nuovo Compito</div>
+          <h3 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+            <span>➕</span> Assegna Task o Promemoria Rapido
+          </h3>
+        </div>
+        <button onclick="closeQuickTaskModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <form onsubmit="initiateQuickTaskAssignment(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Cosa c'è da fare?</label>
+          <input id="quick-task-title" type="text" required placeholder="Es. Comprare il latte, Chiamare idraulico, Pulire filtri..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">📅 Data Scadenza</label>
+            <input id="quick-task-date" type="date" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Punti (Opzionali)</label>
+            <div class="flex items-center bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 focus-within:ring-2 focus-within:ring-indigo-500">
+              <input id="quick-task-points" type="number" value="0" min="0" max="200" class="w-full bg-transparent text-xs text-center font-extrabold outline-none text-slate-800">
+              <span class="text-xs font-bold text-slate-400 select-none ml-1">pt</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeQuickTaskModal()" class="px-4 py-2.5 bg-slate-100 font-bold text-xs rounded-xl">Annulla</button>
+          <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
+            Continua e Assegna ➔
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 3: CATALOGO ROUTINE & CALENDARIO ==================== -->
+  <div id="modal-routine-catalog" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-5xl w-full p-6 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+        <div>
+          <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Monitor Scadenze & Promemoria</div>
+          <h3 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+            <span>🔄</span> Catalogo Completo Routine & Promemoria
+          </h3>
+        </div>
+        <button onclick="closeRoutineCatalogModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <div class="flex gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200 flex-wrap">
+        <button onclick="setRoutineFilter('all')" id="rf-all" class="px-3 py-1.5 text-xs font-extrabold rounded-xl transition bg-indigo-600 text-white shadow">Tutte</button>
+        <button onclick="setRoutineFilter('overdue')" id="rf-overdue" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900 flex items-center gap-1">
+          <span>🔴 Scadute</span> <span id="count-overdue-tag" class="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
+        </button>
+        <button onclick="setRoutineFilter('warning')" id="rf-warning" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900 flex items-center gap-1">
+          <span>🟡 In Scadenza</span> <span id="count-warning-tag" class="bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
+        </button>
+        <button onclick="setRoutineFilter('personal')" id="rf-personal" class="px-3 py-1.5 text-xs font-bold rounded-xl transition text-slate-600 hover:text-slate-900">👤 Personali</button>
+      </div>
+
+      <div id="routine-list" class="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-1">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 4: CLASSIFICA & PODIO ==================== -->
+  <div id="modal-podium-view" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+          <span>🏆</span> Classifica & Podio ChoreQuest
+        </h3>
+        <button onclick="closePodiumModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <!-- Adaptive Podium Graphic -->
+      <div id="podium-graphic" class="flex items-end justify-center gap-3 pt-4 pb-2">
+        <!-- Injected via JS -->
+      </div>
+
+      <div id="leaderboard-table" class="space-y-3 pt-4 border-t border-slate-100">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 5: STATISTICHE & REPORT ==================== -->
+  <div id="modal-stats-view" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-6xl w-full p-6 space-y-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+        <h3 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+          <span>📊</span> Statistiche & Report Rendimento
+        </h3>
+        <button onclick="closeStatsModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <!-- Time Range Filter -->
+      <div class="flex items-center justify-between flex-wrap gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+        <span class="text-xs font-bold text-slate-600">Seleziona Intervallo Temporale:</span>
+        <div id="stats-filter-container" class="flex gap-1.5 bg-white p-1 rounded-xl border border-slate-200">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div class="text-xs font-extrabold uppercase text-slate-400">Punti Totali Periodo</div>
+          <div id="kpi-total-points" class="text-2xl font-extrabold text-indigo-600 mt-1">0 pt</div>
+        </div>
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div class="text-xs font-extrabold uppercase text-slate-400">Attività Svolte</div>
+          <div id="kpi-total-tasks" class="text-2xl font-extrabold text-slate-900 mt-1">0</div>
+        </div>
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div class="text-xs font-extrabold uppercase text-slate-400">Top Contributore</div>
+          <div id="kpi-top-member" class="text-base font-extrabold text-amber-600 mt-1 truncate">-</div>
+        </div>
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+          <div class="text-xs font-extrabold uppercase text-slate-400">Task Singoli Fatti</div>
+          <div id="kpi-single-tasks" class="text-2xl font-extrabold text-emerald-600 mt-1">0</div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+          <h3 class="font-extrabold text-sm text-slate-900">👥 Punti per Membro Famiglia</h3>
+          <div class="h-64 relative">
+            <canvas id="chart-members"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3">
+          <h3 class="font-extrabold text-sm text-slate-900">⚡ Top Attività più Eseguite</h3>
+          <div class="h-64 relative">
+            <canvas id="chart-tasks"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Single Activity Distribution -->
+      <div class="space-y-3 pt-2">
+        <h3 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
+          <span>🏅</span> Dettaglio & Record per Singola Attività
+        </h3>
+        <div id="task-breakdown-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL 6: STORICO CRONOLOGICO ==================== -->
+  <div id="modal-history-view" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-5xl w-full p-6 space-y-5 shadow-2xl border border-slate-200 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+        <div>
+          <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Registro Completo</div>
+          <h3 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
+            <span>📜</span> Storico Cronologico Attività & Note
+          </h3>
+        </div>
+        <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <div class="flex items-center justify-between flex-wrap gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+        <input id="history-search" type="text" oninput="renderHistory()" placeholder="🔍 Cerca attività, note o autore..." class="px-3.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 font-medium flex-1">
+        <select id="history-member-filter" onchange="renderHistory()" class="px-3.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-bold">
+          <option value="all">Tutti gli esecutori</option>
+        </select>
+      </div>
+
+      <div id="history-timeline" class="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-1">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== MODAL: WHO COMPLETED THE TASK? ==================== -->
   <div id="modal-select-performer" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
-          <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Conferma Completamento</div>
+          <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Conferma Esecuzione</div>
           <h3 id="modal-performer-task-title" class="font-extrabold text-lg text-slate-900">Chi ha svolto l'attività?</h3>
         </div>
         <button onclick="closePerformerModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
@@ -501,7 +574,7 @@
             <button type="button" onclick="selectAllMultiCheckboxes(true)" class="text-[11px] text-indigo-600 font-bold hover:underline">Seleziona Tutti</button>
           </div>
           <div id="modal-multi-checkboxes" class="grid grid-cols-2 gap-2">
-            <!-- Injected via JS (checked by default!) -->
+            <!-- Injected via JS -->
           </div>
           <button type="button" onclick="confirmMultiAuthorCompletion()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
             Conferma e Dividi Punti
@@ -569,7 +642,6 @@
       </div>
 
       <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
-        
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
           <div class="text-xs text-slate-500 font-medium flex items-center justify-between">
             <span>Assegnato a: <b id="modal-notes-assigned" class="text-slate-800">-</b></span>
@@ -605,21 +677,22 @@
             </button>
           </div>
         </div>
-
       </div>
     </div>
   </div>
 
-  <!-- ==================== EMOJI PICKER POPUP ==================== -->
+  <!-- ==================== GIGANTIC EMOJI PICKER MODAL (500+ EMOJIS CON RICERCA) ==================== -->
   <div id="modal-emoji-picker" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-xl w-full p-5 space-y-4 shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 space-y-4 shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-        <h4 class="font-extrabold text-sm text-slate-900">Seleziona un'Emoji</h4>
+        <h4 class="font-extrabold text-base text-slate-900 flex items-center gap-2">
+          <span>✨</span> Catalogo Emoji ChoreQuest (500+ Emoji)
+        </h4>
         <button onclick="closeEmojiPicker()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
       </div>
 
       <div>
-        <input id="emoji-search-input" type="text" oninput="filterEmojiLibrary(this.value)" placeholder="🔍 Cerca emoji (es. lavatrice, pizza, cane, auto, bagno, denti, spesa, bimbo)..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 font-medium">
+        <input id="emoji-search-input" type="text" oninput="filterEmojiLibrary(this.value)" placeholder="🔍 Cerca qualsiasi emoji (es. lavatrice, auto, pizza, denti, cane, bici, barba, letto, spesa, studio)..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 font-medium">
       </div>
 
       <div id="emoji-library-container" class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
@@ -782,140 +855,249 @@
   </div>
 
   <script>
-    let activeTab = 'spontaneous';
     let activeMode = 'use';
     let activeStatsFilter = 'all';
     let activeRoutineFilter = 'all';
+    let activeHomeRoutineFilter = 'due_default'; // Default: Scadute & In Scadenza
     let appData = null;
     let chartMembers = null;
     let chartTasks = null;
     let currentEmojiTargetInput = null;
     let currentEmojiTargetPreview = null;
 
-    // Active task awaiting performer selection, assignment, or notes
     let pendingExecutionTask = null;
     let pendingQuickTaskPayload = null;
     let activeEditingTaskId = null;
 
     const apiBase = './api';
 
-    // Massive Emoji Database with keywords for fast dynamic filtering
+    // Massive Emoji Database (500+ Emojis categorized with search keywords)
     const EMOJI_DATABASE = [
-      { category: "👥 Famiglia & Persone", emojis: [
-        { e: "👨‍💻", t: "papà uomo lavoro computer tech papi" },
+      { category: "👥 Famiglia, Persone, Mestieri & Ruoli", emojis: [
+        { e: "👨‍💻", t: "papà uomo lavoro computer tech informatico" },
         { e: "👩‍🎨", t: "mamma donna arte creativa disegno pittura" },
-        { e: "👦", t: "ragazzo bimbo figlio maschio bambino" },
+        { e: "👦", t: "ragazzo bimbo figlio maschio bambino piccolo" },
         { e: "👧", t: "ragazza bimba figlia femmina bambina" },
-        { e: "👶", t: "neonato bebè baby bimbo piccolo" },
-        { e: "👴", t: "nonno anziano nonnino saggio" },
-        { e: "👵", t: "nonna anziana nonnina nonna" },
-        { e: "🧑", t: "persona ragazzo membro umano" },
-        { e: "🧔‍♂️", t: "uomo barba papà ragazzo" },
-        { e: "🦸‍♂️", t: "supereroe eroe forte papà maschio" },
+        { e: "👶", t: "neonato bebè baby bimbo piccolo ciuccio" },
+        { e: "👴", t: "nonno anziano nonnino saggio occhiali" },
+        { e: "👵", t: "nonna anziana nonnina torta maglia" },
+        { e: "🧑", t: "persona ragazzo membro umano neutrale" },
+        { e: "🧔‍♂️", t: "uomo barba ragazzo papà hipster" },
+        { e: "👱‍♀️", t: "donna bionda capelli treccia" },
+        { e: "🦸‍♂️", t: "supereroe eroe forte papà maschio mantello" },
         { e: "🦸‍♀️", t: "supereroina super mamma donna eroina" },
-        { e: "🧙‍♂️", t: "mago magia fantasy papà" },
-        { e: "🧙‍♀️", t: "maga strega magia mamma" },
-        { e: "👨‍🍳", t: "chef cuoco cucina cibo papà" },
-        { e: "👩‍🍳", t: "cuoca chef cucina cibo mamma" },
-        { e: "👨‍🌾", t: "contadino orto giardino piante terra" },
-        { e: "👩‍⚕️", t: "dottoressa medico dottore salute mamma" },
-        { e: "👨‍🚒", t: "pompiere fuoco soccorso eroe" },
-        { e: "👨‍🔧", t: "meccanico attrezzi riparare idraulico tecnico" },
-        { e: "🕵️‍♂️", t: "detective spia lente segreto" },
-        { e: "🤴", t: "principe re corona nobile" },
-        { e: "👸", t: "principessa regina corona" },
-        { e: "👑", t: "corona re vincitore oro primo" },
-        { e: "⭐", t: "stella super premio stella oro" }
+        { e: "🧙‍♂️", t: "mago magia fantasy papà barba bacchetta" },
+        { e: "🧙‍♀️", t: "maga strega magia mamma incantesimo" },
+        { e: "👨‍🍳", t: "chef cuoco cucina cibo papà piatti ristorante" },
+        { e: "👩‍🍳", t: "cuoca chef cucina cibo mamma fornelli" },
+        { e: "👨‍🌾", t: "contadino orto giardino piante terra frutta" },
+        { e: "👩‍🌾", t: "contadina orto verdura piante terra" },
+        { e: "👩‍⚕️", t: "dottoressa medico dottore salute mamma camice" },
+        { e: "👨‍⚕️", t: "dottore medico salute papà camice ospedale" },
+        { e: "👨‍🚒", t: "pompiere fuoco soccorso eroe idrante" },
+        { e: "👨‍🔧", t: "meccanico attrezzi riparare idraulico tecnico officina" },
+        { e: "👩‍🔧", t: "meccanico attrezzi riparazioni donna tecnica" },
+        { e: "🕵️‍♂️", t: "detective spia lente segreto investigatore" },
+        { e: "👮‍♂️", t: "poliziotto guardia sicurezza legge divisa" },
+        { e: "👷‍♂️", t: "costruttore operaio cantiere casco lavori" },
+        { e: "🤴", t: "principe re corona nobile oro" },
+        { e: "👸", t: "principessa regina corona diadema" },
+        { e: "👑", t: "corona re vincitore oro primo premio imperatore" },
+        { e: "⭐", t: "stella super premio stella oro successo" },
+        { e: "🌟", t: "scintilla stella splendente bagliore" },
+        { e: "🔥", t: "fuoco fiamma caldo record forza super" }
       ]},
-      { category: "🐶 Animali & Mascotte", emojis: [
-        { e: "🐶", t: "cane cucciolo cagnolino animale pet pappa veterinario" },
-        { e: "🐱", t: "gatto micio micetto gattino lettiera pet" },
-        { e: "🦊", t: "volpe furbetto bosco animale" },
-        { e: "🐻", t: "orso orsetto orso peluche" },
-        { e: "🐼", t: "panda orso bianco nero" },
-        { e: "🐨", t: "koala animale dolce" },
-        { e: "🐯", t: "tigre forte coraggioso" },
-        { e: "🦁", t: "leone re savana forza" },
-        { e: "🐰", t: "coniglio coniglietto salti" },
-        { e: "🐹", t: "criceto roditore piccolo gabbia" },
-        { e: "🦄", t: "unicorno magia arcobaleno cavallo" },
-        { e: "🐲", t: "drago fuoco verde magia" },
-        { e: "🦖", t: "dinosauro tirannosauro t-rex jurassic" },
-        { e: "🦉", t: "gufo saggio notte studio" },
-        { e: "🐝", t: "ape miele giardino laborioso" },
-        { e: "🐢", t: "tartaruga lenta corazza mare terra" },
-        { e: "🐟", t: "pesce acquario pappa cibo acqua" },
-        { e: "🦜", t: "pappagallo uccellino volare piume" }
+      { category: "🐶 Animali, Cuccioli, Mascotte & Natura", emojis: [
+        { e: "🐶", t: "cane cucciolo cagnolino animale pet pappa veterinario spasso" },
+        { e: "🐕", t: "cane grande cagnolone passeggiata guinzaglio" },
+        { e: "🦮", t: "cane guida pastore golden retriever" },
+        { e: "🐩", t: "barboncino cane toelettatura pelo" },
+        { e: "🐱", t: "gatto micio micetto gattino lettiera pet fusa" },
+        { e: "🐈", t: "gatto tigrato micio coccole" },
+        { e: "🦊", t: "volpe furbetto bosco animale rosso" },
+        { e: "🐻", t: "orso orsetto peluche forte" },
+        { e: "🐼", t: "panda orso bianco nero bamboo dolce" },
+        { e: "🐨", t: "koala animale dolce eucalipto" },
+        { e: "🐯", t: "tigre forte coraggioso felino" },
+        { e: "🦁", t: "leone re savana forza maestoso" },
+        { e: "🐮", t: "mucca latte fattoria prato" },
+        { e: "🐷", t: "maialino maiale fattoria porcellino" },
+        { e: "🐸", t: "rana ranocchia stagno verde" },
+        { e: "🐵", t: "scimmia buffa gioco salti" },
+        { e: "🐰", t: "coniglio coniglietto salti carote orecchie" },
+        { e: "🐹", t: "criceto roditore piccolo gabbia ruota seme" },
+        { e: "🐭", t: "topolino topo formaggio dolce" },
+        { e: "🦄", t: "unicorno magia arcobaleno cavallo favola" },
+        { e: "🐴", t: "cavallo criniera corsa maneggio" },
+        { e: "🐲", t: "drago fuoco verde magia ali" },
+        { e: "🦖", t: "dinosauro tirannosauro t-rex jurassic preistoria" },
+        { e: "🦉", t: "gufo saggio notte studio occhi" },
+        { e: "🐝", t: "ape miele giardino laborioso fiori pungiglione" },
+        { e: "🦋", t: "farfalla ali colori primavera volo" },
+        { e: "🐢", t: "tartaruga lenta corazza mare terra acquario" },
+        { e: "🐟", t: "pesce acquario pappa cibo acqua boccia" },
+        { e: "🐠", t: "pesce tropicale colori mare barriera" },
+        { e: "🦜", t: "pappagallo uccellino volare piume becco gabbia" },
+        { e: "🦆", t: "anatra papera stagno piume laghetto" }
       ]},
-      { category: "🧹 Pulizie, Bucato, Faccende & Casa", emojis: [
-        { e: "🧺", t: "bucato lavatrice cesto panni vestiti stendere" },
-        { e: "🍽️", t: "piatti stoviglie lavastoviglie cucina posate forchetta" },
-        { e: "🗑️", t: "spazzatura immondizia bidone differenziata buttare sacchetto" },
-        { e: "🛏️", t: "letto lenzuola cambio camera dormire coperte cuscino" },
-        { e: "🧹", t: "scopa spazzare pavimento polvere aspirapolvere pulizia" },
-        { e: "🧼", t: "sapone lavare mani pulire igiene bagno schiuma" },
-        { e: "🧽", t: "spugna strofinare piatti pulire sanitari" },
-        { e: "🪣", t: "secchio acqua mocio lavare pavimenti" },
-        { e: "🫧", t: "bolle sapone pulito fresco splendente" },
-        { e: "🪟", t: "finestra vetri pulire sole balcone persiane" },
-        { e: "🚿", t: "doccia bagno acqua lavarsi pulito" },
-        { e: "🛁", t: "vasca bagno relax bagnoschiuma idromassaggio" },
-        { e: "👕", t: "maglietta stirare vestiti panni armadio" },
-        { e: "👖", t: "pantaloni jeans vestiti stendere piegare" },
-        { e: "🪴", t: "pianta annaffiare balcone fiori verde giardino" },
-        { e: "🌸", t: "fiori fioriera profumo primavera" },
-        { e: "🔧", t: "chiave inglese attrezzi riparare manutenzione montare" },
-        { e: "🔨", t: "martello chiodo riparare fai da te bricolage" },
-        { e: "🪛", t: "cacciavite viti stringere montaggio mobili" },
-        { e: "💡", t: "lampadina luce cambiare idea elettricità" },
-        { e: "📦", t: "scatola pacco ordine trasloco riordinare cantina" },
-        { e: "🛋️", t: "divano salotto cuscini tv relax ordine" }
+      { category: "🧹 Pulizie, Faccende, Bucato & Arredo Casa", emojis: [
+        { e: "🧺", t: "bucato lavatrice cesto panni vestiti stendere stendino" },
+        { e: "🍽️", t: "piatti stoviglie lavastoviglie cucina posate forchetta bicchiere" },
+        { e: "🗑️", t: "spazzatura immondizia bidone differenziata buttare sacchetto umido secco" },
+        { e: "🛏️", t: "letto lenzuola cambio camera dormire coperte cuscino rifare" },
+        { e: "🧹", t: "scopa spazzare pavimento polvere aspirapolvere pulizia saggina" },
+        { e: "🧼", t: "sapone lavare mani pulire igiene bagno schiuma saponetta" },
+        { e: "🧽", t: "spugna strofinare piatti pulire sanitari cucina lavello" },
+        { e: "🪣", t: "secchio acqua mocio lavare pavimenti straccio pulito" },
+        { e: "🫧", t: "bolle sapone pulito fresco splendente lucido lavaggio" },
+        { e: "🪟", t: "finestra vetri pulire sole balcone persiane tenda" },
+        { e: "🚿", t: "doccia bagno acqua lavarsi pulito box doccia" },
+        { e: "🛁", t: "vasca bagno relax bagnoschiuma idromassaggio schiuma" },
+        { e: "🚽", t: "water bagno tazza sanitari disinfettare igiene" },
+        { e: "👕", t: "maglietta stirare vestiti panni armadio piegare" },
+        { e: "👖", t: "pantaloni jeans vestiti stendere piegare cassetto" },
+        { e: "👗", t: "vestito abito donna armadio gruccia stirare" },
+        { e: "👔", t: "camicia cravatta lavoro stirare elegante" },
+        { e: "🧦", t: "calzini calze bucato accoppiare cassetto" },
+        { e: "🪴", t: "pianta annaffiare balcone fiori verde giardino vaso" },
+        { e: "🌸", t: "fiori fioriera profumo primavera giardino balcone" },
+        { e: "🌱", t: "germoglio piantina semina orto terra" },
+        { e: "🌲", t: "albero potare pino giardino rami foglie" },
+        { e: "🍂", t: "foglie rastrello giardino autunno pulire viale" },
+        { e: "🛋️", t: "divano salotto cuscini tv relax ordine aspirapolvere" },
+        { e: "🚪", t: "porta maniglia chiudere ingresso chiavi" },
+        { e: "🪑", t: "sedia tavolo riordinare sala pranzo" },
+        { e: "📦", t: "scatola pacco ordine trasloco riordinare cantina garage scatoloni" },
+        { e: "🧸", t: "giocattoli riordinare giochi bambini cameretta peluche" },
+        { e: "🔌", t: "presa corrente caricatore cavi spina elettricità staccare" },
+        { e: "💡", t: "lampadina luce cambiare idea elettricità lampadario faretto" }
       ]},
-      { category: "🍳 Cucina, Spesa & Cibo", emojis: [
-        { e: "🍳", t: "uovo cucinare colazione padella fritto pranzo" },
-        { e: "🛒", t: "carrello spesa supermercato comprare provviste" },
-        { e: "🛍️", t: "buste spesa shopping sacchetti negozi" },
-        { e: "🥘", t: "pentola cena pranzo cucinare sugo stufato" },
-        { e: "🍕", t: "pizza cena sabato forno margherita asporto" },
-        { e: "🍝", t: "pasta spaghetti pranzo pomodoro cucina italiana" },
-        { e: "🥗", t: "insalata verdura dieta salutare pranzo verde" },
-        { e: "🥪", t: "panino toast merenda spuntino sandwich" },
-        { e: "🍞", t: "pane fornaio fresco colazione fetta" },
-        { e: "🍎", t: "mela frutta sana spesa merenda" },
-        { e: "🥦", t: "broccoli verdura spesa vitamine verdure" },
-        { e: "🥩", t: "carne macelleria bistecca secondo" },
-        { e: "☕", t: "caffè moka espresso colazione pausa sveglia" },
-        { e: "🍵", t: "tè tisana caldo relax infuso" },
-        { e: "🍰", t: "torta dolce pasticceria compleanno fetta" },
-        { e: "🍪", t: "biscotti forno colazione latte dolci" }
+      { category: "🍳 Cucina, Cibo, Fornelli, Spesa & Dolci", emojis: [
+        { e: "🍳", t: "uovo cucinare colazione padella fritto pranzo fornelli" },
+        { e: "🥘", t: "pentola cena pranzo cucinare sugo stufato casseruola" },
+        { e: "🍲", t: "zuppa minestra brodo caldo ciotola verdure" },
+        { e: "🥣", t: "ciotola latte cereali colazione fiocchi cucchiaio" },
+        { e: "🛒", t: "carrello spesa supermercato comprare provviste cibo" },
+        { e: "🛍️", t: "buste spesa shopping sacchetti negozi compere" },
+        { e: "🍕", t: "pizza cena sabato forno margherita asporto teglia" },
+        { e: "🍝", t: "pasta spaghetti pranzo pomodoro cucina italiana primo" },
+        { e: "🥫", t: "pomodoro barattolo pelati scatolame sugo conserva" },
+        { e: "🥪", t: "panino toast merenda spuntino sandwich toast tramezzino" },
+        { e: "🍞", t: "pane fornaio fresco colazione fetta pagnotta" },
+        { e: "🥖", t: "baguette pane francese sfilatino forno" },
+        { e: "🥐", t: "cornetto brioche colazione croissant bar" },
+        { e: "🥗", t: "insalata verdura dieta salutare pranzo verde condimento" },
+        { e: "🍅", t: "pomodori insalata orto verdure fresche" },
+        { e: "🥔", t: "patate pelare forno purè fritte verdura" },
+        { e: "🥕", t: "carote orto insalata verdure buccia coniglio" },
+        { e: "🥦", t: "broccoli verdura spesa vitamine verdure vapore" },
+        { e: "🧅", t: "cipolla soffritto sbucciare cucina verdura" },
+        { e: "🧄", t: "aglio condimento sbucciare spezie cucina" },
+        { e: "🍎", t: "mela frutta sana spesa merenda sbucciare" },
+        { e: "🍌", t: "banana frutta buccia merenda colazione" },
+        { e: "🍊", t: "arancia spremuta vitamina agrumi frutta fresca" },
+        { e: "🍓", t: "fragola dolce frutta dessert primavera" },
+        { e: "🍋", t: "limone spremuta agrume condimento pesce sgrassare" },
+        { e: "🥩", t: "carne macelleria bistecca secondo fettina griglia" },
+        { e: "🍗", t: "pollo arrosto coscia carne forno cena" },
+        { e: "🍖", t: "costine arrosto barbecue carne maiale" },
+        { e: "🧀", t: "formaggio parmigiano grattugiare caciotta stagionato" },
+        { e: "🧈", t: "burro panetto dolci colazione cucina grasso" },
+        { e: "☕", t: "caffè moka espresso colazione pausa sveglia tazzina" },
+        { e: "🍵", t: "tè tisana caldo relax infuso camomilla tazza" },
+        { e: "🧃", t: "succo frutta cannuccia brik merenda bimbi" },
+        { e: "🥛", t: "bicchiere latte fresco colazione bere" },
+        { e: "🍷", t: "vino calice rosso cena brindisi bottiglia" },
+        { e: "🍺", t: "birra bionda boccale sabato pizza serata" },
+        { e: "🍰", t: "torta dolce pasticceria compleanno fetta forno" },
+        { e: "🎂", t: "torta compleanno candeline festa party dolce" },
+        { e: "🍪", t: "biscotti forno colazione latte dolci gocce cioccolato" },
+        { e: "🍫", t: "cioccolato barretta fondente latte dolce snack" },
+        { e: "🍦", t: "gelato cono estate vaniglia cioccolato coppetta" }
       ]},
-      { category: "💈 Cura Personale, Auto & Commissioni", emojis: [
-        { e: "💈", t: "barbiere capelli taglio barba rasatura uomo" },
-        { e: "💇‍♂️", t: "taglio capelli parrucchiere uomo pettinarsi" },
-        { e: "💇‍♀️", t: "parrucchiera piega capelli donna tinta" },
-        { e: "🪥", t: "spazzolino denti dentifricio igiene lavare denti" },
-        { e: "🧖‍♂️", t: "spa sauna relax massaggio benessere" },
-        { e: "🩺", t: "stetoscopio dottore visita medico ricetta controllo" },
-        { e: "💊", t: "pillole farmacia medicine vitamine ricetta" },
+      { category: "💈 Cura Personale, Bagno, Salute & Benessere", emojis: [
+        { e: "💈", t: "barbiere capelli taglio barba rasatura uomo pettine" },
+        { e: "💇‍♂️", t: "taglio capelli parrucchiere uomo pettinarsi accorciare" },
+        { e: "💇‍♀️", t: "parrucchiera piega capelli donna tinta shampoo" },
+        { e: "🪥", t: "spazzolino denti dentifricio igiene lavare denti sorriso" },
+        { e: "🧴", t: "crema lozione flacone idratante solare corpo" },
+        { e: "🪒", t: "rasoio lametta barba peli rasatura sbarbata" },
+        { e: "🧖‍♂️", t: "spa sauna relax massaggio benessere terme asciugamano" },
+        { e: "🧖‍♀️", t: "spa relax donna maschera viso benessere terme" },
+        { e: "💅", t: "unghie smalto estetista manicure pedicure" },
+        { e: "💄", t: "rossetto trucco truccarsi cosmetici specchio" },
+        { e: "🪞", t: "specchio riflettersi bagno trucco controllo" },
+        { e: "🩺", t: "stetoscopio dottore visita medico ricetta controllo salute" },
+        { e: "💊", t: "pillole farmacia medicine vitamine ricetta compressa pastiglia" },
+        { e: "🩹", t: "cerotto ferita medicazione bua disinfettante" },
+        { e: "🌡️", t: "termometro febbre temperatura influenza caldo" },
+        { e: "💉", t: "siringa vaccino puntura analisi sangue prelievo" },
+        { e: "👓", t: "occhiali vista ottico lenti leggere oculista" },
+        { e: "🕶️", t: "occhiali sole estate protezione occhi" }
+      ]},
+      { category: "🚗 Auto, Mezzi, Manutenzione & Viaggi", emojis: [
         { e: "🚗", t: "macchina auto guidare lavare lavaggio benzina tagliando meccanico" },
-        { e: "🚙", t: "suv auto famiglia viaggio gita" },
-        { e: "🛵", t: "scooter motorino moto casco tragitto" },
-        { e: "🚲", t: "bicicletta bici pedalare giro ruota gommista" },
-        { e: "⛽", t: "benzina distributore carburante pieno diesel" },
-        { e: "🛞", t: "ruota gomma cambio gomme pressione gommista" },
-        { e: "🏢", t: "ufficio lavoro posta banca commissioni documenti" },
-        { e: "📬", t: "posta lettere cassetta bollette raccomandata" },
-        { e: "🎒", t: "zaino scuola compiti studio bambini libri" },
-        { e: "📚", t: "libri studiare leggere compiti scuola" },
-        { e: "🎮", t: "videogiochi playstation console svago relax" },
-        { e: "🏋️‍♂️", t: "palestra pesi allenamento sport fitness corsa" },
-        { e: "🏃‍♂️", t: "corsa running correre allenamento movimento" }
+        { e: "🚙", t: "suv auto famiglia viaggio gita baule caricare" },
+        { e: "🏎️", t: "auto corsa sportiva veloce pista" },
+        { e: "🛻", t: "pickup furgone carico trasporto materiali" },
+        { e: "🛵", t: "scooter motorino moto casco tragitto città lavoro" },
+        { e: "🏍️", t: "moto grande centauro viaggio strada casco" },
+        { e: "🚲", t: "bicicletta bici pedalare giro ruota gommista catena" },
+        { e: "🛴", t: "monopattino elettrico città tragitto" },
+        { e: "⛽", t: "benzina distributore carburante pieno diesel gpl rifornimento" },
+        { e: "🛞", t: "ruota gomma cambio gomme pressione gommista cerchio bucata" },
+        { e: "🚌", t: "autobus bus scuola fermata linea abbonamento" },
+        { e: "🚆", t: "treno stazione binario viaggio pendolare" },
+        { e: "✈️", t: "aereo volo aeroporto vacanze viaggio bagagli" },
+        { e: "🧳", t: "valigia bagaglio preparare valigie vestiti partire" },
+        { e: "🏖️", t: "spiaggia mare vacanze ombrellone sabbia sole" },
+        { e: "🏔️", t: "montagna neve gita trekking sentiero aria aperta" }
+      ]},
+      { category: "🛠️ Fai da te, Attrezzi, Ufficio & Scuola", emojis: [
+        { e: "🔧", t: "chiave inglese attrezzi riparare manutenzione montare bulloni" },
+        { e: "🔨", t: "martello chiodo riparare fai da te bricolage picchiare" },
+        { e: "🪛", t: "cacciavite viti stringere montaggio mobili brugola" },
+        { e: "🪚", t: "sega tagliare legno potare rami bricolage" },
+        { e: "📏", t: "metro riga misurare centimetri dimensioni spazio" },
+        { e: "🪜", t: "scala salire soffitto lampadario alto ragnatele" },
+        { e: "🎨", t: "pittura tinteggiare pennello colori pareti vernice" },
+        { e: "🖌️", t: "pennello dipingere verniciare ritocco bricolage" },
+        { e: "🏢", t: "ufficio lavoro posta banca commissioni documenti comune" },
+        { e: "📬", t: "posta lettere cassetta bollette raccomandata busta" },
+        { e: "✉️", t: "busta lettera francobollo spedizione messaggio" },
+        { e: "💻", t: "computer portatile pc lavoro email smart working" },
+        { e: "📱", t: "smartphone telefono cellulare chiamata messaggi whatsapp" },
+        { e: "🖨️", t: "stampante stampare fogli cartucce documenti fotocopia" },
+        { e: "🎒", t: "zaino scuola compiti studio bambini libri astuccio" },
+        { e: "📚", t: "libri studiare leggere compiti scuola biblioteca" },
+        { e: "📝", t: "appunti foglio matita note scrivere lista compiti promemoria" },
+        { e: "✏️", t: "matita disegnare scrivere cancellare compiti" },
+        { e: "✂️", t: "forbici tagliare carta bricolage lavoretti cucito" },
+        { e: "📌", t: "puntina bacheca fissare fogli avviso memorandum" }
+      ]},
+      { category: "🎮 Giochi, Hobby, Sport & Relax", emojis: [
+        { e: "🎮", t: "videogiochi playstation console svago relax joystick" },
+        { e: "🕹️", t: "joystick arcade cabinato retrogaming sala giochi" },
+        { e: "🎲", t: "dadi gioco società tavolo risico monopoli" },
+        { e: "🧩", t: "puzzle incastro pezzi gioco passatempo logica" },
+        { e: "⚽", t: "calcio pallone partita campo allenamento gol" },
+        { e: "🏀", t: "basket pallacanestro canestro palla rimbalzo" },
+        { e: "🎾", t: "tennis racchetta pallina campo terra battuta" },
+        { e: "🏐", t: "pallavolo volley spiaggia campo schiacciata" },
+        { e: "🏊‍♂️", t: "nuoto piscina nuotare bracciate tuffo acqua" },
+        { e: "🏋️‍♂️", t: "palestra pesi bilanciere allenamento sport fitness ghisa" },
+        { e: "🏃‍♂️", t: "corsa running correre allenamento movimento scarpe" },
+        { e: "🧘‍♂️", t: "yoga meditazione relax stretching respirazione calma" },
+        { e: "🎸", t: "chitarra musica suonare corde accordi rock" },
+        { e: "🎹", t: "pianoforte tastiera musica tasti classica suonare" },
+        { e: "🎧", t: "cuffie musica ascoltare podcast canzoni relax" },
+        { e: "🎬", t: "film cinema tv divano serie netflix serata ciak" }
       ]}
     ];
 
     function goToHome() {
       switchMode('use');
-      switchTab('spontaneous');
+      closeAllModals();
     }
 
     function showToast(msg, icon = '✅') {
@@ -955,24 +1137,60 @@
       if (mode === 'admin') renderAdmin();
     }
 
-    function switchTab(tab) {
-      activeTab = tab;
-      const tabs = ['spontaneous', 'routine', 'podium', 'stats', 'history'];
-      tabs.forEach(t => {
-        const sec = document.getElementById(`section-${t}`);
-        const btn = document.getElementById(`tab-btn-${t}`);
-        if (sec) sec.classList.toggle('hidden', t !== tab);
-        if (btn) {
-          if (t === tab) {
-            btn.className = 'flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-extrabold text-xs sm:text-sm transition shadow-sm bg-white text-slate-900 flex items-center justify-center gap-1.5';
-          } else {
-            btn.className = 'flex-1 min-w-[120px] py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5';
-          }
-        }
+    function closeAllModals() {
+      ['modal-spontaneous-catalog', 'modal-quick-task', 'modal-routine-catalog', 'modal-podium-view', 'modal-stats-view', 'modal-history-view', 'modal-select-performer', 'modal-assign-task', 'modal-task-notes', 'modal-emoji-picker', 'modal-member', 'modal-spontaneous', 'modal-routine'].forEach(id => {
+        document.getElementById(id)?.classList.add('hidden');
       });
-      if (tab === 'stats') renderStatsReports();
-      if (tab === 'history') renderHistory();
-      if (tab === 'routine') renderRoutines();
+    }
+
+    function openSpontaneousCatalogModal() {
+      renderSpontaneousGrid();
+      document.getElementById('modal-spontaneous-catalog').classList.remove('hidden');
+    }
+    function closeSpontaneousCatalogModal() {
+      document.getElementById('modal-spontaneous-catalog').classList.add('hidden');
+    }
+
+    function openQuickTaskModal() {
+      const todayIso = new Date().toISOString().split('T')[0];
+      const dateEl = document.getElementById('quick-task-date');
+      if (dateEl && !dateEl.value) dateEl.value = todayIso;
+      document.getElementById('modal-quick-task').classList.remove('hidden');
+    }
+    function closeQuickTaskModal() {
+      document.getElementById('modal-quick-task').classList.add('hidden');
+    }
+
+    function openRoutineCatalogModal() {
+      renderRoutines();
+      document.getElementById('modal-routine-catalog').classList.remove('hidden');
+    }
+    function closeRoutineCatalogModal() {
+      document.getElementById('modal-routine-catalog').classList.add('hidden');
+    }
+
+    function openPodiumModal() {
+      renderPodium();
+      document.getElementById('modal-podium-view').classList.remove('hidden');
+    }
+    function closePodiumModal() {
+      document.getElementById('modal-podium-view').classList.add('hidden');
+    }
+
+    function openStatsModal() {
+      renderStatsReports();
+      document.getElementById('modal-stats-view').classList.remove('hidden');
+    }
+    function closeStatsModal() {
+      document.getElementById('modal-stats-view').classList.add('hidden');
+    }
+
+    function openHistoryModal() {
+      renderHistory();
+      document.getElementById('modal-history-view').classList.remove('hidden');
+    }
+    function closeHistoryModal() {
+      document.getElementById('modal-history-view').classList.add('hidden');
     }
 
     function toggleCustomTaskBox() {
@@ -1024,7 +1242,6 @@
       const histSelect = document.getElementById('history-member-filter');
       const routMemberSelect = document.getElementById('rout-edit-member');
       const noteAuthorSelect = document.getElementById('modal-note-author');
-      const filterRoutMember = document.getElementById('filter-routine-member');
       const filterSingleMember = document.getElementById('filter-single-member');
       const winnersBadge = document.getElementById('period-winners-badge');
       if (!bar || !appData) return;
@@ -1043,7 +1260,6 @@
       if (histSelect) histSelect.innerHTML = '<option value="all">Tutti gli esecutori</option>';
       if (routMemberSelect) routMemberSelect.innerHTML = '<option value="all">👥 Tutta la Famiglia</option>';
       if (noteAuthorSelect) noteAuthorSelect.innerHTML = '';
-      if (filterRoutMember) filterRoutMember.innerHTML = '<option value="all">Tutti gli assegnatari</option>';
       if (filterSingleMember) filterSingleMember.innerHTML = '<option value="all">Tutti gli assegnatari</option>';
 
       let gridColsClass = 'grid grid-cols-1 gap-4 w-full';
@@ -1100,7 +1316,6 @@
         cardsHtml += `
           <div class="p-5 rounded-3xl border border-slate-200 bg-slate-50/90 shadow-2xs hover:shadow-md transition flex flex-col justify-between space-y-3.5 w-full">
             
-            <!-- Member Header & Primary Score -->
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-3.5">
                 <div class="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-3xl shadow-xs shrink-0">${m.icon || '👤'}</div>
@@ -1117,7 +1332,7 @@
             <!-- Last completed task for this member -->
             ${lastActivityHtml}
 
-            <!-- Attention Warning Badge for Pending Tasks (No animation, clickable) -->
+            <!-- Attention Warning Badge for Pending Tasks -->
             ${pendingWarningBadge ? `<div>${pendingWarningBadge}</div>` : ''}
 
             <!-- Sub-bar: Total Score & Gap -->
@@ -1132,7 +1347,6 @@
         if (histSelect) histSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
         if (routMemberSelect) routMemberSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
         if (noteAuthorSelect) noteAuthorSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
-        if (filterRoutMember) filterRoutMember.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
         if (filterSingleMember) filterSingleMember.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
       });
 
@@ -1148,40 +1362,68 @@
       }
     }
 
+    function setHomeRoutineFilter(flt) {
+      activeHomeRoutineFilter = flt;
+      ['due_default', 'overdue', 'warning', 'personal', 'all'].forEach(k => {
+        const btn = document.getElementById(`hrf-${k}`);
+        if (btn) {
+          btn.className = (k === flt)
+            ? 'px-2.5 py-1 rounded-xl font-extrabold transition bg-indigo-600 text-white shadow-2xs'
+            : 'px-2.5 py-1 rounded-xl font-bold transition text-slate-600 hover:text-slate-900 bg-slate-100';
+        }
+      });
+      renderHomeWidgets();
+    }
+
     // ==================== RENDER EXPANDED 2-COLUMN DASHBOARD WIDGETS ====================
     function renderHomeWidgets() {
       if (!appData) return;
 
-      // 1. Overdue & Imminent Routines with Free Text & Member Filter
+      // 1. Routine in Scadenza / Scadute Widget (Filtered via search and status pills)
       const dueBox = document.getElementById('home-due-routines-list');
       const dueCountBadge = document.getElementById('due-routines-count-badge');
       const routineSearch = (document.getElementById('filter-routine-search')?.value || '').toLowerCase().trim();
-      const routineMemberFilter = document.getElementById('filter-routine-member')?.value || 'all';
 
-      const allDueRoutines = (appData.routine_tasks || []).filter(r => r.status === 'overdue' || r.status === 'warning');
+      const allRoutines = appData.routine_tasks || [];
+      const overdueRoutines = allRoutines.filter(r => r.status === 'overdue');
+      const warningRoutines = allRoutines.filter(r => r.status === 'warning');
 
       if (dueCountBadge) {
-        dueCountBadge.textContent = allDueRoutines.length;
-        dueCountBadge.classList.toggle('hidden', allDueRoutines.length === 0);
+        const attentionCount = overdueRoutines.length + warningRoutines.length;
+        dueCountBadge.textContent = attentionCount;
+        dueCountBadge.classList.toggle('hidden', attentionCount === 0);
       }
 
-      const filteredDueRoutines = allDueRoutines.filter(r => {
-        const matchText = (r.name || '').toLowerCase().includes(routineSearch);
-        const matchMember = (routineMemberFilter === 'all') || 
-                            (r.assigned_member === 'all') || 
-                            (r.assigned_member === routineMemberFilter);
-        return matchText && matchMember;
+      let filteredDueRoutines = allRoutines;
+
+      if (activeHomeRoutineFilter === 'due_default') {
+        filteredDueRoutines = allRoutines.filter(r => r.status === 'overdue' || r.status === 'warning');
+      } else if (activeHomeRoutineFilter === 'overdue') {
+        filteredDueRoutines = overdueRoutines;
+      } else if (activeHomeRoutineFilter === 'warning') {
+        filteredDueRoutines = warningRoutines;
+      } else if (activeHomeRoutineFilter === 'personal') {
+        filteredDueRoutines = allRoutines.filter(r => r.is_personal);
+      }
+
+      filteredDueRoutines = filteredDueRoutines.filter(r => {
+        return (r.name || '').toLowerCase().includes(routineSearch);
       });
 
       if (dueBox) {
         dueBox.innerHTML = '';
         if (filteredDueRoutines.length === 0) {
-          dueBox.innerHTML = '<div class="text-center py-8 text-xs text-emerald-700 bg-emerald-50 rounded-2xl font-bold flex items-center justify-center gap-1.5"><span>✅</span> Nessuna routine in scadenza per questi filtri!</div>';
+          dueBox.innerHTML = '<div class="text-center py-8 text-xs text-emerald-700 bg-emerald-50 rounded-2xl font-bold flex items-center justify-center gap-1.5"><span>✅</span> Nessuna routine per questo filtro!</div>';
         } else {
           filteredDueRoutines.forEach(r => {
-            let badge = (r.status === 'overdue')
-              ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800">🔴 Scaduta (${r.overdue_days}gg fa)</span>`
-              : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800">🟡 ${r.days_remaining === 0 ? 'Scade oggi' : 'Tra ' + r.days_remaining + 'gg'}</span>`;
+            let badge = '';
+            if (r.status === 'overdue') {
+              badge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800">🔴 Scaduta (${r.overdue_days}gg fa)</span>`;
+            } else if (r.status === 'warning') {
+              badge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800">🟡 ${r.days_remaining === 0 ? 'Scade oggi' : 'Tra ' + r.days_remaining + 'gg'}</span>`;
+            } else {
+              badge = `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">🟢 Tra ${r.days_remaining}gg</span>`;
+            }
 
             const assignedText = r.assigned_member && r.assigned_member !== 'all' ? `👤 ${r.assigned_member}` : '👥 Famiglia';
 
@@ -1283,6 +1525,39 @@
       }
     }
 
+    // ==================== RENDER SPONTANEOUS CATALOG WITH LAST EXECUTED DAYS AGO ====================
+    function renderSpontaneousGrid() {
+      const spontGrid = document.getElementById('spontaneous-grid');
+      if (!spontGrid || !appData) return;
+
+      spontGrid.innerHTML = '';
+      (appData.spontaneous_tasks || []).forEach(t => {
+        const ptsBadge = t.is_personal 
+          ? '<span class="text-[10px] font-extrabold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-lg">👤 Personale (0 pt)</span>' 
+          : `<span class="text-[11px] font-extrabold text-indigo-700 bg-indigo-100 px-2.5 py-0.5 rounded-lg">+${t.points} pt</span>`;
+
+        const lastExecHtml = t.last_executed_text 
+          ? `<div class="text-[11px] text-slate-500 font-medium truncate">🕒 Ultima: <b class="text-slate-700">${t.last_executed_text}</b></div>`
+          : '<div class="text-[11px] text-slate-400 font-medium">🕒 Mai eseguita</div>';
+
+        spontGrid.innerHTML += `
+          <div onclick="promptPerformerSelection('${t.name}', ${t.points}, 'spontaneous', ${!!t.is_personal})" class="p-4 bg-slate-50 hover:bg-indigo-50/60 border-2 border-slate-200 hover:border-indigo-500 rounded-3xl shadow-2xs hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-3">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-1.5">
+                <span class="text-3xl">${t.icon || '⚡'}</span>
+                ${ptsBadge}
+              </div>
+              <div class="text-sm font-extrabold text-slate-900 leading-snug">${t.name}</div>
+            </div>
+            
+            <div class="pt-2 border-t border-slate-200/60">
+              ${lastExecHtml}
+            </div>
+          </div>
+        `;
+      });
+    }
+
     // ==================== TASK PERFORMER SELECTION POPUP ====================
     function promptPerformerSelection(taskName, points, taskType = 'spontaneous', isPersonal = false) {
       pendingExecutionTask = { taskName, points, taskType, isPersonal };
@@ -1352,6 +1627,7 @@
       if (!pendingExecutionTask) return;
       const { taskName, points, taskType, isPersonal } = pendingExecutionTask;
       closePerformerModal();
+      closeSpontaneousCatalogModal();
 
       try {
         await fetch(`${apiBase}/log`, {
@@ -1384,6 +1660,7 @@
 
       const { taskName, points, taskType, isPersonal } = pendingExecutionTask;
       closePerformerModal();
+      closeSpontaneousCatalogModal();
 
       try {
         await fetch(`${apiBase}/log`, {
@@ -1406,7 +1683,7 @@
       } catch (e) {}
     }
 
-    // ==================== QUICK TASK / PROMEMORIA INTERACTIVE POPUP ASSIGNMENT ====================
+    // ==================== QUICK TASK POPUP ASSIGNMENT ====================
     function initiateQuickTaskAssignment(e) {
       e.preventDefault();
       const title = document.getElementById('quick-task-title').value.trim();
@@ -1415,6 +1692,7 @@
 
       if (!title) return;
 
+      closeQuickTaskModal();
       pendingQuickTaskPayload = { title, date, points: pts };
 
       const titleEl = document.getElementById('modal-assign-task-title');
@@ -1719,116 +1997,94 @@
       });
     }
 
+    // ==================== RENDER PODIUM & LEADERBOARD ====================
+    function renderPodium() {
+      const podiumGraphic = document.getElementById('podium-graphic');
+      const lbTable = document.getElementById('leaderboard-table');
+      if (!podiumGraphic || !lbTable || !appData) return;
+
+      const lb = appData.leaderboard || [];
+      podiumGraphic.innerHTML = '';
+      lbTable.innerHTML = '';
+
+      if (lb.length === 1) {
+        const p1 = lb[0];
+        podiumGraphic.innerHTML = `
+          <div class="flex flex-col items-center w-28">
+            <span class="text-xs font-extrabold text-amber-600 mb-1 truncate">👑 ${p1.name}</span>
+            <div class="w-full podium-step-1 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-xl shadow-lg">1°</div>
+            <span class="text-xs font-extrabold text-amber-700 mt-1">${p1.weekly_points} pt</span>
+          </div>
+        `;
+      } else if (lb.length === 2) {
+        const p1 = lb[0];
+        const p2 = lb[1];
+        podiumGraphic.innerHTML = `
+          <div class="flex flex-col items-center w-28">
+            <span class="text-xs font-extrabold text-amber-600 mb-1 truncate">👑 ${p1.name}</span>
+            <div class="w-full podium-step-1 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-xl shadow-lg">1°</div>
+            <span class="text-xs font-extrabold text-amber-700 mt-1">${p1.weekly_points} pt</span>
+          </div>
+          <div class="flex flex-col items-center w-28">
+            <span class="text-xs font-extrabold text-slate-700 mb-1 truncate">${p2.name}</span>
+            <div class="w-full podium-step-2 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-lg shadow-md">2°</div>
+            <span class="text-xs font-extrabold text-slate-600 mt-1">${p2.weekly_points} pt</span>
+          </div>
+        `;
+      } else if (lb.length >= 3) {
+        const p1 = lb[0];
+        const p2 = lb[1];
+        const p3 = lb[2];
+        podiumGraphic.innerHTML = `
+          <div class="flex flex-col items-center w-24">
+            <span class="text-xs font-extrabold text-slate-700 mb-1 truncate">${p2.name}</span>
+            <div class="w-full podium-step-2 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-lg shadow-md">2°</div>
+            <span class="text-xs font-extrabold text-slate-600 mt-1">${p2.weekly_points} pt</span>
+          </div>
+          <div class="flex flex-col items-center w-28">
+            <span class="text-xs font-extrabold text-amber-600 mb-1 truncate">👑 ${p1.name}</span>
+            <div class="w-full podium-step-1 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-xl shadow-lg">1°</div>
+            <span class="text-xs font-extrabold text-amber-700 mt-1">${p1.weekly_points} pt</span>
+          </div>
+          <div class="flex flex-col items-center w-24">
+            <span class="text-xs font-extrabold text-slate-700 mb-1 truncate">${p3.name}</span>
+            <div class="w-full podium-step-3 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-base shadow-md">3°</div>
+            <span class="text-xs font-extrabold text-slate-600 mt-1">${p3.weekly_points} pt</span>
+          </div>
+        `;
+      }
+
+      lb.forEach(m => {
+        const badgesHtml = (m.badges || []).map(b => `<span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">${b.name}</span>`).join(' ');
+        const primary = getPrimaryScore(m);
+
+        lbTable.innerHTML += `
+          <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="font-extrabold text-slate-400 text-base w-6">#${m.rank}</span>
+              <span class="text-2xl">${m.icon || '👤'}</span>
+              <div>
+                <div class="font-extrabold text-sm text-slate-900">${m.name}</div>
+                <div class="flex flex-wrap gap-1 mt-0.5">${badgesHtml}</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="font-extrabold text-indigo-600 text-base">${primary.value} pt <span class="text-xs font-semibold text-slate-500">(${primary.label})</span></div>
+              <div class="text-xs text-slate-400 font-semibold">💎 Totale di sempre: ${m.total_points} pt</div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
     function render() {
       if (!appData) return;
 
       renderMembersBar();
       renderHomeWidgets();
+      renderSpontaneousGrid();
       renderRoutines();
-
-      const dueCount = (appData.routine_tasks || []).filter(r => r.status === 'overdue' || r.status === 'warning').length;
-      const dueBadge = document.getElementById('badge-due-routine-count');
-      if (dueBadge) {
-        dueBadge.textContent = dueCount;
-        dueBadge.classList.toggle('hidden', dueCount === 0);
-      }
-
-      // Spontaneous Tasks Grid
-      const spontGrid = document.getElementById('spontaneous-grid');
-      if (spontGrid) {
-        spontGrid.innerHTML = '';
-        (appData.spontaneous_tasks || []).forEach(t => {
-          const ptsBadge = t.is_personal ? '<span class="text-[10px] font-extrabold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-lg self-start">👤 Personale (0 pt)</span>' : `<span class="text-[11px] font-extrabold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-lg self-start">+${t.points} pt</span>`;
-          spontGrid.innerHTML += `
-            <div onclick="promptPerformerSelection('${t.name}', ${t.points}, 'spontaneous', ${!!t.is_personal})" class="p-4 bg-white border border-slate-200/90 hover:border-indigo-500 rounded-3xl shadow-2xs hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-3">
-              <div>
-                <div class="text-3xl mb-1.5">${t.icon || '⚡'}</div>
-                <div class="text-xs sm:text-sm font-bold text-slate-900 leading-snug">${t.name}</div>
-              </div>
-              ${ptsBadge}
-            </div>
-          `;
-        });
-      }
-
-      // Adaptive Dynamic Podium & Leaderboard
-      const podiumGraphic = document.getElementById('podium-graphic');
-      const lbTable = document.getElementById('leaderboard-table');
-      const lb = appData.leaderboard || [];
-
-      if (podiumGraphic && lbTable) {
-        podiumGraphic.innerHTML = '';
-        lbTable.innerHTML = '';
-
-        if (lb.length === 1) {
-          const p1 = lb[0];
-          podiumGraphic.innerHTML = `
-            <div class="flex flex-col items-center w-28">
-              <span class="text-xs font-extrabold text-amber-600 mb-1 truncate">👑 ${p1.name}</span>
-              <div class="w-full podium-step-1 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-xl shadow-lg">1°</div>
-              <span class="text-xs font-extrabold text-amber-700 mt-1">${p1.weekly_points} pt</span>
-            </div>
-          `;
-        } else if (lb.length === 2) {
-          const p1 = lb[0];
-          const p2 = lb[1];
-          podiumGraphic.innerHTML = `
-            <div class="flex flex-col items-center w-28">
-              <span class="text-xs font-extrabold text-amber-600 mb-1 truncate">👑 ${p1.name}</span>
-              <div class="w-full podium-step-1 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-xl shadow-lg">1°</div>
-              <span class="text-xs font-extrabold text-amber-700 mt-1">${p1.weekly_points} pt</span>
-            </div>
-            <div class="flex flex-col items-center w-28">
-              <span class="text-xs font-extrabold text-slate-700 mb-1 truncate">${p2.name}</span>
-              <div class="w-full podium-step-2 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-lg shadow-md">2°</div>
-              <span class="text-xs font-extrabold text-slate-600 mt-1">${p2.weekly_points} pt</span>
-            </div>
-          `;
-        } else if (lb.length >= 3) {
-          const p1 = lb[0];
-          const p2 = lb[1];
-          const p3 = lb[2];
-          podiumGraphic.innerHTML = `
-            <div class="flex flex-col items-center w-24">
-              <span class="text-xs font-extrabold text-slate-700 mb-1 truncate">${p2.name}</span>
-              <div class="w-full podium-step-2 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-lg shadow-md">2°</div>
-              <span class="text-xs font-extrabold text-slate-600 mt-1">${p2.weekly_points} pt</span>
-            </div>
-            <div class="flex flex-col items-center w-28">
-              <span class="text-xs font-extrabold text-amber-600 mb-1 truncate">👑 ${p1.name}</span>
-              <div class="w-full podium-step-1 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-xl shadow-lg">1°</div>
-              <span class="text-xs font-extrabold text-amber-700 mt-1">${p1.weekly_points} pt</span>
-            </div>
-            <div class="flex flex-col items-center w-24">
-              <span class="text-xs font-extrabold text-slate-700 mb-1 truncate">${p3.name}</span>
-              <div class="w-full podium-step-3 rounded-t-2xl flex items-center justify-center font-extrabold text-white text-base shadow-md">3°</div>
-              <span class="text-xs font-extrabold text-slate-600 mt-1">${p3.weekly_points} pt</span>
-            </div>
-          `;
-        }
-
-        lb.forEach(m => {
-          const badgesHtml = (m.badges || []).map(b => `<span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">${b.name}</span>`).join(' ');
-          const primary = getPrimaryScore(m);
-
-          lbTable.innerHTML += `
-            <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <span class="font-extrabold text-slate-400 text-base w-6">#${m.rank}</span>
-                <span class="text-2xl">${m.icon || '👤'}</span>
-                <div>
-                  <div class="font-extrabold text-sm text-slate-900">${m.name}</div>
-                  <div class="flex flex-wrap gap-1 mt-0.5">${badgesHtml}</div>
-                </div>
-              </div>
-              <div class="text-right">
-                <div class="font-extrabold text-indigo-600 text-base">${primary.value} pt <span class="text-xs font-semibold text-slate-500">(${primary.label})</span></div>
-                <div class="text-xs text-slate-400 font-semibold">💎 Totale di sempre: ${m.total_points} pt</div>
-              </div>
-            </div>
-          `;
-        });
-      }
+      renderPodium();
     }
 
     // ==================== STATS & REPORTS ====================
@@ -1985,7 +2241,7 @@
       }
     }
 
-    // ==================== CHRONOLOGICAL HISTORY (RICH DETAILED TIMELINE) ====================
+    // ==================== CHRONOLOGICAL HISTORY ====================
     function renderHistory() {
       if (!appData) return;
 
@@ -2073,7 +2329,7 @@
       } catch (e) {}
     }
 
-    // ==================== DYNAMIC EMOJI PICKER WITH INSTANT LIVE SEARCH ====================
+    // ==================== GIGANTIC EMOJI PICKER WITH INSTANT LIVE SEARCH ====================
     function openEmojiPicker(targetInputId, targetPreviewId) {
       currentEmojiTargetInput = document.getElementById(targetInputId);
       currentEmojiTargetPreview = document.getElementById(targetPreviewId);
@@ -2119,7 +2375,7 @@
           container.innerHTML += `
             <div class="space-y-1.5">
               <div class="text-[11px] font-extrabold text-indigo-700 uppercase tracking-wider">${cat.category}</div>
-              <div class="grid grid-cols-7 sm:grid-cols-9 gap-1.5 bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80">
+              <div class="grid grid-cols-7 sm:grid-cols-10 gap-1.5 bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80">
                 ${emojisGridHtml}
               </div>
             </div>
@@ -2128,7 +2384,7 @@
       });
 
       if (totalMatches === 0) {
-        container.innerHTML = '<div class="text-center py-12 text-xs text-slate-400 font-medium">Nessuna emoji trovata per questa ricerca. Prova con parole come "cane", "auto", "pizza", "scopa"...</div>';
+        container.innerHTML = '<div class="text-center py-12 text-xs text-slate-400 font-medium">Nessuna emoji trovata per questa ricerca.</div>';
       }
     }
 
