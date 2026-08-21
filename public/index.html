@@ -8,23 +8,39 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    
+    * {
+      -webkit-user-select: auto;
+      user-select: auto;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
     .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    
     .podium-step-1 { height: 110px; background: linear-gradient(180deg, #f59e0b, #d97706); }
     .podium-step-2 { height: 85px; background: linear-gradient(180deg, #94a3b8, #64748b); }
     .podium-step-3 { height: 65px; background: linear-gradient(180deg, #b45309, #78350f); }
     
-    /* Solid, rock-stable cursor styles for input fields */
+    /* Absolute rock-stable text cursor and caret fix */
     input[type="text"], input[type="number"], input[type="date"], textarea {
       cursor: text !important;
+      -webkit-user-select: text !important;
+      user-select: text !important;
       caret-color: #4f46e5 !important;
       color: #0f172a !important;
-      background-color: #f8fafc !important;
+      background-color: #ffffff !important;
       pointer-events: auto !important;
     }
-    select, button, .clickable { cursor: pointer !important; }
+    
+    select, button, .clickable, label {
+      cursor: pointer !important;
+    }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen pb-16">
@@ -69,7 +85,7 @@
   <!-- ==================== MODE 1: USO QUOTIDIANO ==================== -->
   <main id="mode-use" class="max-w-7xl mx-auto px-4 pt-6 space-y-6">
 
-    <!-- 1. ACTIVE FAMILY MEMBERS CARDS (EXPANDED TO FULL WIDTH WITH PENDING TASK WARNINGS) -->
+    <!-- 1. ACTIVE FAMILY MEMBERS CARDS (ADAPTIVE FULL 100% WIDTH GRID) -->
     <div class="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
       <div class="flex items-center justify-between flex-wrap gap-2">
         <div class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Membri della Famiglia & Punteggi</div>
@@ -79,31 +95,28 @@
         </div>
       </div>
 
-      <!-- Dynamic Full-Width Member Cards Grid -->
-      <div id="members-bar" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
-        <!-- Injected via JS -->
+      <!-- Dynamic Adaptive Width Member Cards Container -->
+      <div id="members-bar" class="w-full">
+        <!-- Injected via JS with dynamic responsive columns matching member count -->
       </div>
     </div>
 
-    <!-- 2. QUICK ADD SINGLE TASK / PROMEMORIA ESTEMPORANEO (ACCESSO IMMEDIATO A COLPO D'OCCHIO) -->
+    <!-- 2. QUICK ADD SINGLE TASK / PROMEMORIA ESTEMPORANEO (CON DATA E ASSEGNAZIONE POPUP) -->
     <div class="bg-gradient-to-r from-indigo-50 via-purple-50 to-slate-50 p-4 sm:p-5 rounded-3xl border border-indigo-100 shadow-sm space-y-3">
       <div class="flex items-center justify-between flex-wrap gap-2">
         <h3 class="font-extrabold text-sm text-slate-900 flex items-center gap-2">
           <span>⚡</span> Assegna Task o Promemoria Rapido
         </h3>
-        <span class="text-[11px] text-slate-500 font-semibold">Crea un'attività estemporanea assegnata a uno o più membri</span>
+        <span class="text-[11px] text-slate-500 font-semibold">Crea un'attività estemporanea e assegnala a chi vuoi con un click</span>
       </div>
 
-      <form onsubmit="submitQuickSingleTask(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-        <input id="quick-task-title" type="text" required placeholder="Cosa c'è da fare? (es. Comprare il latte, Chiamare idraulico...)" class="sm:col-span-6 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
+      <form onsubmit="initiateQuickTaskAssignment(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+        <input id="quick-task-title" type="text" required placeholder="Cosa c'è da fare? (es. Comprare il latte, Chiamare idraulico...)" class="sm:col-span-7 px-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500">
         
-        <select id="quick-task-assigned" class="sm:col-span-3 px-3 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500">
-          <option value="all">👥 Tutta la Famiglia</option>
-          <!-- Injected dynamically -->
-        </select>
+        <input id="quick-task-date" type="date" title="Data di scadenza / inserimento" class="sm:col-span-3 px-3 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500">
 
-        <div class="sm:col-span-3 flex gap-2">
-          <input id="quick-task-points" type="number" value="0" min="0" max="200" placeholder="Punti (opz.)" title="Punti (default 0)" class="w-20 px-2 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs text-center font-bold focus:ring-2 focus:ring-indigo-500">
+        <div class="sm:col-span-2 flex gap-2">
+          <input id="quick-task-points" type="number" value="0" min="0" max="200" placeholder="Punti" title="Punti assegnati (default 0)" class="w-16 px-2 py-2.5 bg-white border border-slate-200 rounded-2xl text-xs text-center font-bold focus:ring-2 focus:ring-indigo-500">
           <button type="submit" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-2xl shadow transition">
             + Assegna
           </button>
@@ -182,7 +195,7 @@
           <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
             <span>⚡</span> Attività Spontanee (Al bisogno)
           </h2>
-          <p class="text-xs text-slate-500">Tocca un'attività per registrarla e selezionare chi l'ha svolta</p>
+          <p class="text-xs text-slate-500">Tocca un'attività per registrarla e scegliere chi l'ha svolta</p>
         </div>
       </div>
       <div id="spontaneous-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
@@ -327,25 +340,25 @@
 
     </div>
 
-    <!-- TAB 5: STORICO CRONOLOGICO -->
-    <div id="section-history" class="hidden space-y-4 max-w-4xl mx-auto">
+    <!-- TAB 5: STORICO CRONOLOGICO DETTAGLIATO -->
+    <div id="section-history" class="hidden space-y-4 max-w-5xl mx-auto">
       <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-3 border-b border-slate-100 pb-3">
           <div>
             <h2 class="font-extrabold text-lg text-slate-900 flex items-center gap-2">
               <span>📜</span> Storico Cronologico Attività
             </h2>
-            <p class="text-xs text-slate-500">Registro dettagliato con data, orario, autore e punti</p>
+            <p class="text-xs text-slate-500">Registro dettagliato con momento di inserimento, autore inserimento, autore esecuzione e tipologia task</p>
           </div>
           <div class="flex items-center gap-2">
-            <input id="history-search" type="text" oninput="renderHistory()" placeholder="Cerca attività..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500">
+            <input id="history-search" type="text" oninput="renderHistory()" placeholder="Cerca attività o autore..." class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500">
             <select id="history-member-filter" onchange="renderHistory()" class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold">
-              <option value="all">Tutti i membri</option>
+              <option value="all">Tutti gli esecutori</option>
             </select>
           </div>
         </div>
 
-        <div id="history-timeline" class="space-y-2 max-h-[500px] overflow-y-auto custom-scrollbar">
+        <div id="history-timeline" class="space-y-3 max-h-[550px] overflow-y-auto custom-scrollbar">
           <!-- Injected via JS -->
         </div>
       </div>
@@ -444,7 +457,7 @@
 
   </main>
 
-  <!-- ==================== MODAL: WHO COMPLETED THE TASK? (CHI HA SVOLTO L'ATTIVITÀ?) ==================== -->
+  <!-- ==================== MODAL: WHO COMPLETED THE TASK? (DEFAULT ALL CHECKED FOR MULTI) ==================== -->
   <div id="modal-select-performer" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -463,7 +476,7 @@
         </div>
       </div>
 
-      <!-- Accordion / Toggle: Multi-author selection with points division -->
+      <!-- Accordion / Toggle: Multi-author selection with points division (DEFAULT ALL SELECTED) -->
       <div class="pt-3 border-t border-slate-100 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-xs font-extrabold text-slate-700">👥 Hanno partecipato più persone insieme?</span>
@@ -473,9 +486,12 @@
         </div>
 
         <div id="multi-author-section" class="hidden bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
-          <div class="text-[11px] text-slate-500 font-medium">I punti totali verranno divisi equamente tra i partecipanti selezionati:</div>
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] text-slate-500 font-medium">I punti totali verranno divisi equamente:</span>
+            <button type="button" onclick="selectAllMultiCheckboxes(true)" class="text-[11px] text-indigo-600 font-bold hover:underline">Seleziona Tutti</button>
+          </div>
           <div id="modal-multi-checkboxes" class="grid grid-cols-2 gap-2">
-            <!-- Injected via JS -->
+            <!-- Injected via JS (checked by default!) -->
           </div>
           <button type="button" onclick="confirmMultiAuthorCompletion()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
             Conferma e Dividi Punti
@@ -485,133 +501,60 @@
     </div>
   </div>
 
-  <!-- ==================== EMOJI PICKER POPUP MODAL (GENEROUS & COMPREHENSIVE) ==================== -->
+  <!-- ==================== MODAL: CHOOSE WHO TO ASSIGN QUICK TASK TO ==================== -->
+  <div id="modal-assign-task" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div>
+          <div class="text-[11px] font-extrabold text-indigo-600 uppercase tracking-wider">Assegna Task Rapido</div>
+          <h3 id="modal-assign-task-title" class="font-extrabold text-base text-slate-900 truncate">A chi vuoi assegnare questo task?</h3>
+        </div>
+        <button onclick="closeAssignModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <div class="space-y-2">
+        <div class="text-xs font-bold text-slate-500">Assegna rapidamente con 1 tap:</div>
+        <button onclick="confirmTaskAssignment(['all'])" class="w-full p-3 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-2xl text-left flex items-center gap-3 transition">
+          <span class="text-2xl">👥</span>
+          <div>
+            <div class="font-extrabold text-xs sm:text-sm text-indigo-950">Tutta la Famiglia</div>
+            <div class="text-[11px] text-indigo-600 font-semibold">Tutti i membri vedranno questo promemoria</div>
+          </div>
+        </button>
+        <div id="modal-assign-single-buttons" class="grid grid-cols-2 gap-2 pt-1">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Multiple Custom Checkboxes -->
+      <div class="pt-3 border-t border-slate-100 space-y-2">
+        <div class="text-xs font-bold text-slate-700">Oppure seleziona più persone specifiche:</div>
+        <div id="modal-assign-checkboxes" class="grid grid-cols-2 gap-2">
+          <!-- Injected via JS -->
+        </div>
+        <button onclick="confirmCustomTaskAssignment()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl shadow transition mt-2">
+          Assegna ai selezionati
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== EMOJI PICKER POPUP (DYNAMIC LIVE SEARCH + 200+ EMOJIS) ==================== -->
   <div id="modal-emoji-picker" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-5 space-y-4 shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-5 space-y-4 shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2">
         <h4 class="font-extrabold text-sm text-slate-900">Seleziona un'Emoji</h4>
         <button onclick="closeEmojiPicker()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button>
       </div>
 
-      <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
-        <!-- Cat 1: Membri & Persone -->
-        <div>
-          <div class="text-[11px] font-extrabold text-indigo-600 uppercase mb-1.5">👥 Famiglia, Persone & Professioni</div>
-          <div class="grid grid-cols-8 gap-2 text-2xl text-center">
-            <span onclick="selectEmoji('👨‍💻')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👨‍💻</span>
-            <span onclick="selectEmoji('👩‍🎨')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👩‍🎨</span>
-            <span onclick="selectEmoji('👦')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👦</span>
-            <span onclick="selectEmoji('👧')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👧</span>
-            <span onclick="selectEmoji('👴')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👴</span>
-            <span onclick="selectEmoji('👵')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👵</span>
-            <span onclick="selectEmoji('🧑')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧑</span>
-            <span onclick="selectEmoji('👶')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👶</span>
-            <span onclick="selectEmoji('🦸‍♂️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦸‍♂️</span>
-            <span onclick="selectEmoji('🦸‍♀️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦸‍♀️</span>
-            <span onclick="selectEmoji('🧙‍♂️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧙‍♂️</span>
-            <span onclick="selectEmoji('🧙‍♀️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧙‍♀️</span>
-            <span onclick="selectEmoji('👨‍🍳')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👨‍🍳</span>
-            <span onclick="selectEmoji('👩‍🍳')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👩‍🍳</span>
-            <span onclick="selectEmoji('👨‍🌾')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👨‍🌾</span>
-            <span onclick="selectEmoji('🧑‍🚀')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧑‍🚀</span>
-            <span onclick="selectEmoji('👨‍🚒')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👨‍🚒</span>
-            <span onclick="selectEmoji('👩‍⚕️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👩‍⚕️</span>
-            <span onclick="selectEmoji('👨‍🔧')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👨‍🔧</span>
-            <span onclick="selectEmoji('🕵️‍♂️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🕵️‍♂️</span>
-            <span onclick="selectEmoji('🤴')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🤴</span>
-            <span onclick="selectEmoji('👸')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👸</span>
-            <span onclick="selectEmoji('🧔‍♂️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧔‍♂️</span>
-            <span onclick="selectEmoji('👑')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👑</span>
-          </div>
-        </div>
+      <!-- Dynamic Search Input -->
+      <div>
+        <input id="emoji-search-input" type="text" oninput="filterEmojiLibrary(this.value)" placeholder="🔍 Cerca emoji (es. lavatrice, pizza, cane, auto, bagno, denti, spesa, bimbo)..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm focus:ring-2 focus:ring-indigo-500 font-medium">
+      </div>
 
-        <!-- Cat 2: Animali -->
-        <div>
-          <div class="text-[11px] font-extrabold text-amber-600 uppercase mb-1.5">🐶 Animali & Mascotte</div>
-          <div class="grid grid-cols-8 gap-2 text-2xl text-center">
-            <span onclick="selectEmoji('🐶')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐶</span>
-            <span onclick="selectEmoji('🐱')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐱</span>
-            <span onclick="selectEmoji('🦊')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦊</span>
-            <span onclick="selectEmoji('🐻')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐻</span>
-            <span onclick="selectEmoji('🐼')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐼</span>
-            <span onclick="selectEmoji('🐨')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐨</span>
-            <span onclick="selectEmoji('🦁')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦁</span>
-            <span onclick="selectEmoji('🐯')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐯</span>
-            <span onclick="selectEmoji('🐰')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐰</span>
-            <span onclick="selectEmoji('🐹')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐹</span>
-            <span onclick="selectEmoji('🦄')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦄</span>
-            <span onclick="selectEmoji('🐲')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐲</span>
-            <span onclick="selectEmoji('🦖')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦖</span>
-            <span onclick="selectEmoji('🦉')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🦉</span>
-            <span onclick="selectEmoji('🐝')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐝</span>
-            <span onclick="selectEmoji('🐢')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🐢</span>
-          </div>
-        </div>
-
-        <!-- Cat 3: Pulizie & Casa -->
-        <div>
-          <div class="text-[11px] font-extrabold text-emerald-600 uppercase mb-1.5">🧹 Pulizie, Bucato & Manutenzione Casa</div>
-          <div class="grid grid-cols-8 gap-2 text-2xl text-center">
-            <span onclick="selectEmoji('🧺')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧺</span>
-            <span onclick="selectEmoji('🍽️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🍽️</span>
-            <span onclick="selectEmoji('🗑️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🗑️</span>
-            <span onclick="selectEmoji('🛏️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🛏️</span>
-            <span onclick="selectEmoji('🧹')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧹</span>
-            <span onclick="selectEmoji('🧼')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧼</span>
-            <span onclick="selectEmoji('🧽')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧽</span>
-            <span onclick="selectEmoji('🪣')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🪣</span>
-            <span onclick="selectEmoji('🫧')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🫧</span>
-            <span onclick="selectEmoji('🪟')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🪟</span>
-            <span onclick="selectEmoji('🚿')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🚿</span>
-            <span onclick="selectEmoji('🛁')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🛁</span>
-            <span onclick="selectEmoji('👕')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">👕</span>
-            <span onclick="selectEmoji('🪴')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🪴</span>
-            <span onclick="selectEmoji('🔧')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🔧</span>
-            <span onclick="selectEmoji('🔨')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🔨</span>
-          </div>
-        </div>
-
-        <!-- Cat 4: Cucina & Cibo -->
-        <div>
-          <div class="text-[11px] font-extrabold text-rose-600 uppercase mb-1.5">🍳 Cucina, Spesa & Cibo</div>
-          <div class="grid grid-cols-8 gap-2 text-2xl text-center">
-            <span onclick="selectEmoji('🍳')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🍳</span>
-            <span onclick="selectEmoji('🛒')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🛒</span>
-            <span onclick="selectEmoji('🛍️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🛍️</span>
-            <span onclick="selectEmoji('🥘')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🥘</span>
-            <span onclick="selectEmoji('🍕')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🍕</span>
-            <span onclick="selectEmoji('🍝')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🍝</span>
-            <span onclick="selectEmoji('🥗')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🥗</span>
-            <span onclick="selectEmoji('🥪')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🥪</span>
-            <span onclick="selectEmoji('☕')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">☕</span>
-            <span onclick="selectEmoji('🍵')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🍵</span>
-            <span onclick="selectEmoji('🍰')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🍰</span>
-            <span onclick="selectEmoji('🎂')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🎂</span>
-          </div>
-        </div>
-
-        <!-- Cat 5: Cura Personale, Auto & Commissioni -->
-        <div>
-          <div class="text-[11px] font-extrabold text-purple-600 uppercase mb-1.5">💈 Cura Personale, Auto & Commissioni</div>
-          <div class="grid grid-cols-8 gap-2 text-2xl text-center">
-            <span onclick="selectEmoji('💈')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">💈</span>
-            <span onclick="selectEmoji('💇‍♂️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">💇‍♂️</span>
-            <span onclick="selectEmoji('💇‍♀️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">💇‍♀️</span>
-            <span onclick="selectEmoji('🧖‍♂️')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🧖‍♂️</span>
-            <span onclick="selectEmoji('🩺')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🩺</span>
-            <span onclick="selectEmoji('💊')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">💊</span>
-            <span onclick="selectEmoji('🚗')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🚗</span>
-            <span onclick="selectEmoji('🚙')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🚙</span>
-            <span onclick="selectEmoji('🛵')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🛵</span>
-            <span onclick="selectEmoji('🚲')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🚲</span>
-            <span onclick="selectEmoji('📦')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">📦</span>
-            <span onclick="selectEmoji('📚')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">📚</span>
-            <span onclick="selectEmoji('⚡')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">⚡</span>
-            <span onclick="selectEmoji('🔄')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🔄</span>
-            <span onclick="selectEmoji('⭐')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">⭐</span>
-            <span onclick="selectEmoji('🏆')" class="p-1.5 rounded-xl hover:bg-indigo-50 cursor-pointer">🏆</span>
-          </div>
-        </div>
+      <!-- Emoji Container -->
+      <div id="emoji-library-container" class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
+        <!-- Rendered dynamically with live search filter -->
       </div>
     </div>
   </div>
@@ -754,14 +697,10 @@
           </div>
         </div>
 
-        <div class="space-y-2 pt-1">
+        <div class="pt-1">
           <div class="flex items-center gap-2">
             <input id="rout-edit-personal" type="checkbox" onchange="toggleRoutPersonal(this.checked)" class="w-4 h-4 text-indigo-600 rounded">
             <label for="rout-edit-personal" class="text-xs font-bold text-slate-700 cursor-pointer">Promemoria Personale (0 punti, escluso da classifiche e statistiche - es. barbiere)</label>
-          </div>
-          <div class="flex items-center gap-2">
-            <input id="rout-edit-onetime" type="checkbox" class="w-4 h-4 text-indigo-600 rounded">
-            <label for="rout-edit-onetime" class="text-xs font-bold text-slate-700 cursor-pointer">Promemoria una tantum (singola esecuzione, non si ripete)</label>
           </div>
         </div>
 
@@ -784,10 +723,125 @@
     let currentEmojiTargetInput = null;
     let currentEmojiTargetPreview = null;
 
-    // Active task awaiting performer selection
+    // Active task awaiting performer selection or assignment
     let pendingExecutionTask = null;
+    let pendingQuickTaskPayload = null;
 
     const apiBase = './api';
+
+    // Massive Emoji Database with keywords for fast dynamic filtering
+    const EMOJI_DATABASE = [
+      { category: "👥 Famiglia & Persone", emojis: [
+        { e: "👨‍💻", t: "papà uomo lavoro computer tech papi" },
+        { e: "👩‍🎨", t: "mamma donna arte creativa disegno pittura" },
+        { e: "👦", t: "ragazzo bimbo figlio maschio bambino" },
+        { e: "👧", t: "ragazza bimba figlia femmina bambina" },
+        { e: "👶", t: "neonato bebè baby bimbo piccolo" },
+        { e: "👴", t: "nonno anziano nonnino saggio" },
+        { e: "👵", t: "nonna anziana nonnina nonna" },
+        { e: "🧑", t: "persona ragazzo membro umano" },
+        { e: "🧔‍♂️", t: "uomo barba papà ragazzo" },
+        { e: "🦸‍♂️", t: "supereroe eroe forte papà maschio" },
+        { e: "🦸‍♀️", t: "supereroina super mamma donna eroina" },
+        { e: "🧙‍♂️", t: "mago magia fantasy papà" },
+        { e: "🧙‍♀️", t: "maga strega magia mamma" },
+        { e: "👨‍🍳", t: "chef cuoco cucina cibo papà" },
+        { e: "👩‍🍳", t: "cuoca chef cucina cibo mamma" },
+        { e: "👨‍🌾", t: "contadino orto giardino piante terra" },
+        { e: "👩‍⚕️", t: "dottoressa medico dottore salute mamma" },
+        { e: "👨‍🚒", t: "pompiere fuoco soccorso eroe" },
+        { e: "👨‍🔧", t: "meccanico attrezzi riparare idraulico tecnico" },
+        { e: "🕵️‍♂️", t: "detective spia lente segreto" },
+        { e: "🤴", t: "principe re corona nobile" },
+        { e: "👸", t: "principessa regina corona" },
+        { e: "👑", t: "corona re vincitore oro primo" },
+        { e: "⭐", t: "stella super premio stella oro" }
+      ]},
+      { category: "🐶 Animali & Mascotte", emojis: [
+        { e: "🐶", t: "cane cucciolo cagnolino animale pet pappa veterinario" },
+        { e: "🐱", t: "gatto micio micetto gattino lettiera pet" },
+        { e: "🦊", t: "volpe furbetto bosco animale" },
+        { e: "🐻", t: "orso orsetto orso peluche" },
+        { e: "🐼", t: "panda orso bianco nero" },
+        { e: "🐨", t: "koala animale dolce" },
+        { e: "🐯", t: "tigre forte coraggioso" },
+        { e: "🦁", t: "leone re savana forza" },
+        { e: "🐰", t: "coniglio coniglietto salti" },
+        { e: "🐹", t: "criceto roditore piccolo gabbia" },
+        { e: "🦄", t: "unicorno magia arcobaleno cavallo" },
+        { e: "🐲", t: "drago fuoco verde magia" },
+        { e: "🦖", t: "dinosauro tirannosauro t-rex jurassic" },
+        { e: "🦉", t: "gufo saggio notte studio" },
+        { e: "🐝", t: "ape miele giardino laborioso" },
+        { e: "🐢", t: "tartaruga lenta corazza mare terra" },
+        { e: "🐟", t: "pesce acquario pappa cibo acqua" },
+        { e: "🦜", t: "pappagallo uccellino volare piume" }
+      ]},
+      { category: "🧹 Pulizie, Bucato, Faccende & Casa", emojis: [
+        { e: "🧺", t: "bucato lavatrice cesto panni vestiti stendere" },
+        { e: "🍽️", t: "piatti stoviglie lavastoviglie cucina posate forchetta" },
+        { e: "🗑️", t: "spazzatura immondizia bidone differenziata buttare sacchetto" },
+        { e: "🛏️", t: "letto lenzuola cambio camera dormire coperte cuscino" },
+        { e: "🧹", t: "scopa spazzare pavimento polvere aspirapolvere pulizia" },
+        { e: "🧼", t: "sapone lavare mani pulire igiene bagno schiuma" },
+        { e: "🧽", t: "spugna strofinare piatti pulire sanitari" },
+        { e: "🪣", t: "secchio acqua mocio lavare pavimenti" },
+        { e: "🫧", t: "bolle sapone pulito fresco splendente" },
+        { e: "🪟", t: "finestra vetri pulire sole balcone persiane" },
+        { e: "🚿", t: "doccia bagno acqua lavarsi pulito" },
+        { e: "🛁", t: "vasca bagno relax bagnoschiuma idromassaggio" },
+        { e: "👕", t: "maglietta stirare vestiti panni armadio" },
+        { e: "👖", t: "pantaloni jeans vestiti stendere piegare" },
+        { e: "🪴", t: "pianta annaffiare balcone fiori verde giardino" },
+        { e: "🌸", t: "fiori fioriera profumo primavera" },
+        { e: "🔧", t: "chiave inglese attrezzi riparare manutenzione montare" },
+        { e: "🔨", t: "martello chiodo riparare fai da te bricolage" },
+        { e: "🪛", t: "cacciavite viti stringere montaggio mobili" },
+        { e: "💡", t: "lampadina luce cambiare idea elettricità" },
+        { e: "📦", t: "scatola pacco ordine trasloco riordinare cantina" },
+        { e: "🛋️", t: "divano salotto cuscini tv relax ordine" }
+      ]},
+      { category: "🍳 Cucina, Spesa & Cibo", emojis: [
+        { e: "🍳", t: "uovo cucinare colazione padella fritto pranzo" },
+        { e: "🛒", t: "carrello spesa supermercato comprare provviste" },
+        { e: "🛍️", t: "buste spesa shopping sacchetti negozi" },
+        { e: "🥘", t: "pentola cena pranzo cucinare sugo stufato" },
+        { e: "🍕", t: "pizza cena sabato forno margherita asporto" },
+        { e: "🍝", t: "pasta spaghetti pranzo pomodoro cucina italiana" },
+        { e: "🥗", t: "insalata verdura dieta salutare pranzo verde" },
+        { e: "🥪", t: "panino toast merenda spuntino sandwich" },
+        { e: "🍞", t: "pane fornaio fresco colazione fetta" },
+        { e: "🍎", t: "mela frutta sana spesa merenda" },
+        { e: "🥦", t: "broccoli verdura spesa vitamine verdure" },
+        { e: "🥩", t: "carne macelleria bistecca secondo" },
+        { e: "☕", t: "caffè moka espresso colazione pausa sveglia" },
+        { e: "🍵", t: "tè tisana caldo relax infuso" },
+        { e: "🍰", t: "torta dolce pasticceria compleanno fetta" },
+        { e: "🍪", t: "biscotti forno colazione latte dolci" }
+      ]},
+      { category: "💈 Cura Personale, Auto & Commissioni", emojis: [
+        { e: "💈", t: "barbiere capelli taglio barba rasatura uomo" },
+        { e: "💇‍♂️", t: "taglio capelli parrucchiere uomo pettinarsi" },
+        { e: "💇‍♀️", t: "parrucchiera piega capelli donna tinta" },
+        { e: "🪥", t: "spazzolino denti dentifricio igiene lavare denti" },
+        { e: "🧖‍♂️", t: "spa sauna relax massaggio benessere" },
+        { e: "🩺", t: "stetoscopio dottore visita medico ricetta controllo" },
+        { e: "💊", t: "pillole farmacia medicine vitamine ricetta" },
+        { e: "🚗", t: "macchina auto guidare lavare lavaggio benzina tagliando meccanico" },
+        { e: "🚙", t: "suv auto famiglia viaggio gita" },
+        { e: "🛵", t: "scooter motorino moto casco tragitto" },
+        { e: "🚲", t: "bicicletta bici pedalare giro ruota gommista" },
+        { e: "⛽", t: "benzina distributore carburante pieno diesel" },
+        { e: "🛞", t: "ruota gomma cambio gomme pressione gommista" },
+        { e: "🏢", t: "ufficio lavoro posta banca commissioni documenti" },
+        { e: "📬", t: "posta lettere cassetta bollette raccomandata" },
+        { e: "🎒", t: "zaino scuola compiti studio bambini libri" },
+        { e: "📚", t: "libri studiare leggere compiti scuola" },
+        { e: "🎮", t: "videogiochi playstation console svago relax" },
+        { e: "🏋️‍♂️", t: "palestra pesi allenamento sport fitness corsa" },
+        { e: "🏃‍♂️", t: "corsa running correre allenamento movimento" }
+      ]}
+    ];
 
     function goToHome() {
       switchMode('use');
@@ -803,7 +857,13 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      // Set today's date in quick task date picker
+      const todayIso = new Date().toISOString().split('T')[0];
+      const quickDateInput = document.getElementById('quick-task-date');
+      if (quickDateInput) quickDateInput.value = todayIso;
+
       loadStats();
+      renderEmojiLibrary();
     });
 
     async function loadStats() {
@@ -851,9 +911,8 @@
       box.classList.toggle('hidden');
     }
 
-    // Format Date & Time cleanly: "20/08 21:30" or "Oggi 21:30"
     function formatDateTime(isoString) {
-      if (!isoString) return '';
+      if (!isoString) return '-';
       const d = new Date(isoString);
       const now = new Date();
       const isToday = d.toDateString() === now.toDateString();
@@ -890,12 +949,11 @@
       }
     }
 
-    // ==================== RENDER FULL-WIDTH MEMBER CARDS ====================
+    // ==================== RENDER DYNAMIC FULL-WIDTH MEMBER CARDS ====================
     function renderMembersBar() {
       const bar = document.getElementById('members-bar');
       const histSelect = document.getElementById('history-member-filter');
       const routMemberSelect = document.getElementById('rout-edit-member');
-      const quickAssignedSelect = document.getElementById('quick-task-assigned');
       const winnersBadge = document.getElementById('period-winners-badge');
       if (!bar || !appData) return;
 
@@ -911,46 +969,52 @@
         if (w.monthly) winnersBadge.innerHTML += `<span class="bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-lg font-bold">🌟 ${labels.monthly}: ${w.monthly.name}</span>`;
       }
 
-      bar.innerHTML = '';
-      if (histSelect) histSelect.innerHTML = '<option value="all">Tutti i membri</option>';
+      if (histSelect) histSelect.innerHTML = '<option value="all">Tutti gli esecutori</option>';
       if (routMemberSelect) routMemberSelect.innerHTML = '<option value="all">👥 Tutta la Famiglia</option>';
-      if (quickAssignedSelect) quickAssignedSelect.innerHTML = '<option value="all">👥 Tutta la Famiglia</option>';
 
+      // Adaptive grid class matching exactly number of members (fills 100% of horizontal space!)
+      let gridColsClass = 'grid grid-cols-1 gap-4 w-full';
+      if (members.length === 2) gridColsClass = 'grid grid-cols-1 sm:grid-cols-2 gap-4 w-full';
+      else if (members.length === 3) gridColsClass = 'grid grid-cols-1 sm:grid-cols-3 gap-4 w-full';
+      else if (members.length === 4) gridColsClass = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full';
+      else if (members.length >= 5) gridColsClass = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full';
+
+      let cardsHtml = '';
       members.forEach(m => {
         const primary = getPrimaryScore(m);
 
         let gapBadge = '';
         if (m.is_leader) {
-          gapBadge = `<span class="inline-flex items-center gap-1 text-[11px] font-extrabold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">🏆 ${m.gap_text}</span>`;
+          gapBadge = `<span class="inline-flex items-center gap-1 text-[11px] font-extrabold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-lg shadow-2xs">🏆 ${m.gap_text}</span>`;
         } else if (m.gap_text) {
-          gapBadge = `<span class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">${m.gap_text}</span>`;
+          gapBadge = `<span class="inline-flex items-center gap-1 text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-lg">${m.gap_text}</span>`;
         }
 
-        // Pending single tasks attention indicator
+        // Attention Warning Badge for Pending Tasks
         let pendingWarningBadge = '';
         if (m.pending_single_tasks_count > 0) {
           pendingWarningBadge = `
-            <div class="flex items-center gap-1.5 bg-amber-500/15 border border-amber-400 text-amber-900 px-2.5 py-1 rounded-xl text-xs font-extrabold animate-pulse">
+            <div class="flex items-center gap-2 bg-amber-500/15 border border-amber-400 text-amber-900 px-3 py-1.5 rounded-xl text-xs font-extrabold animate-pulse">
               <span>⚠️</span>
               <span>${m.pending_single_tasks_count} ${m.pending_single_tasks_count === 1 ? 'task in sospeso' : 'task in sospeso'}</span>
             </div>
           `;
         }
 
-        bar.innerHTML += `
-          <div class="p-5 rounded-3xl border border-slate-200 bg-slate-50/90 shadow-2xs hover:shadow-md transition flex flex-col justify-between space-y-3.5">
+        cardsHtml += `
+          <div class="p-5 rounded-3xl border border-slate-200 bg-slate-50/90 shadow-2xs hover:shadow-md transition flex flex-col justify-between space-y-4 w-full">
             
             <!-- Member Header & Primary Score -->
             <div class="flex items-center justify-between gap-3">
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3.5">
                 <div class="w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-3xl shadow-xs shrink-0">${m.icon || '👤'}</div>
                 <div>
-                  <div class="text-lg font-extrabold text-slate-900 leading-tight">${m.name}</div>
+                  <div class="text-xl font-extrabold text-slate-900 leading-tight">${m.name}</div>
                   <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">${primary.label}</div>
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-2xl sm:text-3xl font-extrabold text-indigo-600">${primary.value} <span class="text-xs font-bold text-indigo-400">pt</span></div>
+                <div class="text-3xl font-extrabold text-indigo-600">${primary.value} <span class="text-xs font-bold text-indigo-400">pt</span></div>
               </div>
             </div>
 
@@ -958,7 +1022,7 @@
             ${pendingWarningBadge ? `<div>${pendingWarningBadge}</div>` : ''}
 
             <!-- Sub-bar: Total Score & Gap -->
-            <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/70 text-xs">
+            <div class="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-200/70 text-xs">
               <span class="font-bold text-slate-500">💎 Totale: <b class="text-slate-900">${m.total_points} pt</b></span>
               <div>${gapBadge}</div>
             </div>
@@ -968,8 +1032,9 @@
 
         if (histSelect) histSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
         if (routMemberSelect) routMemberSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
-        if (quickAssignedSelect) quickAssignedSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
       });
+
+      bar.innerHTML = `<div class="${gridColsClass}">${cardsHtml}</div>`;
     }
 
     // ==================== RENDER HOME WIDGETS ====================
@@ -1057,7 +1122,7 @@
           pendingBox.innerHTML = '<div class="text-center py-6 text-xs text-slate-400 font-medium">Nessun task estemporaneo in sospeso! ✨</div>';
         } else {
           pendingTasks.forEach(t => {
-            const assignedText = Array.isArray(t.assigned_to) ? t.assigned_to.join(', ') : t.assigned_to;
+            const assignedText = Array.isArray(t.assigned_to) ? (t.assigned_to.includes('all') ? 'Famiglia' : t.assigned_to.join(', ')) : t.assigned_to;
             const elapsedText = t.elapsed_days === 0 ? 'Oggi' : `${t.elapsed_days}gg fa`;
             const ptsText = t.points > 0 ? `(+${t.points} pt)` : '';
 
@@ -1083,7 +1148,7 @@
       }
     }
 
-    // ==================== TASK PERFORMER SELECTION POPUP ====================
+    // ==================== TASK PERFORMER SELECTION POPUP (ALL CHECKED BY DEFAULT FOR MULTI) ====================
     function promptPerformerSelection(taskName, points, taskType = 'spontaneous', isPersonal = false) {
       pendingExecutionTask = { taskName, points, taskType, isPersonal };
 
@@ -1115,13 +1180,13 @@
         });
       }
 
-      // Multi-Author Checkboxes
+      // Multi-Author Checkboxes (CHECKED BY DEFAULT FOR EVERYONE!)
       if (multiBox) {
         multiBox.innerHTML = '';
         members.forEach(m => {
           multiBox.innerHTML += `
             <label class="flex items-center gap-2 p-2 bg-white rounded-xl border border-slate-200 text-xs font-bold text-slate-800 cursor-pointer">
-              <input type="checkbox" value="${m.name}" class="multi-author-chk w-4 h-4 text-indigo-600 rounded">
+              <input type="checkbox" value="${m.name}" checked class="multi-author-chk w-4 h-4 text-indigo-600 rounded">
               <span>${m.icon || '👤'} ${m.name}</span>
             </label>
           `;
@@ -1133,6 +1198,10 @@
       document.getElementById('btn-toggle-multi').textContent = 'Mostra selezione multipla ▼';
 
       modal.classList.remove('hidden');
+    }
+
+    function selectAllMultiCheckboxes(check) {
+      document.querySelectorAll('.multi-author-chk').forEach(c => c.checked = check);
     }
 
     function closePerformerModal() {
@@ -1156,7 +1225,15 @@
         await fetch(`${apiBase}/log`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ member: memberName, task_name: taskName, points, task_type: taskType, is_personal: isPersonal })
+          body: JSON.stringify({ 
+            member: memberName, 
+            task_name: taskName, 
+            points, 
+            task_type: taskType, 
+            is_personal: isPersonal,
+            created_by: "Famiglia",
+            task_created_at: new Date().toISOString()
+          })
         });
         showToast(isPersonal ? `Promemoria registrato per ${memberName}!` : `+${points} pt assegnati a ${memberName}!`);
         await loadStats();
@@ -1180,7 +1257,15 @@
         await fetch(`${apiBase}/log`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ members: selected, task_name: taskName, points, task_type: taskType, is_personal: isPersonal })
+          body: JSON.stringify({ 
+            members: selected, 
+            task_name: taskName, 
+            points, 
+            task_type: taskType, 
+            is_personal: isPersonal,
+            created_by: "Famiglia",
+            task_created_at: new Date().toISOString()
+          })
         });
         
         const dividedPts = isPersonal ? 0 : Math.max(1, Math.round(points / selected.length));
@@ -1189,20 +1274,74 @@
       } catch (e) {}
     }
 
-    // Single Task Actions
-    async function submitQuickSingleTask(e) {
+    // ==================== QUICK TASK / PROMEMORIA INTERACTIVE POPUP ASSIGNMENT ====================
+    function initiateQuickTaskAssignment(e) {
       e.preventDefault();
       const title = document.getElementById('quick-task-title').value.trim();
-      const assigned = document.getElementById('quick-task-assigned').value;
+      const date = document.getElementById('quick-task-date').value;
       const pts = parseInt(document.getElementById('quick-task-points').value) || 0;
 
       if (!title) return;
+
+      pendingQuickTaskPayload = { title, date, points: pts };
+
+      const titleEl = document.getElementById('modal-assign-task-title');
+      const singleBox = document.getElementById('modal-assign-single-buttons');
+      const chkBox = document.getElementById('modal-assign-checkboxes');
+      const modal = document.getElementById('modal-assign-task');
+
+      if (titleEl) titleEl.textContent = `Assegna: "${title}"`;
+
+      const members = Object.values(appData?.members || {});
+
+      if (singleBox) {
+        singleBox.innerHTML = '';
+        members.forEach(m => {
+          singleBox.innerHTML += `
+            <button onclick="confirmTaskAssignment(['${m.name}'])" class="p-3 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-400 rounded-2xl text-left flex items-center gap-2.5 transition">
+              <span class="text-2xl">${m.icon || '👤'}</span>
+              <div class="font-extrabold text-xs text-slate-900">${m.name}</div>
+            </button>
+          `;
+        });
+      }
+
+      if (chkBox) {
+        chkBox.innerHTML = '';
+        members.forEach(m => {
+          chkBox.innerHTML += `
+            <label class="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 cursor-pointer">
+              <input type="checkbox" value="${m.name}" class="assign-chk w-4 h-4 text-indigo-600 rounded">
+              <span>${m.icon || '👤'} ${m.name}</span>
+            </label>
+          `;
+        });
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeAssignModal() {
+      document.getElementById('modal-assign-task').classList.add('hidden');
+      pendingQuickTaskPayload = null;
+    }
+
+    async function confirmTaskAssignment(assignedList) {
+      if (!pendingQuickTaskPayload) return;
+      const { title, date, points } = pendingQuickTaskPayload;
+      closeAssignModal();
 
       try {
         await fetch(`${apiBase}/single_tasks`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, assigned_to: assigned === 'all' ? ['all'] : [assigned], points: pts })
+          body: JSON.stringify({ 
+            title, 
+            assigned_to: assignedList, 
+            points, 
+            due_date: date,
+            created_by: "Famiglia" 
+          })
         });
         document.getElementById('quick-task-title').value = '';
         document.getElementById('quick-task-points').value = '0';
@@ -1211,11 +1350,20 @@
       } catch (e) {}
     }
 
+    function confirmCustomTaskAssignment() {
+      const checkboxes = document.querySelectorAll('.assign-chk:checked');
+      const selected = Array.from(checkboxes).map(c => c.value);
+      if (selected.length === 0) {
+        showToast("Seleziona almeno una persona!", "⚠️");
+        return;
+      }
+      confirmTaskAssignment(selected);
+    }
+
     async function completeSingleTask(taskId) {
       const task = (appData?.pending_single_tasks || []).find(t => t.id === taskId);
       promptPerformerSelection(task?.title || 'Task Singolo', task?.points || 0, 'single_task', (task?.points || 0) === 0);
       
-      // Hook completing after selection
       const originalConfirm = confirmMultiAuthorCompletion;
       const originalSingle = executeTaskWithSingleAuthor;
 
@@ -1325,7 +1473,7 @@
 
         let lastInfo = 'Mai eseguita';
         if (r.last_completed_at) {
-          lastInfo = `${formatDateTime(r.last_completed_at)} (${r.last_completed_by || 'Anonimo'})`;
+          lastInfo = `${formatDateTime(r.last_completed_at)} (${r.last_completed_by || 'Famiglia'})`;
         }
 
         const nextDueDateFormatted = r.due_date ? new Date(r.due_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }) : '-';
@@ -1633,7 +1781,7 @@
       }
     }
 
-    // ==================== CHRONOLOGICAL HISTORY ====================
+    // ==================== CHRONOLOGICAL HISTORY (RICH DETAILED TIMELINE) ====================
     function renderHistory() {
       if (!appData) return;
 
@@ -1646,33 +1794,57 @@
 
       const logs = [...(appData.logs || [])].reverse();
       const filtered = logs.filter(l => {
-        const matchText = l.task_name.toLowerCase().includes(search) || l.member_name.toLowerCase().includes(search);
+        const matchText = (l.task_name || '').toLowerCase().includes(search) || 
+                          (l.member_name || '').toLowerCase().includes(search) ||
+                          (l.created_by || '').toLowerCase().includes(search) ||
+                          (l.task_type || '').toLowerCase().includes(search);
         const matchMember = (memberFilter === 'all') || (l.member_name === memberFilter);
         return matchText && matchMember;
       });
 
       if (filtered.length === 0) {
-        timeline.innerHTML = '<div class="text-center py-8 text-xs text-slate-400 font-medium">Nessuna attività registrata nello storico.</div>';
+        timeline.innerHTML = '<div class="text-center py-10 text-xs text-slate-400 font-medium">Nessuna attività registrata nello storico.</div>';
         return;
       }
 
       filtered.forEach(l => {
-        const dtFormatted = formatDateTime(l.created_at);
-        const ptsBadge = l.is_personal ? '<span class="text-[11px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-md">promemoria</span>' : `<span class="font-extrabold text-indigo-600 text-sm">+${l.points} pt</span>`;
+        const executedAtFormatted = formatDateTime(l.created_at);
+        const insertedAtFormatted = formatDateTime(l.task_created_at || l.created_at);
+        const createdByText = l.created_by || 'Catalogo / Famiglia';
+
+        let typeBadge = '<span class="bg-indigo-100 text-indigo-800 text-[10px] font-extrabold px-2 py-0.5 rounded-md">⚡ Spontanea</span>';
+        if (l.task_type === 'routine') {
+          typeBadge = '<span class="bg-sky-100 text-sky-800 text-[10px] font-extrabold px-2 py-0.5 rounded-md">🔄 Routine Schedulata</span>';
+        } else if (l.task_type === 'single_task') {
+          typeBadge = '<span class="bg-amber-100 text-amber-900 text-[10px] font-extrabold px-2 py-0.5 rounded-md">📋 Task Singolo</span>';
+        }
+
+        if (l.is_personal) {
+          typeBadge += ' <span class="bg-purple-100 text-purple-800 text-[10px] font-extrabold px-2 py-0.5 rounded-md">👤 Promemoria Personale</span>';
+        }
+
+        const ptsBadge = l.is_personal ? '<span class="text-[11px] font-bold text-slate-400">0 pt (fuori classifica)</span>' : `<span class="font-extrabold text-indigo-600 text-base">+${l.points} pt</span>`;
 
         timeline.innerHTML += `
-          <div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between gap-3 text-xs">
-            <div class="flex items-center gap-3">
-              <span class="w-9 h-9 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-base shadow-2xs">⚡</span>
-              <div>
-                <div class="font-extrabold text-slate-900 text-sm">${l.task_name}</div>
-                <div class="text-slate-500 font-medium text-[11px] mt-0.5">
-                  👤 <b>${l.member_name}</b> • 🕒 <b>${dtFormatted}</b> • <span class="capitalize text-slate-400 font-semibold">${l.task_type}</span>
+          <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
+            <div class="flex items-start gap-3.5">
+              <span class="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-lg shrink-0 shadow-2xs mt-0.5">⚡</span>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-extrabold text-slate-900 text-sm sm:text-base">${l.task_name}</span>
+                  ${typeBadge}
+                </div>
+                <div class="text-slate-600 text-xs flex items-center gap-2 sm:gap-3 flex-wrap font-medium">
+                  <span>👤 Eseguito da: <b class="text-slate-900 font-extrabold">${l.member_name}</b></span>
+                  <span>•</span>
+                  <span>🕒 Esecuzione: <b>${executedAtFormatted}</b></span>
+                  <span>•</span>
+                  <span>✍️ Inserito da: <b>${createdByText}</b> (il ${insertedAtFormatted})</span>
                 </div>
               </div>
             </div>
-            <div class="flex items-center gap-3">
-              ${ptsBadge}
+            <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
+              <div>${ptsBadge}</div>
               <button onclick="deleteLogEntry('${l.id}')" title="Annulla registrazione" class="text-rose-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition">
                 🗑️
               </button>
@@ -1695,19 +1867,67 @@
       } catch (e) {}
     }
 
-    // ==================== EMOJI PICKER POPUP ====================
+    // ==================== DYNAMIC EMOJI PICKER WITH INSTANT LIVE SEARCH ====================
     function openEmojiPicker(targetInputId, targetPreviewId) {
       currentEmojiTargetInput = document.getElementById(targetInputId);
       currentEmojiTargetPreview = document.getElementById(targetPreviewId);
+      const searchInput = document.getElementById('emoji-search-input');
+      if (searchInput) searchInput.value = '';
+      renderEmojiLibrary();
       document.getElementById('modal-emoji-picker').classList.remove('hidden');
     }
+
     function closeEmojiPicker() {
       document.getElementById('modal-emoji-picker').classList.add('hidden');
     }
+
     function selectEmoji(emoji) {
       if (currentEmojiTargetInput) currentEmojiTargetInput.value = emoji;
       if (currentEmojiTargetPreview) currentEmojiTargetPreview.textContent = emoji;
       closeEmojiPicker();
+    }
+
+    function renderEmojiLibrary(filterQuery = '') {
+      const container = document.getElementById('emoji-library-container');
+      if (!container) return;
+
+      const q = filterQuery.trim().toLowerCase();
+      container.innerHTML = '';
+
+      let totalMatches = 0;
+
+      EMOJI_DATABASE.forEach(cat => {
+        const matchingEmojis = cat.emojis.filter(item => {
+          if (!q) return true;
+          return item.t.toLowerCase().includes(q) || item.e.includes(q);
+        });
+
+        if (matchingEmojis.length > 0) {
+          totalMatches += matchingEmojis.length;
+          const emojisGridHtml = matchingEmojis.map(item => `
+            <span onclick="selectEmoji('${item.e}')" title="${item.t}" class="p-2 text-2xl sm:text-3xl rounded-2xl hover:bg-indigo-100/70 active:scale-90 transition cursor-pointer flex items-center justify-center">
+              ${item.e}
+            </span>
+          `).join('');
+
+          container.innerHTML += `
+            <div class="space-y-1.5">
+              <div class="text-[11px] font-extrabold text-indigo-700 uppercase tracking-wider">${cat.category}</div>
+              <div class="grid grid-cols-7 sm:grid-cols-9 gap-1.5 bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80">
+                ${emojisGridHtml}
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      if (totalMatches === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-xs text-slate-400 font-medium">Nessuna emoji trovata per questa ricerca. Prova con parole come "cane", "auto", "pizza", "scopa"...</div>';
+      }
+    }
+
+    function filterEmojiLibrary(val) {
+      renderEmojiLibrary(val);
     }
 
     // ==================== ADMIN CRUD & SETTINGS ====================
@@ -1769,13 +1989,12 @@
           const typeBadge = (r.schedule_type === 'fixed') ? '📅 Fissa' : '🕒 Dall\'ultimo';
           const assignedText = r.assigned_member && r.assigned_member !== 'all' ? `• Assegnato: <b>${r.assigned_member}</b>` : '';
           const personalTag = r.is_personal ? '• 👤 <b class="text-purple-700">Promemoria Personale (0 pt)</b>' : `• Punti: <b>+${r.points} pt</b>`;
-          const oneTimeTag = r.is_one_time ? '• ⏳ Una tantum' : '';
 
           adminRout.innerHTML += `
             <div class="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-slate-200 text-xs">
               <div>
                 <div class="font-extrabold text-sm text-slate-900">${r.icon} ${r.name}</div>
-                <div class="text-slate-500 font-medium mt-0.5">${typeBadge} • Frequenza: <b>${r.frequency_days}gg</b> • Preavviso: <b>${r.warning_days}gg</b> ${assignedText} ${personalTag} ${oneTimeTag}</div>
+                <div class="text-slate-500 font-medium mt-0.5">${typeBadge} • Frequenza: <b>${r.frequency_days}gg</b> • Preavviso: <b>${r.warning_days}gg</b> ${assignedText} ${personalTag}</div>
               </div>
               <div class="flex items-center gap-2">
                 <button onclick="editRoutine('${r.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 font-bold rounded-lg text-slate-700">Modifica</button>
@@ -1981,7 +2200,6 @@
       const iconInput = document.getElementById('rout-edit-icon');
       const iconPreview = document.getElementById('rout-icon-preview');
       const personalCheck = document.getElementById('rout-edit-personal');
-      const onetimeCheck = document.getElementById('rout-edit-onetime');
 
       const todayIso = new Date().toISOString().split('T')[0];
 
@@ -2000,7 +2218,6 @@
           iconInput.value = item.icon || '🔄';
           iconPreview.textContent = item.icon || '🔄';
           personalCheck.checked = !!item.is_personal;
-          onetimeCheck.checked = !!item.is_one_time;
           toggleRoutPersonal(item.is_personal);
         }
       } else {
@@ -2016,7 +2233,6 @@
         iconInput.value = "🔄";
         iconPreview.textContent = "🔄";
         personalCheck.checked = false;
-        onetimeCheck.checked = false;
         toggleRoutPersonal(false);
       }
       modal.classList.remove('hidden');
@@ -2029,7 +2245,6 @@
       const id = document.getElementById('rout-edit-id').value;
       const name = document.getElementById('rout-edit-name').value.trim();
       const is_personal = document.getElementById('rout-edit-personal').checked;
-      const is_one_time = document.getElementById('rout-edit-onetime').checked;
       const points = is_personal ? 0 : (parseInt(document.getElementById('rout-edit-pts').value) || 20);
       const frequency_days = parseInt(document.getElementById('rout-edit-freq').value) || 7;
       const warning_days = parseInt(document.getElementById('rout-edit-warning').value) || 1;
@@ -2042,7 +2257,7 @@
         await fetch(`${apiBase}/routine_tasks`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name, points, frequency_days, warning_days, start_date, schedule_type, icon, is_personal, assigned_member, is_one_time })
+          body: JSON.stringify({ id, name, points, frequency_days, warning_days, start_date, schedule_type, icon, is_personal, assigned_member })
         });
         closeRoutineModal();
         showToast("Routine salvata!");
