@@ -1,7 +1,7 @@
 name: "ChoreQuest"
-version: "2.2.0"
+version: "2.3.0"
 slug: "chorequest"
-description: "Gamified family chore & routine management for Home Assistant with backup & restore, up/down category reordering, dynamic star priorities, diverse ADHD dice picker, and full 700+ emoji library."
+description: "Gamified family chore & routine management for Home Assistant with Material Design Icons (MDI), category-grouped spontaneous chores, Dark/Light/Auto theme sync, Pro admin dashboard, expanded HA sensors, and backup/restore."
 url: "https://github.com/filidam89/chore-quest-addon"
 startup: application
 boot: auto
