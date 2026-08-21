@@ -44,7 +44,6 @@ function loadData() {
         if (r.warning_days === undefined) r.warning_days = 1;
         if (!r.start_date) r.start_date = todayIso;
         if (r.is_personal === undefined) r.is_personal = false;
-        if (r.is_one_time === undefined) r.is_one_time = false;
         if (r.is_personal) r.points = 0;
         if (!r.assigned_member) r.assigned_member = 'all';
       });
@@ -72,10 +71,10 @@ function loadData() {
       { id: "s_5", name: "Fare la spesa", category: "Casa", points: 25, icon: "🛒", is_personal: false }
     ],
     routine_tasks: [
-      { id: "r_1", name: "Cambio lenzuola", category: "Bucato", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🛏️", is_personal: false, assigned_member: "all", is_one_time: false },
-      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🧹", is_personal: false, assigned_member: "all", is_one_time: false },
-      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "🧼", is_personal: false, assigned_member: "all", is_one_time: false },
-      { id: "r_4", name: "Taglio capelli / Barbiere", category: "Personale", points: 0, frequency_days: 21, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "💈", is_personal: true, assigned_member: "Papà", is_one_time: false }
+      { id: "r_1", name: "Cambio lenzuola", category: "Bucato", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🛏️", is_personal: false, assigned_member: "all" },
+      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🧹", is_personal: false, assigned_member: "all" },
+      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "🧼", is_personal: false, assigned_member: "all" },
+      { id: "r_4", name: "Taglio capelli / Barbiere", category: "Personale", points: 0, frequency_days: 21, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "💈", is_personal: true, assigned_member: "Papà" }
     ],
     single_tasks: [],
     assigned_tasks: [],
@@ -126,7 +125,6 @@ function calculateStats() {
       completed_count: 0,
       completed_single_tasks_count: 0,
       pending_single_tasks_count: 0,
-      recent_tasks: [],
       badges: []
     };
   });
@@ -136,21 +134,19 @@ function calculateStats() {
     if (st.status === 'pending') {
       const assignedList = Array.isArray(st.assigned_to) ? st.assigned_to : [st.assigned_to];
       Object.values(stats).forEach(m => {
-        if (assignedList.includes(m.name) || assignedList.includes('all') || assignedList.includes('Tutti')) {
+        if (assignedList.includes(m.name) || assignedList.includes('all') || assignedList.includes('Tutti') || assignedList.includes('Tutta la Famiglia')) {
           m.pending_single_tasks_count += 1;
         }
       });
     }
   });
 
-  const memberTaskLogs = {};
   (appData.logs || []).forEach(log => {
     const m = stats[log.member_id];
     if (m) {
       const pts = parseInt(log.points) || 0;
       const created = new Date(log.created_at);
 
-      // Single task completed counter (separate metric)
       if (log.task_type === 'single_task') {
         m.completed_single_tasks_count += 1;
       }
@@ -165,16 +161,7 @@ function calculateStats() {
         if (created >= startMonthly) m.monthly_points += pts;
         if (created >= startYearly) m.yearly_points += pts;
       }
-
-      if (!memberTaskLogs[m.id]) memberTaskLogs[m.id] = [];
-      memberTaskLogs[m.id].push(log);
     }
-  });
-
-  // Attach last 3 tasks for each member
-  Object.keys(stats).forEach(mId => {
-    const logs = memberTaskLogs[mId] || [];
-    stats[mId].recent_tasks = logs.slice(-3).reverse();
   });
 
   const scoreKeyMap = {
@@ -259,10 +246,10 @@ function calculateStats() {
     };
   }).sort((a, b) => a.days_remaining - b.days_remaining);
 
-  // Global latest 3 activities across the entire family
+  // Global latest 3 activities
   const recentGlobalLogs = [...(appData.logs || [])].reverse().slice(0, 3);
 
-  // Pending single tasks with elapsed days calculation
+  // Pending single tasks with elapsed days and date formatting
   const pendingSingleTasks = (appData.single_tasks || [])
     .filter(t => t.status === 'pending')
     .map(t => {
@@ -283,7 +270,6 @@ function calculateStats() {
     pending_single_tasks: pendingSingleTasks,
     spontaneous_tasks: appData.spontaneous_tasks,
     routine_tasks: routineStatus,
-    pending_assigned: (appData.assigned_tasks || []).filter(t => t.status === 'pending'),
     settings: appData.settings,
     logs: (appData.logs || [])
   };
@@ -297,11 +283,9 @@ async function syncToHomeAssistant() {
   const haBase = "http://supervisor/core/api";
   const data = calculateStats();
 
-  // 1. Member points sensors
   for (const m of data.leaderboard) {
     const cleanName = m.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
     const sensorUrl = `${haBase}/states/sensor.chorequest_${cleanName}_points`;
-    const lastTask = m.recent_tasks[0];
     try {
       await fetch(sensorUrl, {
         method: 'POST',
@@ -320,8 +304,6 @@ async function syncToHomeAssistant() {
             rank: m.rank,
             gap: m.gap_text,
             badges: m.badges.map(b => b.name),
-            last_task_name: lastTask ? lastTask.task_name : null,
-            last_task_time: lastTask ? lastTask.created_at : null,
             icon: "mdi:star-circle"
           }
         })
@@ -329,7 +311,6 @@ async function syncToHomeAssistant() {
     } catch (err) {}
   }
 
-  // 2. Leaderboard Sensor
   try {
     await fetch(`${haBase}/states/sensor.chorequest_leaderboard`, {
       method: 'POST',
@@ -350,7 +331,6 @@ async function syncToHomeAssistant() {
     });
   } catch (err) {}
 
-  // 3. Due Routines Sensor
   const overdueList = data.routine_tasks.filter(r => r.status === 'overdue');
   const warningList = data.routine_tasks.filter(r => r.status === 'warning');
   try {
@@ -371,7 +351,6 @@ async function syncToHomeAssistant() {
     });
   } catch (err) {}
 
-  // 4. Pending Single Tasks Sensor
   try {
     await fetch(`${haBase}/states/sensor.chorequest_pending_tasks`, {
       method: 'POST',
@@ -397,17 +376,17 @@ app.get('/api/stats', (req, res) => {
   res.json(statsData);
 });
 
-// API: Log Task (Supports single or multiple authors with points division!)
+// API: Log Task (Records task_created_at, created_by, performer, task_type)
 app.post('/api/log', (req, res) => {
-  const { member, members, task_name, points = 10, task_type = "spontaneous", is_personal = false } = req.body;
+  const { member, members, task_name, points = 10, task_type = "spontaneous", is_personal = false, created_by = "Utente", task_created_at } = req.body;
   
   const targetMembers = Array.isArray(members) && members.length > 0 ? members : (member ? [member] : []);
   if (targetMembers.length === 0 || !task_name) return res.status(400).json({ error: "Missing parameters" });
 
   const totalPoints = is_personal ? 0 : (parseInt(points) || 0);
-  // Divide points equally among participants (minimum 1 pt if totalPoints > 0)
   const dividedPoints = is_personal ? 0 : Math.max(1, Math.round(totalPoints / targetMembers.length));
 
+  const nowIso = new Date().toISOString();
   const createdLogs = [];
 
   targetMembers.forEach(mName => {
@@ -425,9 +404,11 @@ app.post('/api/log', (req, res) => {
       member_name: memberObj.name,
       task_name,
       task_type,
+      created_by: created_by || "Utente",
+      task_created_at: task_created_at || nowIso,
       is_personal: !!is_personal,
       points: dividedPoints,
-      created_at: new Date().toISOString()
+      created_at: nowIso
     };
     appData.logs.push(newLog);
     createdLogs.push(newLog);
@@ -436,12 +417,8 @@ app.post('/api/log', (req, res) => {
   if (task_type === 'routine') {
     const rout = appData.routine_tasks.find(r => r.name.toLowerCase() === task_name.toLowerCase() || r.id === task_name);
     if (rout) {
-      rout.last_completed_at = new Date().toISOString();
+      rout.last_completed_at = nowIso;
       rout.last_completed_by = targetMembers.join(', ');
-      // If one-time routine, we can remove it or mark completed
-      if (rout.is_one_time) {
-        appData.routine_tasks = appData.routine_tasks.filter(r => r.id !== rout.id);
-      }
     }
   }
 
@@ -461,19 +438,22 @@ app.post('/api/logs/delete', (req, res) => {
   res.json({ status: "deleted" });
 });
 
-// API: Single Task Create (One-off prompt / reminder)
+// API: Single Task Create (with due_date and custom points)
 app.post('/api/single_tasks', (req, res) => {
-  const { title, assigned_to = ["all"], points = 0 } = req.body;
+  const { title, assigned_to = ["all"], points = 0, due_date, created_by = "Famiglia" } = req.body;
   if (!title || !title.trim()) return res.status(400).json({ error: "Title required" });
 
   const assignedList = Array.isArray(assigned_to) ? assigned_to : [assigned_to];
+  const nowIso = new Date().toISOString();
   const newTask = {
     id: `st_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
     title: title.trim(),
     assigned_to: assignedList.length > 0 ? assignedList : ["all"],
     points: parseInt(points) || 0,
+    due_date: due_date || nowIso.split('T')[0],
+    created_by: created_by || "Famiglia",
     status: 'pending',
-    created_at: new Date().toISOString()
+    created_at: nowIso
   };
 
   if (!appData.single_tasks) appData.single_tasks = [];
@@ -489,8 +469,9 @@ app.post('/api/single_tasks/complete', (req, res) => {
   const { id, completed_by } = req.body;
   const task = (appData.single_tasks || []).find(t => t.id === id && t.status === 'pending');
   if (task) {
+    const nowIso = new Date().toISOString();
     task.status = 'completed';
-    task.completed_at = new Date().toISOString();
+    task.completed_at = nowIso;
     task.completed_by = completed_by || 'Famiglia';
 
     const workerList = Array.isArray(completed_by) ? completed_by : [completed_by || 'Famiglia'];
@@ -506,9 +487,11 @@ app.post('/api/single_tasks/complete', (req, res) => {
           member_name: memberObj.name,
           task_name: task.title,
           task_type: 'single_task',
+          created_by: task.created_by || "Famiglia",
+          task_created_at: task.created_at || nowIso,
           is_personal: totalPts === 0,
           points: dividedPts,
-          created_at: new Date().toISOString()
+          created_at: nowIso
         });
       }
     });
@@ -602,9 +585,9 @@ app.post('/api/spontaneous_tasks/delete', (req, res) => {
   res.json({ status: "deleted" });
 });
 
-// API: Save Routine Task (with Prossima Scadenza & is_one_time support)
+// API: Save Routine Task (with Prossima Scadenza)
 app.post('/api/routine_tasks', (req, res) => {
-  const { id, name, points = 20, frequency_days = 7, warning_days = 1, start_date, schedule_type = "from_last", icon = "🔄", category = "Routine", is_personal = false, assigned_member = "all", is_one_time = false } = req.body;
+  const { id, name, points = 20, frequency_days = 7, warning_days = 1, start_date, schedule_type = "from_last", icon = "🔄", category = "Routine", is_personal = false, assigned_member = "all" } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
   const trimmedName = name.trim();
@@ -624,8 +607,7 @@ app.post('/api/routine_tasks', (req, res) => {
     icon,
     category,
     is_personal: !!is_personal,
-    assigned_member: assigned_member || "all",
-    is_one_time: !!is_one_time
+    assigned_member: assigned_member || "all"
   };
 
   if (idx >= 0) appData.routine_tasks[idx] = item;
