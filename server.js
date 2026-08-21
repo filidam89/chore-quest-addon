@@ -17,58 +17,93 @@ app.use(express.json({ limit: '50mb' }));
 // Serve static frontend
 app.use(express.static(path.join(__dirname, 'public')));
 
+function getDefaultCategories() {
+  return [
+    { id: "cat_bucato", name: "Bucato & Panni", icon: "mdi:washing-machine", order: 1 },
+    { id: "cat_cucina", name: "Cucina & Pasti", icon: "mdi:silverware-clean", order: 2 },
+    { id: "cat_pulizia", name: "Pulizia & Casa", icon: "mdi:vacuum", order: 3 },
+    { id: "cat_personale", name: "Cura Personale & Altro", icon: "mdi:content-cut", order: 4 }
+  ];
+}
+
+function getDefaultSpontaneousTasks() {
+  return [
+    // Bucato & Panni
+    { id: "s_lavatrice", name: "Lavatrice", category: "Bucato & Panni", points: 5, icon: "mdi:washing-machine", priority: "medium", is_personal: false },
+    { id: "s_stendere", name: "Stendere", category: "Bucato & Panni", points: 10, icon: "mdi:tshirt-crew", priority: "medium", is_personal: false },
+    { id: "s_ritirare", name: "Ritirare", category: "Bucato & Panni", points: 5, icon: "mdi:tshirt-crew-outline", priority: "medium", is_personal: false },
+    { id: "s_panni_posto", name: "Panni a posto", category: "Bucato & Panni", points: 10, icon: "mdi:hanger", priority: "medium", is_personal: false },
+    
+    // Cucina & Pasti
+    { id: "s_cucinare", name: "Cucinare", category: "Cucina & Pasti", points: 12, icon: "mdi:stove", priority: "medium", is_personal: false },
+    { id: "s_piatti", name: "Piatti", category: "Cucina & Pasti", points: 12, icon: "mdi:silverware-clean", priority: "medium", is_personal: false },
+    { id: "s_macchina_caffe", name: "Macchina Caffè", category: "Cucina & Pasti", points: 8, icon: "mdi:coffee-maker", priority: "medium", is_personal: false },
+    { id: "s_spesa", name: "Spesa", category: "Cucina & Pasti", points: 8, icon: "mdi:cart", priority: "medium", is_personal: false },
+    
+    // Pulizia & Casa
+    { id: "s_bagno", name: "Bagno", category: "Pulizia & Casa", points: 20, icon: "mdi:toilet", priority: "medium", is_personal: false },
+    { id: "s_polvere", name: "Polvere", category: "Pulizia & Casa", points: 15, icon: "mdi:vacuum", priority: "medium", is_personal: false },
+    { id: "s_spolverare", name: "Spolverare", category: "Pulizia & Casa", points: 10, icon: "mdi:feather", priority: "medium", is_personal: false },
+    { id: "s_vetri", name: "Vetri", category: "Pulizia & Casa", points: 15, icon: "mdi:window-closed", priority: "medium", is_personal: false },
+    { id: "s_letto", name: "Letto", category: "Pulizia & Casa", points: 10, icon: "mdi:bed", priority: "medium", is_personal: false }
+  ];
+}
+
+function getDefaultRoutineTasks(todayIso) {
+  return [
+    { id: "r_lenzuola", name: "Cambio lenzuola", category: "Bucato & Panni", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "mdi:bed", priority: "medium", is_personal: false, assigned_member: "all" },
+    { id: "r_bagno_profondo", name: "Pulizia profonda bagno", category: "Pulizia & Casa", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "mdi:toilet", priority: "medium", is_personal: false, assigned_member: "all" },
+    { id: "r_pavimenti", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia & Casa", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "mdi:vacuum", priority: "medium", is_personal: false, assigned_member: "all" },
+    { id: "r_barbiere", name: "Taglio capelli / Barbiere", category: "Cura Personale & Altro", points: 0, frequency_days: 21, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "mdi:content-cut", priority: "medium", is_personal: true, assigned_member: "Papà" }
+  ];
+}
+
 function loadData() {
   const todayIso = new Date().toISOString().split('T')[0];
-
-  const defaultCategories = [
-    { id: "cat_cucina", name: "Cucina & Spesa", icon: "🍳", order: 1 },
-    { id: "cat_pulizia", name: "Pulizia & Casa", icon: "🧹", order: 2 },
-    { id: "cat_bucato", name: "Bucato & Panni", icon: "🧺", order: 3 },
-    { id: "cat_manutenzione", name: "Manutenzione & Auto", icon: "🔧", order: 4 },
-    { id: "cat_personale", name: "Cura Personale", icon: "💈", order: 5 }
-  ];
+  const defaultCategories = getDefaultCategories();
+  const defaultSpontaneous = getDefaultSpontaneousTasks();
+  const defaultRoutines = getDefaultRoutineTasks(todayIso);
 
   if (fs.existsSync(DB_FILE)) {
     try {
       const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
       if (!data.members) data.members = {};
-      if (!data.categories || data.categories.length === 0) data.categories = defaultCategories;
-      if (!data.spontaneous_tasks) data.spontaneous_tasks = [];
-      if (!data.routine_tasks) data.routine_tasks = [];
       if (!data.assigned_tasks) data.assigned_tasks = [];
       if (!data.single_tasks) data.single_tasks = [];
       if (!data.logs) data.logs = [];
       if (!data.settings) {
         data.settings = {
           leaderboard_period_mode: "calendar",
-          primary_score_display: "weekly"
+          primary_score_display: "weekly",
+          theme_mode: "auto"
         };
       }
       if (!data.settings.primary_score_display) data.settings.primary_score_display = "weekly";
       if (!data.settings.leaderboard_period_mode) data.settings.leaderboard_period_mode = "calendar";
+      if (!data.settings.theme_mode) data.settings.theme_mode = "auto";
 
-      // Migrations for routine fields & priorities
-      data.routine_tasks.forEach(r => {
-        if (!r.category) r.category = "Pulizia & Casa";
-        if (!r.priority) r.priority = "medium";
-        if (!r.schedule_type) r.schedule_type = 'from_last';
-        if (r.warning_days === undefined) r.warning_days = 1;
-        if (!r.start_date) r.start_date = todayIso;
-        if (r.is_personal === undefined) r.is_personal = false;
-        if (r.is_personal) r.points = 0;
-        if (!r.assigned_member) r.assigned_member = 'all';
-      });
+      // Apply the user's requested clean reset of categories & spontaneous tasks from image
+      data.categories = defaultCategories;
+      data.spontaneous_tasks = defaultSpontaneous;
 
-      // Migrations for spontaneous tasks
-      data.spontaneous_tasks.forEach(s => {
-        if (!s.category) s.category = "Generale";
-        if (!s.priority) s.priority = "medium";
-        if (s.is_personal === undefined) s.is_personal = false;
-      });
+      if (!data.routine_tasks || data.routine_tasks.length === 0) {
+        data.routine_tasks = defaultRoutines;
+      } else {
+        data.routine_tasks.forEach(r => {
+          if (!r.category) r.category = "Pulizia & Casa";
+          if (!r.priority) r.priority = "medium";
+          if (!r.schedule_type) r.schedule_type = 'from_last';
+          if (r.warning_days === undefined) r.warning_days = 1;
+          if (!r.start_date) r.start_date = todayIso;
+          if (r.is_personal === undefined) r.is_personal = false;
+          if (r.is_personal) r.points = 0;
+          if (!r.assigned_member) r.assigned_member = 'all';
+        });
+      }
 
       // Migrations for single tasks
       data.single_tasks.forEach(st => {
-        if (!st.category) st.category = "Varie";
+        if (!st.category) st.category = "Bucato & Panni";
         if (!st.priority) st.priority = "medium";
         if (!st.notes) st.notes = [];
         if (!st.due_date) st.due_date = st.created_at ? st.created_at.split('T')[0] : todayIso;
@@ -87,26 +122,16 @@ function loadData() {
   return {
     settings: {
       leaderboard_period_mode: "calendar",
-      primary_score_display: "weekly"
+      primary_score_display: "weekly",
+      theme_mode: "auto"
     },
     members: {
       "m_1": { id: "m_1", name: "Papà", icon: "👨‍💻", color: "#3b82f6" },
       "m_2": { id: "m_2", name: "Mamma", icon: "👩‍🎨", color: "#ec4899" }
     },
     categories: defaultCategories,
-    spontaneous_tasks: [
-      { id: "s_1", name: "Fare la lavatrice", category: "Bucato & Panni", points: 15, icon: "🧺", priority: "medium", is_personal: false },
-      { id: "s_2", name: "Lavare i piatti / Svuotare lavastoviglie", category: "Cucina & Spesa", points: 10, icon: "🍽️", priority: "medium", is_personal: false },
-      { id: "s_3", name: "Preparare il pranzo / cena", category: "Cucina & Spesa", points: 20, icon: "🍳", priority: "medium", is_personal: false },
-      { id: "s_4", name: "Portare fuori la spazzatura", category: "Pulizia & Casa", points: 10, icon: "🗑️", priority: "medium", is_personal: false },
-      { id: "s_5", name: "Fare la spesa", category: "Cucina & Spesa", points: 25, icon: "🛒", priority: "medium", is_personal: false }
-    ],
-    routine_tasks: [
-      { id: "r_1", name: "Cambio lenzuola", category: "Bucato & Panni", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🛏️", priority: "medium", is_personal: false, assigned_member: "all" },
-      { id: "r_2", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia & Casa", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "🧹", priority: "medium", is_personal: false, assigned_member: "all" },
-      { id: "r_3", name: "Pulizia profonda bagno", category: "Pulizia & Casa", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "🧼", priority: "medium", is_personal: false, assigned_member: "all" },
-      { id: "r_4", name: "Taglio capelli / Barbiere", category: "Cura Personale", points: 0, frequency_days: 21, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "💈", priority: "medium", is_personal: true, assigned_member: "Papà" }
-    ],
+    spontaneous_tasks: defaultSpontaneous,
+    routine_tasks: defaultRoutines,
     single_tasks: [],
     assigned_tasks: [],
     logs: []
@@ -122,6 +147,7 @@ function saveData(data) {
 }
 
 let appData = loadData();
+saveData(appData);
 
 // Calculate comprehensive period stats, diffs, categories and ADHD candidate weights
 function calculateStats() {
@@ -159,20 +185,48 @@ function calculateStats() {
       pending_single_tasks_count: 0,
       exclusive_single_tasks_count: 0,
       shared_single_tasks_count: 0,
+      member_pending_tasks: [],
       last_activity: null,
       badges: []
     };
   });
 
-  // Calculate pending single tasks (exclusive vs shared)
+  // Calculate pending single tasks with breakdown per member
   (appData.single_tasks || []).forEach(st => {
     if (st.status === 'pending') {
       const assignedList = Array.isArray(st.assigned_to) ? st.assigned_to : [st.assigned_to];
       const isShared = assignedList.includes('all') || assignedList.includes('Tutti') || assignedList.includes('Tutta la Famiglia') || assignedList.length > 1;
 
+      const createdDate = new Date(st.created_at || now);
+      const elapsedDays = Math.floor((now - createdDate) / (1000 * 60 * 60 * 24));
+      let isFuture = false;
+      let daysUntil = 0;
+      if (st.due_date) {
+        const dueDateObj = new Date(st.due_date + 'T23:59:59');
+        const diffDays = Math.ceil((dueDateObj - now) / (1000 * 60 * 60 * 24));
+        if (st.due_date > todayStr) {
+          isFuture = true;
+          daysUntil = diffDays;
+        }
+      }
+
+      const taskSummary = {
+        id: st.id,
+        title: st.title,
+        due_date: st.due_date,
+        points: st.points || 0,
+        category: st.category || 'Varie',
+        priority: st.priority || 'medium',
+        is_future: isFuture,
+        days_until: daysUntil,
+        elapsed_days: elapsedDays,
+        is_shared: isShared
+      };
+
       Object.values(stats).forEach(m => {
         if (assignedList.includes(m.name) || assignedList.includes('all') || assignedList.includes('Tutti') || assignedList.includes('Tutta la Famiglia')) {
           m.pending_single_tasks_count += 1;
+          m.member_pending_tasks.push(taskSummary);
           if (isShared) {
             m.shared_single_tasks_count += 1;
           } else {
@@ -336,7 +390,7 @@ function calculateStats() {
   const pendingSingleTasks = (appData.single_tasks || [])
     .filter(t => t.status === 'pending')
     .map(t => {
-      const createdDate = new Date(t.created_at);
+      const createdDate = new Date(t.created_at || now);
       const elapsedDays = Math.floor((now - createdDate) / (1000 * 60 * 60 * 24));
       
       let isFuture = false;
@@ -380,7 +434,7 @@ function calculateStats() {
   };
 }
 
-// Generic Home Assistant Sync via Supervisor API
+// Comprehensive Home Assistant Sensors Synchronization via Supervisor API
 async function syncToHomeAssistant() {
   const supervisorToken = process.env.SUPERVISOR_TOKEN;
   if (!supervisorToken) return;
@@ -388,11 +442,20 @@ async function syncToHomeAssistant() {
   const haBase = "http://supervisor/core/api";
   const data = calculateStats();
 
+  const overdueList = data.routine_tasks.filter(r => r.status === 'overdue');
+  const warningList = data.routine_tasks.filter(r => r.status === 'warning');
+  const overdueCount = overdueList.length;
+  const warningCount = warningList.length;
+  const pendingCount = data.pending_single_tasks.length;
+  const isAllDone = (overdueCount === 0);
+
+  // 1. Individual Member Sensors (Points & Assigned Pending Tasks)
   for (const m of data.leaderboard) {
     const cleanName = m.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    const sensorUrl = `${haBase}/states/sensor.chorequest_${cleanName}_points`;
+    
+    // Points Sensor
     try {
-      await fetch(sensorUrl, {
+      await fetch(`${haBase}/states/sensor.chorequest_${cleanName}_points`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -404,21 +467,37 @@ async function syncToHomeAssistant() {
             monthly_points: m.monthly_points,
             yearly_points: m.yearly_points,
             total_points: m.total_points,
-            pending_tasks_count: m.pending_single_tasks_count,
-            shared_tasks_count: m.shared_single_tasks_count,
-            exclusive_tasks_count: m.exclusive_single_tasks_count,
-            completed_single_tasks_count: m.completed_single_tasks_count,
             rank: m.rank,
             gap: m.gap_text,
             badges: m.badges.map(b => b.name),
             last_activity: m.last_activity ? `${m.last_activity.task_name} (+${m.last_activity.points}pt)` : null,
-            icon: "mdi:star-circle"
+            icon: "mdi:trophy-award"
+          }
+        })
+      });
+    } catch (err) {}
+
+    // Assigned Pending Tasks Sensor
+    try {
+      await fetch(`${haBase}/states/sensor.chorequest_${cleanName}_pending_tasks`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          state: String(m.pending_single_tasks_count),
+          attributes: {
+            friendly_name: `ChoreQuest: Task Sospesi ${m.name}`,
+            pending_count: m.pending_single_tasks_count,
+            exclusive_count: m.exclusive_single_tasks_count,
+            shared_count: m.shared_single_tasks_count,
+            tasks: m.member_pending_tasks || [],
+            icon: "mdi:clipboard-check-outline"
           }
         })
       });
     } catch (err) {}
   }
 
+  // 2. Leaderboard Sensor
   try {
     await fetch(`${haBase}/states/sensor.chorequest_leaderboard`, {
       method: 'POST',
@@ -426,50 +505,151 @@ async function syncToHomeAssistant() {
       body: JSON.stringify({
         state: data.leaderboard[0] ? data.leaderboard[0].name : "Nessuno",
         attributes: {
-          friendly_name: "ChoreQuest: Classifica",
+          friendly_name: "ChoreQuest: Classifica & Vincitori",
           leader: data.leaderboard[0]?.name || "-",
           daily_winner: data.winners.daily?.name || "-",
           weekly_winner: data.winners.weekly?.name || "-",
           monthly_winner: data.winners.monthly?.name || "-",
           yearly_winner: data.winners.yearly?.name || "-",
           leaderboard: data.leaderboard.map(m => ({ rank: m.rank, name: m.name, weekly_points: m.weekly_points, total_points: m.total_points })),
-          icon: "mdi:trophy"
+          icon: "mdi:podium-gold"
         }
       })
     });
   } catch (err) {}
 
-  const overdueList = data.routine_tasks.filter(r => r.status === 'overdue');
-  const warningList = data.routine_tasks.filter(r => r.status === 'warning');
+  // 3. Due Routines Combined Sensor
   try {
     await fetch(`${haBase}/states/sensor.chorequest_due_routines`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        state: String(overdueList.length + warningList.length),
+        state: String(overdueCount + warningCount),
         attributes: {
-          friendly_name: "ChoreQuest: Routine in Scadenza",
-          overdue_count: overdueList.length,
-          warning_count: warningList.length,
-          overdue_routines: overdueList.map(r => ({ name: r.name, overdue_days: r.overdue_days, assigned_to: r.assigned_member })),
-          warning_routines: warningList.map(r => ({ name: r.name, days_remaining: r.days_remaining, assigned_to: r.assigned_member })),
+          friendly_name: "ChoreQuest: Routine da Eseguire (Scadute + In Scadenza)",
+          total_due: overdueCount + warningCount,
+          overdue_count: overdueCount,
+          warning_count: warningCount,
+          overdue_routines: overdueList.map(r => ({ name: r.name, overdue_days: r.overdue_days, assigned_to: r.assigned_member, category: r.category })),
+          warning_routines: warningList.map(r => ({ name: r.name, days_remaining: r.days_remaining, assigned_to: r.assigned_member, category: r.category })),
           icon: "mdi:clock-alert-outline"
         }
       })
     });
   } catch (err) {}
 
+  // 4. Specifically Overdue Routines Sensor
+  try {
+    await fetch(`${haBase}/states/sensor.chorequest_overdue_routines`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        state: String(overdueCount),
+        attributes: {
+          friendly_name: "ChoreQuest: Routine Scadute",
+          overdue_count: overdueCount,
+          routines: overdueList.map(r => ({ name: r.name, overdue_days: r.overdue_days, points: r.points, assigned_to: r.assigned_member, category: r.category })),
+          icon: "mdi:alert-circle-outline"
+        }
+      })
+    });
+  } catch (err) {}
+
+  // 5. Warning Routines Sensor (Approaching Due Date)
+  try {
+    await fetch(`${haBase}/states/sensor.chorequest_warning_routines`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        state: String(warningCount),
+        attributes: {
+          friendly_name: "ChoreQuest: Routine in Scadenza",
+          warning_count: warningCount,
+          routines: warningList.map(r => ({ name: r.name, days_remaining: r.days_remaining, points: r.points, assigned_to: r.assigned_member, category: r.category })),
+          icon: "mdi:clock-outline"
+        }
+      })
+    });
+  } catch (err) {}
+
+  // 6. Global Pending Single Tasks Sensor
   try {
     await fetch(`${haBase}/states/sensor.chorequest_pending_tasks`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        state: String(data.pending_single_tasks.length),
+        state: String(pendingCount),
         attributes: {
           friendly_name: "ChoreQuest: Task Singoli in Sospeso",
-          pending_count: data.pending_single_tasks.length,
-          tasks: data.pending_single_tasks.map(t => ({ title: t.title, assigned_to: t.assigned_to, elapsed_days: t.elapsed_days, due_date: t.due_date, is_future: t.is_future })),
-          icon: "mdi:clipboard-alert-outline"
+          pending_count: pendingCount,
+          tasks: data.pending_single_tasks.map(t => ({ title: t.title, assigned_to: t.assigned_to, elapsed_days: t.elapsed_days, due_date: t.due_date, is_future: t.is_future, category: t.category })),
+          icon: "mdi:format-list-checks"
+        }
+      })
+    });
+  } catch (err) {}
+
+  // 7. Binary Sensor: All Chores Done (No overdue activities!)
+  try {
+    await fetch(`${haBase}/states/binary_sensor.chorequest_all_chores_done`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        state: isAllDone ? "on" : "off",
+        attributes: {
+          friendly_name: "ChoreQuest: Tutto in Ordine (Nessuna Routine Scaduta)",
+          is_clean: isAllDone,
+          overdue_count: overdueCount,
+          warning_count: warningCount,
+          pending_tasks_count: pendingCount,
+          icon: isAllDone ? "mdi:check-decagram" : "mdi:alert-decagram"
+        }
+      })
+    });
+  } catch (err) {}
+
+  // 8. Binary Sensor: Has Overdue Chores
+  try {
+    await fetch(`${haBase}/states/binary_sensor.chorequest_has_overdue`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        state: (overdueCount > 0) ? "on" : "off",
+        attributes: {
+          friendly_name: "ChoreQuest: Presenza di Routine Scadute",
+          device_class: "problem",
+          overdue_count: overdueCount,
+          icon: (overdueCount > 0) ? "mdi:alert-circle" : "mdi:check-circle"
+        }
+      })
+    });
+  } catch (err) {}
+
+  // 9. Summary Status Sensor
+  let summaryText = "Tutto in ordine";
+  if (overdueCount > 0 && warningCount > 0) {
+    summaryText = `${overdueCount} scadute, ${warningCount} in scadenza`;
+  } else if (overdueCount > 0) {
+    summaryText = `${overdueCount} routine scadute`;
+  } else if (warningCount > 0) {
+    summaryText = `${warningCount} routine in scadenza`;
+  } else if (pendingCount > 0) {
+    summaryText = `${pendingCount} task in sospeso`;
+  }
+
+  try {
+    await fetch(`${haBase}/states/sensor.chorequest_summary`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        state: summaryText,
+        attributes: {
+          friendly_name: "ChoreQuest: Riepilogo Casa",
+          overdue_count: overdueCount,
+          warning_count: warningCount,
+          pending_tasks_count: pendingCount,
+          leader: data.leaderboard[0]?.name || "-",
+          icon: isAllDone ? "mdi:home-heart" : "mdi:home-alert"
         }
       })
     });
@@ -505,9 +685,20 @@ app.post('/api/restore', (req, res) => {
   res.json({ status: "restored", message: "Database ripristinato con successo!" });
 });
 
+// API: Reset to Defaults
+app.post('/api/admin/reset_defaults', (req, res) => {
+  const todayIso = new Date().toISOString().split('T')[0];
+  appData.categories = getDefaultCategories();
+  appData.spontaneous_tasks = getDefaultSpontaneousTasks();
+  appData.routine_tasks = getDefaultRoutineTasks(todayIso);
+  saveData(appData);
+  syncToHomeAssistant();
+  res.json({ status: "reset", message: "Attività e categorie ripristinate secondo configurazione predefinita!" });
+});
+
 // API: Categories Management (CRUD & Order Move Up/Down)
 app.post('/api/categories', (req, res) => {
-  const { id, name, icon = "📁" } = req.body;
+  const { id, name, icon = "mdi:folder" } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
   const trimmedName = name.trim();
@@ -830,7 +1021,7 @@ app.post('/api/members/delete', (req, res) => {
 
 // API: Save Spontaneous Task
 app.post('/api/spontaneous_tasks', (req, res) => {
-  const { id, name, points = 10, icon = "⚡", category = "Generale", priority = "medium", is_personal = false } = req.body;
+  const { id, name, points = 10, icon = "mdi:lightning-bolt", category = "Pulizia & Casa", priority = "medium", is_personal = false } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
   const trimmedName = name.trim();
@@ -841,7 +1032,7 @@ app.post('/api/spontaneous_tasks', (req, res) => {
     name: trimmedName,
     points: is_personal ? 0 : (parseInt(points) || 10),
     icon,
-    category: category || "Generale",
+    category: category || "Pulizia & Casa",
     priority: priority || "medium",
     is_personal: !!is_personal
   };
@@ -863,7 +1054,7 @@ app.post('/api/spontaneous_tasks/delete', (req, res) => {
 
 // API: Save Routine Task (with Category & Priority)
 app.post('/api/routine_tasks', (req, res) => {
-  const { id, name, points = 20, frequency_days = 7, warning_days = 1, start_date, schedule_type = "from_last", icon = "🔄", category = "Routine", priority = "medium", is_personal = false, assigned_member = "all" } = req.body;
+  const { id, name, points = 20, frequency_days = 7, warning_days = 1, start_date, schedule_type = "from_last", icon = "mdi:calendar-sync", category = "Routine", priority = "medium", is_personal = false, assigned_member = "all" } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
   const trimmedName = name.trim();
@@ -906,10 +1097,11 @@ app.post('/api/routine_tasks/delete', (req, res) => {
 
 // API: Save Settings
 app.post('/api/settings', (req, res) => {
-  const { leaderboard_period_mode, primary_score_display } = req.body;
+  const { leaderboard_period_mode, primary_score_display, theme_mode } = req.body;
   if (!appData.settings) appData.settings = {};
   if (leaderboard_period_mode) appData.settings.leaderboard_period_mode = leaderboard_period_mode;
   if (primary_score_display) appData.settings.primary_score_display = primary_score_display;
+  if (theme_mode) appData.settings.theme_mode = theme_mode;
 
   saveData(appData);
   syncToHomeAssistant();
