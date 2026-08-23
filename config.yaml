@@ -1,7 +1,7 @@
 name: "ChoreQuest"
-version: "2.4.0"
+version: "2.4.1"
 slug: "chorequest"
-description: "Gamified family chore & routine management for Home Assistant with Task Splitting, custom execution dates, Day/Month frequencies, Audit Trail log editing with notes, member-specific activity popups, and non-destructive data persistence."
+description: "Gamified family chore & routine management for Home Assistant with Task Splitting (complete part + rename remaining), Routine Undo with previous due date restoration, History inline audit trail, foreground edit dialogs, and native contrast text cursors."
 url: "https://github.com/filidam89/chore-quest-addon"
 startup: application
 boot: auto
