@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v1.0.0</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.5.0</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -194,6 +194,7 @@
         <button onclick="setAdminTab('members')" id="adm-tab-members" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-account-group-outline text-sm"></i> 👥 Membri Famiglia</button>
         <button onclick="setAdminTab('settings')" id="adm-tab-settings" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-tune-variant text-sm"></i> ⚙️ Sistema & Punteggio</button>
         <button onclick="setAdminTab('backup')" id="adm-tab-backup" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-database-outline text-sm"></i> 💾 Backup & Ripristino</button>
+        <button onclick="setAdminTab('updates')" id="adm-tab-updates" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-cloud-sync-outline text-sm"></i> 🔄 Aggiornamenti</button>
       </div>
     </div>
 
@@ -270,6 +271,50 @@
             <button onclick="restoreBackupFromFile()" class="py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">Ripristina</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- TAB 7: AGGIORNAMENTI & VERSIONE -->
+    <div id="adm-sec-updates" class="hidden bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-wrap gap-2">
+        <div>
+          <h3 class="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="mdi mdi-cloud-sync-outline text-indigo-600 text-xl"></i> Controllo Aggiornamenti Add-on
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Verifica se è disponibile una nuova versione su GitHub e gestisci gli aggiornamenti di Home Assistant</p>
+        </div>
+        <button onclick="checkForUpdatesLive()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+          <i class="mdi mdi-refresh"></i> <span>Verifica Aggiornamenti Ora</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
+          <div class="text-[11px] font-bold text-slate-400 uppercase">Versione Installata</div>
+          <div class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">v2.5.0</div>
+        </div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
+          <div class="text-[11px] font-bold text-slate-400 uppercase">Ultima Versione su GitHub</div>
+          <div id="update-remote-version" class="text-xl font-extrabold text-slate-900 dark:text-white">v2.5.0</div>
+        </div>
+        <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
+          <div class="text-[11px] font-bold text-slate-400 uppercase">Stato Sistema</div>
+          <div id="update-status-badge" class="text-sm font-extrabold text-emerald-600 flex items-center gap-1">
+            <span>✅ Sistema Aggiornato</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-indigo-50/70 dark:bg-indigo-950/40 rounded-2xl border border-indigo-200 dark:border-indigo-800/70 space-y-3">
+        <div class="font-extrabold text-xs text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
+          <i class="mdi mdi-information-outline text-indigo-600 text-base"></i>
+          <span>Come installare gli aggiornamenti su Home Assistant:</span>
+        </div>
+        <ol class="text-xs text-slate-600 dark:text-slate-300 list-decimal list-inside space-y-1 font-medium">
+          <li>Apri lo <b>Store degli Add-on</b> di Home Assistant (<a href="/hassio/store" target="_blank" class="text-indigo-600 dark:text-indigo-400 underline font-bold">Clicca qui</a> oppure vai in <i>Impostazioni ➔ Add-on ➔ Store</i>).</li>
+          <li>Clicca sui <b>tre pallini in alto a destra (⋮)</b> e seleziona <b>"Controlla aggiornamenti"</b> (o ricarica con <kbd class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 rounded">F5</kbd>).</li>
+          <li>Seleziona <b>ChoreQuest</b> e clicca su <b>"Aggiorna"</b> (o <i>"Ricostruisci / Rebuild"</i>) per caricare i file aggiornati.</li>
+        </ol>
       </div>
     </div>
   </main>
@@ -950,7 +995,7 @@
 
     function setAdminTab(tabName) {
       activeAdminTab = tabName;
-      ['categories', 'spontaneous', 'routines', 'members', 'settings', 'backup'].forEach(t => {
+      ['categories', 'spontaneous', 'routines', 'members', 'settings', 'backup', 'updates'].forEach(t => {
         const btn = document.getElementById(`adm-tab-${t}`);
         const sec = document.getElementById(`adm-sec-${t}`);
         if (btn) {
@@ -960,6 +1005,33 @@
         }
         if (sec) sec.classList.toggle('hidden', t !== tabName);
       });
+      if (tabName === 'updates') checkForUpdatesLive();
+    }
+
+    async function checkForUpdatesLive() {
+      const remoteVersionEl = document.getElementById('update-remote-version');
+      const statusBadgeEl = document.getElementById('update-status-badge');
+      if (!remoteVersionEl || !statusBadgeEl) return;
+
+      remoteVersionEl.textContent = 'Verifica in corso...';
+      statusBadgeEl.innerHTML = '<span class="text-indigo-600 font-bold">⏳ Controllo su GitHub...</span>';
+
+      try {
+        const res = await fetch(`${apiBase}/system/check_update`);
+        const data = await res.json();
+        remoteVersionEl.textContent = `v${data.remote_version}`;
+
+        if (data.update_available) {
+          statusBadgeEl.innerHTML = `<span class="text-amber-600 font-extrabold">⚡ Aggiornamento v${data.remote_version} disponibile!</span>`;
+          showToast(`Nuova versione v${data.remote_version} disponibile su GitHub!`, "⚡");
+        } else {
+          statusBadgeEl.innerHTML = '<span class="text-emerald-600 font-extrabold">✅ Sistema Aggiornato</span>';
+          showToast("ChoreQuest è aggiornato all'ultima versione!", "✅");
+        }
+      } catch (err) {
+        remoteVersionEl.textContent = 'Non disponibile';
+        statusBadgeEl.innerHTML = '<span class="text-slate-400 font-bold">Impossibile contattare GitHub</span>';
+      }
     }
 
     function closeAllModals() {
