@@ -51,10 +51,10 @@ function getDefaultSpontaneousTasks() {
 
 function getDefaultRoutineTasks(todayIso) {
   return [
-    { id: "r_lenzuola", name: "Cambio lenzuola", category: "Bucato & Panni", points: 25, frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "mdi:bed", priority: "medium", is_personal: false, assigned_member: "all" },
-    { id: "r_bagno_profondo", name: "Pulizia profonda bagno", category: "Pulizia & Casa", points: 35, frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "mdi:toilet", priority: "medium", is_personal: false, assigned_member: "all" },
-    { id: "r_pavimenti", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia & Casa", points: 30, frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "mdi:vacuum", priority: "medium", is_personal: false, assigned_member: "all" },
-    { id: "r_barbiere", name: "Taglio capelli / Barbiere", category: "Cura Personale & Altro", points: 0, frequency_days: 21, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "mdi:content-cut", priority: "medium", is_personal: true, assigned_member: "Papà" }
+    { id: "r_lenzuola", name: "Cambio lenzuola", category: "Bucato & Panni", points: 25, frequency_number: 7, frequency_unit: "days", frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "mdi:bed", priority: "medium", is_personal: false, assigned_member: "all" },
+    { id: "r_bagno_profondo", name: "Pulizia profonda bagno", category: "Pulizia & Casa", points: 35, frequency_number: 5, frequency_unit: "days", frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "mdi:toilet", priority: "medium", is_personal: false, assigned_member: "all" },
+    { id: "r_pavimenti", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia & Casa", points: 30, frequency_number: 3, frequency_unit: "days", frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "mdi:vacuum", priority: "medium", is_personal: false, assigned_member: "all" },
+    { id: "r_barbiere", name: "Taglio capelli / Barbiere", category: "Cura Personale & Altro", points: 0, frequency_number: 1, frequency_unit: "months", frequency_days: 30, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "mdi:content-cut", priority: "medium", is_personal: true, assigned_member: "Papà" }
   ];
 }
 
@@ -68,6 +68,9 @@ function loadData() {
     try {
       const data = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
       if (!data.members) data.members = {};
+      if (!data.categories || data.categories.length === 0) data.categories = defaultCategories;
+      if (!data.spontaneous_tasks || data.spontaneous_tasks.length === 0) data.spontaneous_tasks = defaultSpontaneous;
+      if (!data.routine_tasks || data.routine_tasks.length === 0) data.routine_tasks = defaultRoutines;
       if (!data.assigned_tasks) data.assigned_tasks = [];
       if (!data.single_tasks) data.single_tasks = [];
       if (!data.logs) data.logs = [];
@@ -82,24 +85,26 @@ function loadData() {
       if (!data.settings.leaderboard_period_mode) data.settings.leaderboard_period_mode = "calendar";
       if (!data.settings.theme_mode) data.settings.theme_mode = "auto";
 
-      // Apply the user's requested clean reset of categories & spontaneous tasks from image
-      data.categories = defaultCategories;
-      data.spontaneous_tasks = defaultSpontaneous;
+      // Non-destructive schema enhancements for routine fields & frequency units
+      data.routine_tasks.forEach(r => {
+        if (!r.category) r.category = "Pulizia & Casa";
+        if (!r.priority) r.priority = "medium";
+        if (!r.schedule_type) r.schedule_type = 'from_last';
+        if (!r.frequency_unit) r.frequency_unit = 'days';
+        if (!r.frequency_number) r.frequency_number = parseInt(r.frequency_days) || 7;
+        if (r.warning_days === undefined) r.warning_days = 1;
+        if (!r.start_date) r.start_date = todayIso;
+        if (r.is_personal === undefined) r.is_personal = false;
+        if (r.is_personal) r.points = 0;
+        if (!r.assigned_member) r.assigned_member = 'all';
+      });
 
-      if (!data.routine_tasks || data.routine_tasks.length === 0) {
-        data.routine_tasks = defaultRoutines;
-      } else {
-        data.routine_tasks.forEach(r => {
-          if (!r.category) r.category = "Pulizia & Casa";
-          if (!r.priority) r.priority = "medium";
-          if (!r.schedule_type) r.schedule_type = 'from_last';
-          if (r.warning_days === undefined) r.warning_days = 1;
-          if (!r.start_date) r.start_date = todayIso;
-          if (r.is_personal === undefined) r.is_personal = false;
-          if (r.is_personal) r.points = 0;
-          if (!r.assigned_member) r.assigned_member = 'all';
-        });
-      }
+      // Migrations for spontaneous tasks
+      data.spontaneous_tasks.forEach(s => {
+        if (!s.category) s.category = "Generale";
+        if (!s.priority) s.priority = "medium";
+        if (s.is_personal === undefined) s.is_personal = false;
+      });
 
       // Migrations for single tasks
       data.single_tasks.forEach(st => {
@@ -147,7 +152,32 @@ function saveData(data) {
 }
 
 let appData = loadData();
-saveData(appData);
+
+// Helper to calculate routine next due date considering days or months
+function calculateRoutineDueDate(r, baseDate, now) {
+  const freqUnit = r.frequency_unit || 'days';
+  const freqNum = parseInt(r.frequency_number || r.frequency_days) || (freqUnit === 'months' ? 1 : 7);
+
+  let dueDate;
+  if (baseDate) {
+    const start = new Date(baseDate);
+    if (freqUnit === 'months') {
+      dueDate = new Date(start);
+      dueDate.setMonth(dueDate.getMonth() + freqNum);
+    } else {
+      dueDate = new Date(start.getTime() + (freqNum * 24 * 60 * 60 * 1000));
+    }
+  } else {
+    const start = new Date(now);
+    if (freqUnit === 'months') {
+      dueDate = new Date(start);
+      dueDate.setMonth(dueDate.getMonth() + freqNum);
+    } else {
+      dueDate = new Date(start.getTime() + (freqNum * 24 * 60 * 60 * 1000));
+    }
+  }
+  return dueDate;
+}
 
 // Calculate comprehensive period stats, diffs, categories and ADHD candidate weights
 function calculateStats() {
@@ -350,17 +380,19 @@ function calculateStats() {
     };
   });
 
-  // Evaluate Routine Due Statuses & Next Due Dates
+  // Evaluate Routine Due Statuses & Next Due Dates (supporting Days & Months)
   const routineStatus = (appData.routine_tasks || []).map(r => {
-    const freq = parseInt(r.frequency_days) || 7;
     const warning = parseInt(r.warning_days) || 1;
+    const freqUnit = r.frequency_unit || 'days';
+    const freqNum = parseInt(r.frequency_number || r.frequency_days) || (freqUnit === 'months' ? 1 : 7);
+
     let dueDate;
     if (r.schedule_type === 'from_last' && r.last_completed_at) {
-      dueDate = new Date(new Date(r.last_completed_at).getTime() + (freq * 24 * 60 * 60 * 1000));
+      dueDate = calculateRoutineDueDate(r, r.last_completed_at, now);
     } else if (r.start_date) {
       dueDate = new Date(r.start_date);
     } else {
-      dueDate = new Date(now.getTime() + (freq * 24 * 60 * 60 * 1000));
+      dueDate = calculateRoutineDueDate(r, null, now);
     }
 
     const diffMs = dueDate - now;
@@ -376,11 +408,14 @@ function calculateStats() {
       status = "warning";
     }
 
+    const freqText = (freqUnit === 'months') ? `${freqNum} ${freqNum === 1 ? 'mese' : 'mesi'}` : `${freqNum} gg`;
+
     return {
       ...r,
       due_date: dueDate.toISOString(),
       days_remaining: diffDays,
       overdue_days: overdueDays,
+      frequency_text: freqText,
       status,
       priority: r.priority || "medium"
     };
@@ -760,9 +795,24 @@ app.post('/api/categories/delete', (req, res) => {
   res.json({ status: "deleted" });
 });
 
-// API: Log Task (with priority)
+// API: Log Task (with support for custom execution date, partial split execution, and notes)
 app.post('/api/log', (req, res) => {
-  const { member, members, task_name, points = 10, task_type = "spontaneous", category = "Generale", priority = "medium", is_personal = false, created_by = "Utente", task_created_at } = req.body;
+  const { 
+    member, 
+    members, 
+    task_name, 
+    points = 10, 
+    task_type = "spontaneous", 
+    category = "Generale", 
+    priority = "medium", 
+    is_personal = false, 
+    created_by = "Utente", 
+    execution_date, 
+    is_partial = false, 
+    partial_pct = 100, 
+    partial_note = "", 
+    update_routine_schedule = true 
+  } = req.body;
   
   const targetMembers = Array.isArray(members) && members.length > 0 ? members : (member ? [member] : []);
   if (targetMembers.length === 0 || !task_name) return res.status(400).json({ error: "Missing parameters" });
@@ -771,6 +821,7 @@ app.post('/api/log', (req, res) => {
   const dividedPoints = is_personal ? 0 : Math.max(1, Math.round(totalPoints / targetMembers.length));
 
   const nowIso = new Date().toISOString();
+  const effectiveExecDate = execution_date ? new Date(execution_date).toISOString() : nowIso;
   const createdLogs = [];
 
   targetMembers.forEach(mName => {
@@ -791,19 +842,23 @@ app.post('/api/log', (req, res) => {
       category: category || "Generale",
       priority: priority || "medium",
       created_by: created_by || "Utente",
-      task_created_at: task_created_at || nowIso,
+      task_created_at: nowIso,
       is_personal: !!is_personal,
+      is_partial: !!is_partial,
+      partial_pct: is_partial ? (parseInt(partial_pct) || 50) : null,
+      partial_note: is_partial ? (partial_note || "") : null,
       points: dividedPoints,
-      created_at: nowIso
+      edit_history: [],
+      created_at: effectiveExecDate
     };
     appData.logs.push(newLog);
     createdLogs.push(newLog);
   });
 
-  if (task_type === 'routine') {
+  if (task_type === 'routine' && update_routine_schedule !== false) {
     const rout = appData.routine_tasks.find(r => r.name.toLowerCase() === task_name.toLowerCase() || r.id === task_name);
     if (rout) {
-      rout.last_completed_at = nowIso;
+      rout.last_completed_at = effectiveExecDate;
       rout.last_completed_by = targetMembers.join(', ');
     }
   }
@@ -811,6 +866,50 @@ app.post('/api/log', (req, res) => {
   saveData(appData);
   syncToHomeAssistant();
   res.status(201).json(createdLogs);
+});
+
+// API: Update Log Entry with Audit Trail & Notes
+app.post('/api/logs/update', (req, res) => {
+  const { id, task_name, points, created_at, member_name, note = "", edited_by = "Famiglia" } = req.body;
+  if (!id) return res.status(400).json({ error: "ID required" });
+
+  const log = (appData.logs || []).find(l => l.id === id);
+  if (!log) return res.status(404).json({ error: "Log not found" });
+
+  if (!log.edit_history) log.edit_history = [];
+
+  const changes = [];
+  if (task_name && task_name !== log.task_name) {
+    changes.push(`Attività: "${log.task_name}" ➔ "${task_name}"`);
+    log.task_name = task_name;
+  }
+  if (points !== undefined && parseInt(points) !== parseInt(log.points)) {
+    changes.push(`Punti: ${log.points}pt ➔ ${points}pt`);
+    log.points = parseInt(points) || 0;
+  }
+  if (created_at && created_at !== log.created_at) {
+    changes.push(`Data esecuzione aggiornata`);
+    log.created_at = new Date(created_at).toISOString();
+  }
+  if (member_name && member_name !== log.member_name) {
+    changes.push(`Esecutore: ${log.member_name} ➔ ${member_name}`);
+    log.member_name = member_name;
+    const mObj = Object.values(appData.members).find(m => m.name.toLowerCase() === member_name.toLowerCase());
+    if (mObj) log.member_id = mObj.id;
+  }
+
+  if (changes.length > 0 || note.trim()) {
+    log.edit_history.push({
+      edited_at: new Date().toISOString(),
+      edited_by: edited_by || "Famiglia",
+      note: note.trim() || "Modifica dati attività",
+      changes_summary: changes.join(', ') || "Aggiunta nota"
+    });
+  }
+
+  saveData(appData);
+  syncToHomeAssistant();
+  res.json({ status: "updated", log });
 });
 
 // API: Delete Log Entry (Undo)
@@ -898,6 +997,7 @@ app.post('/api/single_tasks/note', (req, res) => {
       task_created_at: nowIso,
       is_personal: true,
       points: 0,
+      edit_history: [],
       created_at: nowIso
     });
   }
@@ -907,18 +1007,22 @@ app.post('/api/single_tasks/note', (req, res) => {
   res.json({ status: "saved", task });
 });
 
-// API: Single Task Complete
+// API: Single Task Complete (with optional custom date and partial execution)
 app.post('/api/single_tasks/complete', (req, res) => {
-  const { id, completed_by } = req.body;
+  const { id, completed_by, execution_date, is_partial = false, partial_pct = 100, partial_note = "" } = req.body;
   const task = (appData.single_tasks || []).find(t => t.id === id && t.status === 'pending');
   if (task) {
     const nowIso = new Date().toISOString();
+    const effectiveExecDate = execution_date ? new Date(execution_date).toISOString() : nowIso;
     task.status = 'completed';
-    task.completed_at = nowIso;
+    task.completed_at = effectiveExecDate;
     task.completed_by = completed_by || 'Famiglia';
 
     const workerList = Array.isArray(completed_by) ? completed_by : [completed_by || 'Famiglia'];
-    const totalPts = task.points || 0;
+    let totalPts = task.points || 0;
+    if (is_partial) {
+      totalPts = Math.max(1, Math.round(totalPts * (parseInt(partial_pct) || 50) / 100));
+    }
     const dividedPts = totalPts > 0 ? Math.max(1, Math.round(totalPts / workerList.length)) : 0;
 
     workerList.forEach(wName => {
@@ -934,8 +1038,12 @@ app.post('/api/single_tasks/complete', (req, res) => {
           created_by: task.created_by || "Famiglia",
           task_created_at: task.created_at || nowIso,
           is_personal: totalPts === 0,
+          is_partial: !!is_partial,
+          partial_pct: is_partial ? (parseInt(partial_pct) || 50) : null,
+          partial_note: is_partial ? partial_note : null,
           points: dividedPts,
-          created_at: nowIso
+          edit_history: [],
+          created_at: effectiveExecDate
         });
       }
     });
@@ -970,6 +1078,7 @@ app.post('/api/single_tasks/delete', (req, res) => {
       task_created_at: task.created_at || nowIso,
       is_personal: true,
       points: 0,
+      edit_history: [],
       created_at: nowIso
     });
 
@@ -1052,22 +1161,43 @@ app.post('/api/spontaneous_tasks/delete', (req, res) => {
   res.json({ status: "deleted" });
 });
 
-// API: Save Routine Task (with Category & Priority)
+// API: Save Routine Task (with Days or Months frequency units)
 app.post('/api/routine_tasks', (req, res) => {
-  const { id, name, points = 20, frequency_days = 7, warning_days = 1, start_date, schedule_type = "from_last", icon = "mdi:calendar-sync", category = "Routine", priority = "medium", is_personal = false, assigned_member = "all" } = req.body;
+  const { 
+    id, 
+    name, 
+    points = 20, 
+    frequency_number, 
+    frequency_unit = "days", 
+    frequency_days, 
+    warning_days = 1, 
+    start_date, 
+    schedule_type = "from_last", 
+    icon = "mdi:calendar-sync", 
+    category = "Routine", 
+    priority = "medium", 
+    is_personal = false, 
+    assigned_member = "all" 
+  } = req.body;
+
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
 
   const trimmedName = name.trim();
   const tId = id || `r_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
   const idx = appData.routine_tasks.findIndex(t => t.id === tId || t.name.toLowerCase() === trimmedName.toLowerCase());
   
+  const freqNum = parseInt(frequency_number || frequency_days) || (frequency_unit === 'months' ? 1 : 7);
+  const approxDays = (frequency_unit === 'months') ? (freqNum * 30) : freqNum;
+
   const existingItem = idx >= 0 ? appData.routine_tasks[idx] : {};
   const item = {
     ...existingItem,
     id: tId,
     name: trimmedName,
     points: is_personal ? 0 : (parseInt(points) || 20),
-    frequency_days: parseInt(frequency_days) || 7,
+    frequency_number: freqNum,
+    frequency_unit: frequency_unit || "days",
+    frequency_days: approxDays,
     warning_days: parseInt(warning_days) || 1,
     start_date: start_date || existingItem.start_date || new Date().toISOString().split('T')[0],
     schedule_type: schedule_type || "from_last",
