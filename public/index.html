@@ -28,7 +28,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    * { -webkit-user-select: auto; user-select: auto; box-sizing: border-box; }
     body { font-family: 'Plus Jakarta Sans', sans-serif; transition: background-color 0.2s ease, color 0.2s ease; }
     .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -37,9 +36,12 @@
     .podium-step-1 { height: 110px; background: linear-gradient(180deg, #f59e0b, #d97706); }
     .podium-step-2 { height: 85px; background: linear-gradient(180deg, #94a3b8, #64748b); }
     .podium-step-3 { height: 65px; background: linear-gradient(180deg, #b45309, #78350f); }
-    input, textarea, select { cursor: text !important; caret-color: #6366f1 !important; }
-    .dark input, .dark textarea, .dark select { background-color: #1e293b !important; color: #f8fafc !important; border-color: #334155 !important; }
+    
+    /* Input & mouse cursor: high contrast standard */
+    input, textarea, select { color: #0f172a !important; caret-color: #0f172a !important; }
+    .dark input, .dark textarea, .dark select { background-color: #1e293b !important; color: #f8fafc !important; caret-color: #f8fafc !important; border-color: #334155 !important; }
     select, button, .clickable, label { cursor: pointer !important; }
+
     @keyframes dice-spin { 0% { transform: rotate(0deg) scale(1); } 25% { transform: rotate(90deg) scale(1.15); } 50% { transform: rotate(180deg) scale(0.9); } 75% { transform: rotate(270deg) scale(1.15); } 100% { transform: rotate(360deg) scale(1); } }
     .animate-dice { animation: dice-spin 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
   </style>
@@ -47,7 +49,7 @@
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen pb-16">
 
   <!-- TOAST NOTIFICATION -->
-  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 dark:bg-indigo-600 text-white text-xs font-extrabold px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 border border-slate-700">
+  <div id="toast" class="fixed bottom-5 right-5 z-[999] transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 dark:bg-indigo-600 text-white text-xs font-extrabold px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2 border border-slate-700">
     <span id="toast-icon">✅</span>
     <span id="toast-msg">Operazione completata</span>
   </div>
@@ -62,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.4</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.4.1</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -151,7 +153,7 @@
         <div id="home-due-routines-list" class="space-y-2.5 max-h-[380px] overflow-y-auto custom-scrollbar"></div>
       </div>
 
-      <!-- WIDGET B: TASK SINGOLI -->
+      <!-- WIDGET B: TASK SINGOLI (INTERAMENTE CLICCABILI) -->
       <div id="widget-pending-tasks-container" class="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-wrap gap-2">
           <h3 class="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
@@ -271,8 +273,8 @@
     </div>
   </main>
 
-  <!-- ==================== MODAL: ATTIVITÀ & STORICO DEL SINGOLO MEMBRO ==================== -->
-  <div id="modal-member-history" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <!-- ==================== MODAL: ATTIVITÀ & STORICO DEL SINGOLO MEMBRO (Z-70) ==================== -->
+  <div id="modal-member-history" class="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <div class="flex items-center gap-3">
@@ -297,12 +299,12 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: EDIT LOG ENTRY CON AUDIT TRAIL & NOTE ==================== -->
-  <div id="modal-edit-log" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col">
+  <!-- ==================== MODAL: EDIT LOG ENTRY (IN PRIMO PIANO Z-[80]) ==================== -->
+  <div id="modal-edit-log" class="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full p-6 sm:p-7 space-y-5 shadow-2xl border-2 border-indigo-500/30 max-h-[90vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <div>
-          <div class="text-[11px] font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Modifica Storico & Tracciamento</div>
+          <div class="text-[11px] font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Modifica & Tracciamento Audit</div>
           <h3 class="font-extrabold text-lg text-slate-900 dark:text-white">Modifica Attività Registrata</h3>
         </div>
         <button onclick="closeEditLogModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
@@ -337,12 +339,6 @@
           <input id="edit-log-note" type="text" required placeholder="Es. Corretto punteggio errato, spostato orario corretto..." class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-xl text-xs font-medium">
         </div>
 
-        <!-- Audit History Preview -->
-        <div id="edit-log-audit-trail-container" class="space-y-1.5 hidden">
-          <div class="text-[11px] font-extrabold text-slate-400 uppercase">Registro Modifiche Precedenti:</div>
-          <div id="edit-log-audit-trail" class="space-y-1 max-h-32 overflow-y-auto custom-scrollbar text-[11px]"></div>
-        </div>
-
         <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
           <button type="button" onclick="closeEditLogModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 font-bold text-xs rounded-xl">Annulla</button>
           <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow">Salva Modifiche</button>
@@ -351,8 +347,92 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: WHO COMPLETED THE TASK (CON SPLIT / ESECUZIONE PARZIALE E DATA MODIFICABILE) ==================== -->
-  <div id="modal-select-performer" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <!-- ==================== MODAL: TASK NOTES, RESCHEDULING & SPLIT TASK ==================== -->
+  <div id="modal-task-notes" class="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div>
+          <div class="text-[11px] font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Gestione & Dettagli Task</div>
+          <h3 id="modal-notes-task-title" class="font-extrabold text-lg text-slate-900 dark:text-white truncate">Nome Task</h3>
+        </div>
+        <button onclick="closeTaskNotesModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+      <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
+        
+        <!-- Info & Reschedule -->
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center justify-between"><span>Assegnato a: <b id="modal-notes-assigned" class="text-slate-800 dark:text-slate-200">-</b></span><span>Inserito: <b id="modal-notes-created" class="text-slate-800 dark:text-slate-200">-</b></span></div>
+          <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700"><label class="block text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase mb-1">📅 Sposta / Modifica Data Scadenza:</label><input id="modal-notes-due-date" type="date" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200"></div>
+        </div>
+
+        <!-- ✂️ SPLIT TASK SECTION (Esegui parte e lascia il resto in sospeso con nuovo nome) -->
+        <div class="bg-indigo-50/80 dark:bg-indigo-950/40 p-4 rounded-2xl border border-indigo-200 dark:border-indigo-800 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5">
+              <span>✂️</span> <span>Splitta Task (Fai una parte e rinomina il rimanente)</span>
+            </span>
+            <button type="button" onclick="toggleTaskSplitSection()" id="btn-toggle-task-split" class="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline">Apri Split ▼</button>
+          </div>
+
+          <div id="task-split-form-container" class="hidden pt-3 border-t border-indigo-200/70 dark:border-indigo-800/70 space-y-3">
+            <div class="text-[11px] text-slate-600 dark:text-slate-300">
+              Dichiara completata una porzione dell'attività e assegna un nuovo nome alla parte che resta da fare!
+            </div>
+            
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">1. Cosa hai completato adesso?</label>
+              <input id="split-completed-title" type="text" placeholder="Es. Spazzare (cucina)" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">Punti parte fatta</label>
+                <input id="split-completed-points" type="number" min="0" value="5" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">Completato da</label>
+                <select id="split-completed-by" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></select>
+              </div>
+            </div>
+
+            <div class="space-y-1 pt-1">
+              <label class="block text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">2. Cosa rimane da fare? (Nuovo nome task)</label>
+              <input id="split-remaining-title" type="text" placeholder="Es. Spazzare (sala)" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
+            </div>
+
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">Punti parte rimanente</label>
+              <input id="split-remaining-points" type="number" min="0" value="5" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
+            </div>
+
+            <button type="button" onclick="submitTaskSplit()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
+              Conferma Split (Completa Parte & Rinomina Rimanente)
+            </button>
+          </div>
+        </div>
+
+        <!-- Notes History -->
+        <div class="space-y-2"><div class="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase">💬 Cronologia Note e Commenti:</div><div id="modal-notes-history-list" class="space-y-2 max-h-36 overflow-y-auto custom-scrollbar"></div></div>
+        
+        <!-- Add New Note -->
+        <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+          <label class="block text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase">Aggiungi una nuova nota:</label>
+          <textarea id="modal-new-note-text" rows="2" placeholder="Es. Lo farò domani dopo lavoro..." class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-medium"></textarea>
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 text-xs"><span class="font-bold text-slate-500">Autore:</span><select id="modal-note-author" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1 text-xs font-bold"></select></div>
+            <button onclick="saveTaskNoteAndDate()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">Salva Note & Data</button>
+          </div>
+        </div>
+        
+        <div class="pt-3 border-t border-rose-100 dark:border-rose-950 flex justify-end">
+          <button onclick="deleteSingleTaskWithConfirmation()" class="px-4 py-2 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-extrabold text-xs rounded-xl border border-rose-200 dark:border-rose-800 transition flex items-center gap-1.5"><i class="mdi mdi-trash-can-outline"></i> <span>Elimina Definitivamente Task</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: WHO COMPLETED THE TASK ==================== -->
+  <div id="modal-select-performer" class="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <div>
@@ -368,30 +448,6 @@
         <div class="bg-slate-50 dark:bg-slate-800/80 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">📅 Data & Ora di Esecuzione (Default: Adesso):</label>
           <input id="performer-exec-datetime" type="datetime-local" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200">
-        </div>
-
-        <!-- SPLIT ATTIVITÀ / ESECUZIONE PARZIALE (COLLAPSED BY DEFAULT) -->
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-extrabold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <span>✂️</span> <span>Esecuzione Parziale / Split Attività?</span>
-            </span>
-            <input id="performer-split-toggle" type="checkbox" onchange="toggleSplitSection(this.checked)" class="w-4 h-4 text-indigo-600 rounded">
-          </div>
-
-          <div id="performer-split-box" class="hidden pt-2 border-t border-slate-200 dark:border-slate-700 space-y-2">
-            <div class="text-[11px] text-slate-500 dark:text-slate-400">Seleziona percentuale o punti personalizzati:</div>
-            <div class="flex items-center gap-1.5">
-              <button type="button" onclick="setSplitPercentage(25)" class="px-2.5 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold hover:bg-indigo-50">25%</button>
-              <button type="button" onclick="setSplitPercentage(50)" class="px-2.5 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold hover:bg-indigo-50">50%</button>
-              <button type="button" onclick="setSplitPercentage(75)" class="px-2.5 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold hover:bg-indigo-50">75%</button>
-              <div class="flex items-center gap-1 flex-1 ml-1">
-                <input id="performer-split-pts" type="number" min="1" placeholder="Pt" class="w-full px-2.5 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-extrabold text-center">
-                <span class="text-xs text-slate-400">pt</span>
-              </div>
-            </div>
-            <input id="performer-split-note" type="text" placeholder="Nota split (es. Fatta solo metà, solo primo carico)..." class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs">
-          </div>
         </div>
 
         <div class="space-y-2">
@@ -546,37 +602,10 @@
         <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
       </div>
       <div class="flex items-center justify-between flex-wrap gap-3 bg-slate-50 dark:bg-slate-800/80 p-3 rounded-2xl border border-slate-200 dark:border-slate-700">
-        <input id="history-search" type="text" oninput="renderHistory()" placeholder="🔍 Cerca attività, note, cancellazioni..." class="px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 font-medium flex-1">
+        <input id="history-search" type="text" oninput="renderHistory()" placeholder="🔍 Cerca attività, note, modifiche..." class="px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 font-medium flex-1">
         <select id="history-member-filter" onchange="renderHistory()" class="px-3.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"><option value="all">Tutti gli esecutori</option></select>
       </div>
       <div id="history-timeline" class="space-y-3 overflow-y-auto custom-scrollbar flex-1 pr-1"></div>
-    </div>
-  </div>
-
-  <div id="modal-task-notes" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col">
-      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-        <div><div class="text-[11px] font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Dettagli & Note Task</div><h3 id="modal-notes-task-title" class="font-extrabold text-lg text-slate-900 dark:text-white truncate">Nome Task</h3></div>
-        <button onclick="closeTaskNotesModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
-      </div>
-      <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
-          <div class="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center justify-between"><span>Assegnato a: <b id="modal-notes-assigned" class="text-slate-800 dark:text-slate-200">-</b></span><span>Inserito: <b id="modal-notes-created" class="text-slate-800 dark:text-slate-200">-</b></span></div>
-          <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700"><label class="block text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase mb-1">📅 Sposta / Modifica Data Scadenza:</label><input id="modal-notes-due-date" type="date" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200"></div>
-        </div>
-        <div class="space-y-2"><div class="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase">💬 Cronologia Note e Commenti:</div><div id="modal-notes-history-list" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar"></div></div>
-        <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
-          <label class="block text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase">Aggiungi una nuova nota:</label>
-          <textarea id="modal-new-note-text" rows="2" placeholder="Es. Lo farò domani dopo lavoro..." class="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs sm:text-sm font-medium"></textarea>
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2 text-xs"><span class="font-bold text-slate-500">Autore:</span><select id="modal-note-author" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1 text-xs font-bold"></select></div>
-            <button onclick="saveTaskNoteAndDate()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">Salva Note & Data</button>
-          </div>
-        </div>
-        <div class="pt-3 border-t border-rose-100 dark:border-rose-950 flex justify-end">
-          <button onclick="deleteSingleTaskWithConfirmation()" class="px-4 py-2 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-extrabold text-xs rounded-xl border border-rose-200 dark:border-rose-800 transition flex items-center gap-1.5"><i class="mdi mdi-trash-can-outline"></i> <span>Elimina Definitivamente Task</span></button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -605,7 +634,7 @@
     </div>
   </div>
 
-  <div id="modal-emoji-picker" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div id="modal-emoji-picker" class="fixed inset-0 z-[75] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full p-6 sm:p-7 space-y-4 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[88vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 flex-wrap gap-2">
         <div class="flex items-center gap-3">
@@ -675,7 +704,7 @@
     </div>
   </div>
 
-  <!-- MODAL: ADD / EDIT ROUTINE (CON CADENZA IN GG O MESI) -->
+  <!-- MODAL: ADD / EDIT ROUTINE -->
   <div id="modal-routine" class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-4 shadow-2xl border border-slate-200 dark:border-slate-800">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3"><h3 id="modal-routine-title" class="font-extrabold text-lg text-slate-900 dark:text-white">Routine / Promemoria Schedulato</h3><button onclick="closeRoutineModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">✕</button></div>
@@ -709,7 +738,7 @@
           <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Assegnato a</label><select id="rout-edit-member" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"><option value="all">👥 Famiglia</option></select></div>
         </div>
 
-        <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Priorità</label><select id="rout-edit-priority" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"><option value="medium">Media (Default)</option><option value="high">⭐ Alta</option><option value="urgent">🔥 Urgente</option><option value="low">🟢 Bassa</option></select></div>
+        <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Priorità</label><select id="rout-edit-priority" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"><option value="medium">Media (Default)</option><option value="high">⭐ Alta</option><option value="urgent">🔥 Urgente</option><option value="low">🟢 Bassa</option></select></div>
         <div class="pt-1"><div class="flex items-center gap-2"><input id="rout-edit-personal" type="checkbox" onchange="toggleRoutPersonal(this.checked)" class="w-4 h-4 text-indigo-600 rounded"><label for="rout-edit-personal" class="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">Promemoria Personale (0 pt, escluso da classifiche)</label></div></div>
         <div class="flex justify-end gap-2 pt-2"><button type="button" onclick="closeRoutineModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 font-bold text-xs rounded-xl">Annulla</button><button type="submit" class="px-5 py-2 bg-indigo-600 text-white font-extrabold text-xs rounded-xl shadow">Salva Routine</button></div>
       </form>
@@ -958,13 +987,13 @@
         memberLogs.forEach(l => {
           const dt = formatDateTime(l.created_at);
           const ptsBadge = l.is_personal ? '<span class="text-[11px] font-bold text-slate-400">0 pt</span>' : `<span class="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm">+${l.points} pt</span>`;
-          const partialTag = l.is_partial ? `<span class="bg-amber-100 text-amber-900 text-[10px] font-extrabold px-1.5 py-0.2 rounded">✂️ Parziale (${l.partial_pct}%)</span>` : '';
-          const editBadge = (l.edit_history && l.edit_history.length > 0) ? `<span class="bg-purple-100 text-purple-800 text-[10px] font-bold px-1.5 py-0.2 rounded">✏️ Modificato</span>` : '';
+          const partialTag = l.is_partial ? `<span class="bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 text-[10px] font-extrabold px-1.5 py-0.2 rounded">✂️ Parziale</span>` : '';
+          const editBadge = (l.edit_history && l.edit_history.length > 0) ? `<span class="bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 text-[10px] font-bold px-1.5 py-0.2 rounded">✏️ Modificato</span>` : '';
 
           listEl.innerHTML += `
             <div class="p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-center justify-between gap-3 text-xs">
               <div>
-                <div class="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <div class="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
                   <span>${l.task_name}</span>
                   ${partialTag}
                   ${editBadge}
@@ -982,7 +1011,7 @@
     }
     function closeMemberHistoryModal() { document.getElementById('modal-member-history').classList.add('hidden'); }
 
-    // ==================== EDIT LOG ENTRY CON AUDIT TRAIL ====================
+    // ==================== EDIT LOG ENTRY CON FOREGROUND Z-INDEX & AUDIT TRAIL ====================
     function openEditLogModal(logId) {
       const log = (appData?.logs || []).find(l => l.id === logId);
       if (!log) return;
@@ -1001,23 +1030,6 @@
       Object.values(appData?.members || {}).forEach(m => {
         memSelect.innerHTML += `<option value="${m.name}" ${m.name === log.member_name ? 'selected' : ''}>${m.name}</option>`;
       });
-
-      const auditContainer = document.getElementById('edit-log-audit-trail-container');
-      const auditTrail = document.getElementById('edit-log-audit-trail');
-      if (log.edit_history && log.edit_history.length > 0) {
-        auditContainer.classList.remove('hidden');
-        auditTrail.innerHTML = '';
-        log.edit_history.forEach(h => {
-          auditTrail.innerHTML += `
-            <div class="p-2 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-              <div><b>${h.edited_by || 'Admin'}</b> (${formatDateTime(h.edited_at)}): <i>"${h.note}"</i></div>
-              <div class="text-[10px] text-slate-400">${h.changes_summary || ''}</div>
-            </div>
-          `;
-        });
-      } else {
-        auditContainer.classList.add('hidden');
-      }
 
       document.getElementById('modal-edit-log').classList.remove('hidden');
     }
@@ -1150,12 +1162,22 @@
       return '';
     }
 
-    // ==================== RENDER MEMBERS BAR (CLICKABLE) ====================
+    function getTaskTypeBadge(taskType) {
+      if (taskType === 'routine') return `<span class="bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 font-extrabold text-[10px] px-2 py-0.5 rounded-md">🔄 Routine</span>`;
+      if (taskType === 'spontaneous') return `<span class="bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 font-extrabold text-[10px] px-2 py-0.5 rounded-md">⚡ Spontanea</span>`;
+      if (taskType === 'single_task') return `<span class="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-extrabold text-[10px] px-2 py-0.5 rounded-md">📋 Task Singolo</span>`;
+      if (taskType === 'task_note') return `<span class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[10px] px-2 py-0.5 rounded-md">📝 Nota</span>`;
+      if (taskType === 'task_deleted') return `<span class="bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 font-bold text-[10px] px-2 py-0.5 rounded-md">🗑️ Eliminato</span>`;
+      return `<span class="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-[10px] px-2 py-0.5 rounded-md">Attività</span>`;
+    }
+
+    // ==================== RENDER MEMBERS BAR ====================
     function renderMembersBar() {
       const bar = document.getElementById('members-bar');
       const histSelect = document.getElementById('history-member-filter');
       const routMemberSelect = document.getElementById('rout-edit-member');
       const noteAuthorSelect = document.getElementById('modal-note-author');
+      const splitMemberSelect = document.getElementById('split-completed-by');
       const filterSingleMember = document.getElementById('filter-single-member');
       const quickCatSelect = document.getElementById('quick-task-category');
       const spontCatSelect = document.getElementById('spont-edit-category');
@@ -1176,6 +1198,7 @@
       if (histSelect) histSelect.innerHTML = '<option value="all">Tutti gli esecutori</option>';
       if (routMemberSelect) routMemberSelect.innerHTML = '<option value="all">👥 Tutta la Famiglia</option>';
       if (noteAuthorSelect) noteAuthorSelect.innerHTML = '';
+      if (splitMemberSelect) splitMemberSelect.innerHTML = '';
       if (filterSingleMember) filterSingleMember.innerHTML = '<option value="all">Tutti gli assegnatari</option>';
 
       const cats = appData.categories || [];
@@ -1224,6 +1247,7 @@
         if (histSelect) histSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
         if (routMemberSelect) routMemberSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
         if (noteAuthorSelect) noteAuthorSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
+        if (splitMemberSelect) splitMemberSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
         if (filterSingleMember) filterSingleMember.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
       });
 
@@ -1312,7 +1336,7 @@
         }
       }
 
-      // Pending Single Tasks
+      // Pending Single Tasks (INTERAMENTE CLICCABILI SENZA IL PULSANTE NOTE DUPLICATO)
       const pendingBox = document.getElementById('home-pending-tasks-list');
       const pendingBadge = document.getElementById('pending-tasks-count-badge');
       const singleSearch = (document.getElementById('filter-single-search')?.value || '').toLowerCase().trim();
@@ -1340,25 +1364,24 @@
             const assignedText = Array.isArray(t.assigned_to) ? (t.assigned_to.includes('all') ? 'Famiglia' : t.assigned_to.join(', ')) : t.assigned_to;
             const ptsText = t.points > 0 ? `(+${t.points} pt)` : '';
             const statusIcon = t.is_future ? '📅' : '⚠️';
-            let dateBadge = t.is_future ? `<span class="text-sky-700 dark:text-sky-400 font-bold">Scade tra ${t.days_until}gg (${t.due_date})</span>` : (t.due_date && t.due_date === new Date().toISOString().split('T')[0] ? `<span class="text-amber-700 font-bold">Scade Oggi</span>` : `<span class="text-rose-700 font-bold">Inserito ${t.elapsed_days === 0 ? 'Oggi' : t.elapsed_days + 'gg fa'}</span>`);
+            let dateBadge = t.is_future ? `<span class="text-sky-700 dark:text-sky-400 font-bold">Scade tra ${t.days_until}gg (${t.due_date})</span>` : (t.due_date && t.due_date === new Date().toISOString().split('T')[0] ? `<span class="text-amber-700 dark:text-amber-400 font-bold">Scade Oggi</span>` : `<span class="text-rose-700 dark:text-rose-400 font-bold">Inserito ${t.elapsed_days === 0 ? 'Oggi' : t.elapsed_days + 'gg fa'}</span>`);
 
             pendingBox.innerHTML += `
-              <div class="p-3.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl flex items-center justify-between gap-3 text-xs hover:border-indigo-300 dark:hover:border-indigo-500 transition">
-                <div onclick="openTaskNotesModal('${t.id}')" class="flex items-center gap-3 overflow-hidden cursor-pointer flex-1">
-                  <span class="text-2xl shrink-0">${statusIcon}</span>
+              <div onclick="openTaskNotesModal('${t.id}')" title="Clicca per visualizzare note, modificare o splittare questo task" class="p-3.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl flex items-center justify-between gap-3 text-xs hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xs transition cursor-pointer group">
+                <div class="flex items-center gap-3 overflow-hidden flex-1">
+                  <span class="text-2xl shrink-0 group-hover:scale-110 transition">${statusIcon}</span>
                   <div class="truncate">
                     <div class="font-extrabold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
                       <span>${t.title}</span>
-                      <span class="text-indigo-600 dark:text-indigo-400">${ptsText}</span>
+                      <span class="text-indigo-600 dark:text-indigo-400 font-bold">${ptsText}</span>
                       ${t.category ? `<span class="text-[10px] font-semibold text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1 rounded">${t.category}</span>` : ''}
                       ${getPriorityBadge(t.priority)}
                     </div>
                     <div class="text-slate-500 dark:text-slate-400 text-[11px] font-medium mt-0.5 truncate">Assegnato: <b>${assignedText}</b> • ${dateBadge}</div>
                   </div>
                 </div>
-                <div class="flex items-center gap-2 shrink-0">
-                  <button onclick="openTaskNotesModal('${t.id}')" class="px-2.5 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 rounded-xl text-slate-700 dark:text-slate-200 font-bold text-xs transition">📝 Note</button>
-                  <button onclick="completeSingleTask('${t.id}')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow">✓ Fatto</button>
+                <div class="flex items-center gap-2 shrink-0" onclick="event.stopPropagation()">
+                  <button onclick="completeSingleTask('${t.id}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition">✓ Fatto</button>
                 </div>
               </div>
             `;
@@ -1471,7 +1494,7 @@
       });
     }
 
-    // ==================== TASK PERFORMER SELECTION POPUP WITH CUSTOM DATE & SPLIT ====================
+    // ==================== TASK PERFORMER SELECTION POPUP ====================
     function promptPerformerSelection(taskName, points, taskType = 'spontaneous', isPersonal = false, category = "Generale") {
       pendingExecutionTask = { taskName, points, taskType, isPersonal, category };
 
@@ -1488,12 +1511,6 @@
       const now = new Date();
       const localDatetime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
       document.getElementById('performer-exec-datetime').value = localDatetime;
-
-      // Reset split controls
-      document.getElementById('performer-split-toggle').checked = false;
-      document.getElementById('performer-split-box').classList.add('hidden');
-      document.getElementById('performer-split-pts').value = Math.max(1, Math.round(points / 2));
-      document.getElementById('performer-split-note').value = '';
 
       const members = Object.values(appData?.members || {});
       if (singleBox) {
@@ -1528,17 +1545,6 @@
       modal.classList.remove('hidden');
     }
 
-    function toggleSplitSection(checked) {
-      document.getElementById('performer-split-box').classList.toggle('hidden', !checked);
-    }
-
-    function setSplitPercentage(pct) {
-      if (!pendingExecutionTask) return;
-      const basePts = pendingExecutionTask.points || 10;
-      const pts = Math.max(1, Math.round(basePts * pct / 100));
-      document.getElementById('performer-split-pts').value = pts;
-    }
-
     function selectAllMultiCheckboxes(check) {
       document.querySelectorAll('.multi-author-chk').forEach(c => c.checked = check);
     }
@@ -1558,11 +1564,7 @@
     async function executeTaskWithSingleAuthor(memberName) {
       if (!pendingExecutionTask) return;
       const { taskName, points, taskType, isPersonal, category } = pendingExecutionTask;
-      
       const customDate = document.getElementById('performer-exec-datetime').value;
-      const isSplit = document.getElementById('performer-split-toggle').checked;
-      const splitPts = isSplit ? (parseInt(document.getElementById('performer-split-pts').value) || points) : points;
-      const splitNote = isSplit ? document.getElementById('performer-split-note').value.trim() : '';
 
       closePerformerModal();
       closeSpontaneousCatalogModal();
@@ -1574,18 +1576,15 @@
           body: JSON.stringify({ 
             member: memberName, 
             task_name: taskName, 
-            points: splitPts, 
+            points: points, 
             task_type: taskType, 
             category: category || "Generale",
             is_personal: isPersonal,
             created_by: "Famiglia",
-            execution_date: customDate ? new Date(customDate).toISOString() : new Date().toISOString(),
-            is_partial: isSplit,
-            partial_pct: isSplit ? Math.round((splitPts / (points || 1)) * 100) : 100,
-            partial_note: splitNote
+            execution_date: customDate ? new Date(customDate).toISOString() : new Date().toISOString()
           })
         });
-        showToast(isPersonal ? `Promemoria registrato per ${memberName}!` : `+${splitPts} pt assegnati a ${memberName}!`);
+        showToast(isPersonal ? `Promemoria registrato per ${memberName}!` : `+${points} pt assegnati a ${memberName}!`);
         await loadStats();
       } catch (e) {}
     }
@@ -1598,9 +1597,6 @@
 
       const { taskName, points, taskType, isPersonal, category } = pendingExecutionTask;
       const customDate = document.getElementById('performer-exec-datetime').value;
-      const isSplit = document.getElementById('performer-split-toggle').checked;
-      const splitPts = isSplit ? (parseInt(document.getElementById('performer-split-pts').value) || points) : points;
-      const splitNote = isSplit ? document.getElementById('performer-split-note').value.trim() : '';
 
       closePerformerModal();
       closeSpontaneousCatalogModal();
@@ -1612,18 +1608,15 @@
           body: JSON.stringify({ 
             members: selected, 
             task_name: taskName, 
-            points: splitPts, 
+            points: points, 
             task_type: taskType, 
             category: category || "Generale",
             is_personal: isPersonal,
             created_by: "Famiglia",
-            execution_date: customDate ? new Date(customDate).toISOString() : new Date().toISOString(),
-            is_partial: isSplit,
-            partial_pct: isSplit ? Math.round((splitPts / (points || 1)) * 100) : 100,
-            partial_note: splitNote
+            execution_date: customDate ? new Date(customDate).toISOString() : new Date().toISOString()
           })
         });
-        const dividedPts = isPersonal ? 0 : Math.max(1, Math.round(splitPts / selected.length));
+        const dividedPts = isPersonal ? 0 : Math.max(1, Math.round(points / selected.length));
         showToast(`+${dividedPts} pt a testa assegnati a ${selected.join(' e ')}!`);
         await loadStats();
       } catch (e) {}
@@ -1707,7 +1700,7 @@
       confirmTaskAssignment(selected);
     }
 
-    // ==================== TASK NOTES, RESCHEDULING & DELETE ====================
+    // ==================== TASK NOTES, RESCHEDULING & SPLIT TASK ====================
     function openTaskNotesModal(taskId) {
       activeEditingTaskId = taskId;
       const task = (appData?.pending_single_tasks || []).find(t => t.id === taskId);
@@ -1718,6 +1711,23 @@
       document.getElementById('modal-notes-created').textContent = formatDateTime(task.created_at);
       document.getElementById('modal-notes-due-date').value = task.due_date || '';
       document.getElementById('modal-new-note-text').value = '';
+
+      // Initialize Split Section
+      document.getElementById('task-split-form-container').classList.add('hidden');
+      document.getElementById('btn-toggle-task-split').textContent = 'Apri Split ▼';
+      document.getElementById('split-completed-title').value = `${task.title} (completata parte)`;
+      document.getElementById('split-remaining-title').value = `${task.title} (rimanente)`;
+      const halfPts = Math.max(1, Math.round((task.points || 10) / 2));
+      document.getElementById('split-completed-points').value = halfPts;
+      document.getElementById('split-remaining-points').value = halfPts;
+
+      const splitMemberSelect = document.getElementById('split-completed-by');
+      if (splitMemberSelect) {
+        splitMemberSelect.innerHTML = '';
+        Object.values(appData?.members || {}).forEach(m => {
+          splitMemberSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
+        });
+      }
 
       const notesList = document.getElementById('modal-notes-history-list');
       if (notesList) {
@@ -1739,6 +1749,46 @@
       document.getElementById('modal-task-notes').classList.remove('hidden');
     }
     function closeTaskNotesModal() { document.getElementById('modal-task-notes').classList.add('hidden'); activeEditingTaskId = null; }
+
+    function toggleTaskSplitSection() {
+      const container = document.getElementById('task-split-form-container');
+      const btn = document.getElementById('btn-toggle-task-split');
+      const isHidden = container.classList.toggle('hidden');
+      btn.textContent = isHidden ? 'Apri Split ▼' : 'Chiudi ▲';
+    }
+
+    async function submitTaskSplit() {
+      if (!activeEditingTaskId) return;
+      const completedTitle = document.getElementById('split-completed-title').value.trim();
+      const completedPoints = parseInt(document.getElementById('split-completed-points').value) || 0;
+      const completedBy = document.getElementById('split-completed-by').value;
+      const remainingTitle = document.getElementById('split-remaining-title').value.trim();
+      const remainingPoints = parseInt(document.getElementById('split-remaining-points').value) || 0;
+
+      if (!completedTitle || !remainingTitle) {
+        showToast("Inserisci i nomi per la parte completata e rimanente!", "⚠️");
+        return;
+      }
+
+      try {
+        await fetch(`${apiBase}/single_tasks/split`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: activeEditingTaskId,
+            completed_title: completedTitle,
+            completed_points: completedPoints,
+            completed_by: completedBy,
+            remaining_title: remainingTitle,
+            remaining_points: remainingPoints,
+            author: completedBy
+          })
+        });
+        closeTaskNotesModal();
+        showToast(`Task splittato: registrato "${completedTitle}"!`, "✂️");
+        await loadStats();
+      } catch (e) {}
+    }
 
     async function saveTaskNoteAndDate() {
       if (!activeEditingTaskId) return;
@@ -1910,7 +1960,7 @@
       }
     }
 
-    // ==================== CHRONOLOGICAL HISTORY CON TASTO MODIFICA & AUDIT ====================
+    // ==================== CHRONOLOGICAL HISTORY CON BADGE TIPO, MODIFICHE IN LINEA & AUDIT ====================
     function renderHistory() {
       const timeline = document.getElementById('history-timeline');
       const search = (document.getElementById('history-search')?.value || '').toLowerCase();
@@ -1933,52 +1983,75 @@
       filtered.forEach(l => {
         const executedAtFormatted = formatDateTime(l.created_at);
         const ptsBadge = (l.is_personal || l.points === 0) ? '<span class="text-[11px] font-bold text-slate-400">0 pt</span>' : `<span class="font-extrabold text-indigo-600 dark:text-indigo-400 text-base">+${l.points} pt</span>`;
-        const partialBadge = l.is_partial ? `<span class="bg-amber-100 text-amber-900 text-[10px] font-extrabold px-1.5 py-0.2 rounded">✂️ Parziale (${l.partial_pct}%)</span>` : '';
-        const editBadge = (l.edit_history && l.edit_history.length > 0) ? `<span class="bg-purple-100 text-purple-800 text-[10px] font-bold px-1.5 py-0.2 rounded" title="${l.edit_history[l.edit_history.length-1].note}">✏️ Modificato</span>` : '';
+        const partialBadge = l.is_partial ? `<span class="bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 text-[10px] font-extrabold px-1.5 py-0.2 rounded">✂️ Parziale</span>` : '';
+        const editBadge = (l.edit_history && l.edit_history.length > 0) ? `<span class="bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 text-[10px] font-bold px-1.5 py-0.2 rounded">✏️ Modificato</span>` : '';
+        const typeBadge = getTaskTypeBadge(l.task_type);
+
+        // Audit Trail Inline Display
+        let auditTrailHtml = '';
+        if (l.edit_history && l.edit_history.length > 0) {
+          auditTrailHtml = `
+            <div class="mt-2.5 pt-2 border-t border-purple-200/50 dark:border-purple-900/50 space-y-1.5">
+              <div class="text-[10px] font-extrabold uppercase text-purple-700 dark:text-purple-300 flex items-center gap-1">
+                <i class="mdi mdi-history"></i> <span>Storico Modifiche Registrate:</span>
+              </div>
+              ${l.edit_history.map(h => `
+                <div class="text-[11px] text-slate-700 dark:text-slate-300 bg-purple-50 dark:bg-purple-950/40 p-2 rounded-xl border border-purple-100 dark:border-purple-900/50 space-y-0.5">
+                  <div><b>${h.edited_by || 'Famiglia'}</b> (${formatDateTime(h.edited_at)}): <i>"${h.note}"</i></div>
+                  <div class="text-[10px] text-purple-600 dark:text-purple-400 font-medium">${h.changes_summary || ''}</div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
 
         timeline.innerHTML += `
-          <div class="p-4 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
-            <div class="flex items-start gap-3.5">
-              <span class="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-xl shrink-0 mt-0.5"><i class="mdi mdi-check"></i></span>
-              <div class="space-y-1">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">${l.task_name}</span>
-                  ${partialBadge}
-                  ${editBadge}
+          <div class="p-4 bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 rounded-2xl flex flex-col justify-between gap-3 text-xs shadow-2xs">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div class="flex items-start gap-3.5">
+                <span class="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-xl shrink-0 mt-0.5"><i class="mdi mdi-check"></i></span>
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-extrabold text-slate-900 dark:text-white text-sm sm:text-base">${l.task_name}</span>
+                    ${typeBadge}
+                    ${partialBadge}
+                    ${editBadge}
+                  </div>
+                  <div class="text-slate-600 dark:text-slate-300 text-xs flex items-center gap-2 flex-wrap font-medium">
+                    <span>👤 Esecutore: <b class="text-slate-900 dark:text-white">${l.member_name}</b></span>
+                    <span>•</span>
+                    <span>🕒 Data: <b>${executedAtFormatted}</b></span>
+                    <span>•</span>
+                    <span>📁 <b>${l.category || 'Generale'}</b></span>
+                  </div>
+                  ${l.partial_note ? `<div class="text-xs text-amber-700 dark:text-amber-300 italic">Nota split: "${l.partial_note}"</div>` : ''}
                 </div>
-                <div class="text-slate-600 dark:text-slate-300 text-xs flex items-center gap-2 flex-wrap font-medium">
-                  <span>👤 Esecutore: <b class="text-slate-900 dark:text-white">${l.member_name}</b></span>
-                  <span>•</span>
-                  <span>🕒 Data: <b>${executedAtFormatted}</b></span>
-                  <span>•</span>
-                  <span>📁 <b>${l.category || 'Generale'}</b></span>
-                </div>
-                ${l.partial_note ? `<div class="text-xs text-amber-700 dark:text-amber-300 italic">Nota split: "${l.partial_note}"</div>` : ''}
+              </div>
+              <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 dark:border-slate-700">
+                <div>${ptsBadge}</div>
+                <button onclick="openEditLogModal('${l.id}')" title="Modifica attività & Note" class="text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/70 p-1.5 rounded-lg transition font-bold flex items-center gap-1">
+                  <i class="mdi mdi-pencil-outline text-base"></i> <span>Modifica</span>
+                </button>
+                <button onclick="deleteLogEntry('${l.id}')" title="Annulla registrazione (ripristina scadenza se routine)" class="text-rose-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition">
+                  <i class="mdi mdi-trash-can-outline text-base"></i>
+                </button>
               </div>
             </div>
-            <div class="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60 dark:border-slate-700">
-              <div>${ptsBadge}</div>
-              <button onclick="openEditLogModal('${l.id}')" title="Modifica attività & Note" class="text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/70 p-1.5 rounded-lg transition font-bold flex items-center gap-1">
-                <i class="mdi mdi-pencil-outline text-base"></i> <span>Modifica</span>
-              </button>
-              <button onclick="deleteLogEntry('${l.id}')" title="Annulla registrazione" class="text-rose-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition">
-                <i class="mdi mdi-trash-can-outline text-base"></i>
-              </button>
-            </div>
+            ${auditTrailHtml}
           </div>
         `;
       });
     }
 
     async function deleteLogEntry(logId) {
-      if (!confirm("Vuoi annullare e cancellare questa attività dallo storico?")) return;
+      if (!confirm("Vuoi annullare e cancellare questa attività dallo storico? Se è una routine, la sua scadenza tornerà a quella precedente.")) return;
       try {
         await fetch(`${apiBase}/logs/delete`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: logId })
         });
-        showToast("Attività annullata dallo storico", "🗑️");
+        showToast("Attività annullata e scadenza ripristinata!", "🗑️");
         loadStats();
       } catch (e) {}
     }
