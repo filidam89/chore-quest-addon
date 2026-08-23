@@ -1,5 +1,5 @@
 name: "ChoreQuest"
-version: "1.0.0"
+version: "2.5.0"
 slug: "chorequest"
 description: "Gamified family chore & routine management for Home Assistant. Routine Postpone & Rescheduling, Task Splitting with parent point accrual, MDI icon engine, Home Assistant sensor synchronization, and comprehensive audit trail."
 url: "https://github.com/filidam89/chore-quest-addon"
