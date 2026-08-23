@@ -471,7 +471,7 @@ function calculateStats() {
 
 // Comprehensive Home Assistant Sensors Synchronization via Supervisor API
 async function syncToHomeAssistant() {
-  const supervisorToken = process.env.SUPERVISOR_TOKEN;
+  const supervisorToken = process.env.SUPERIOR_TOKEN || process.env.SUPERVISOR_TOKEN;
   if (!supervisorToken) return;
 
   const haBase = "http://supervisor/core/api";
@@ -795,7 +795,7 @@ app.post('/api/categories/delete', (req, res) => {
   res.json({ status: "deleted" });
 });
 
-// API: Log Task (with support for custom execution date, partial split execution, and notes)
+// API: Log Task (with support for custom execution date and notes)
 app.post('/api/log', (req, res) => {
   const { 
     member, 
@@ -888,7 +888,7 @@ app.post('/api/logs/update', (req, res) => {
     log.points = parseInt(points) || 0;
   }
   if (created_at && created_at !== log.created_at) {
-    changes.push(`Data esecuzione aggiornata`);
+    changes.push(`Data esecuzione modificata`);
     log.created_at = new Date(created_at).toISOString();
   }
   if (member_name && member_name !== log.member_name) {
@@ -912,13 +912,32 @@ app.post('/api/logs/update', (req, res) => {
   res.json({ status: "updated", log });
 });
 
-// API: Delete Log Entry (Undo)
+// API: Delete Log Entry (Undo) & Restore Routine Previous Due Date
 app.post('/api/logs/delete', (req, res) => {
   const { id } = req.body;
   if (id) {
-    appData.logs = appData.logs.filter(l => l.id !== id);
-    saveData(appData);
-    syncToHomeAssistant();
+    const logToDelete = (appData.logs || []).find(l => l.id === id);
+    if (logToDelete) {
+      appData.logs = appData.logs.filter(l => l.id !== id);
+
+      if (logToDelete.task_type === 'routine') {
+        const rout = (appData.routine_tasks || []).find(r => r.name.toLowerCase() === logToDelete.task_name.toLowerCase() || r.id === logToDelete.task_name);
+        if (rout) {
+          // Look for previous completion of this routine in remaining logs
+          const prevLog = [...appData.logs].reverse().find(l => l.task_type === 'routine' && (l.task_name.toLowerCase() === rout.name.toLowerCase() || l.task_name === rout.id));
+          if (prevLog) {
+            rout.last_completed_at = prevLog.created_at;
+            rout.last_completed_by = prevLog.member_name;
+          } else {
+            rout.last_completed_at = null;
+            rout.last_completed_by = null;
+          }
+        }
+      }
+
+      saveData(appData);
+      syncToHomeAssistant();
+    }
   }
   res.json({ status: "deleted" });
 });
@@ -1007,9 +1026,73 @@ app.post('/api/single_tasks/note', (req, res) => {
   res.json({ status: "saved", task });
 });
 
-// API: Single Task Complete (with optional custom date and partial execution)
+// API: Single Task Split (Complete one part, keep the remaining in pending with a new name)
+app.post('/api/single_tasks/split', (req, res) => {
+  const { 
+    id, 
+    completed_title, 
+    completed_points = 0, 
+    completed_by = "Famiglia", 
+    remaining_title, 
+    remaining_points = 0,
+    author = "Famiglia"
+  } = req.body;
+
+  const task = (appData.single_tasks || []).find(t => t.id === id && t.status === 'pending');
+  if (!task) return res.status(404).json({ error: "Task non trovato" });
+
+  const nowIso = new Date().toISOString();
+  const workerList = Array.isArray(completed_by) ? completed_by : [completed_by || 'Famiglia'];
+  const ptsDone = parseInt(completed_points) || 0;
+  const dividedPts = ptsDone > 0 ? Math.max(1, Math.round(ptsDone / workerList.length)) : 0;
+
+  // 1. Log the completed part
+  workerList.forEach(wName => {
+    let memberObj = Object.values(appData.members).find(m => m.name.toLowerCase() === wName.toLowerCase());
+    if (!memberObj) {
+      memberObj = Object.values(appData.members)[0];
+    }
+    if (memberObj) {
+      appData.logs.push({
+        id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        member_id: memberObj.id,
+        member_name: memberObj.name,
+        task_name: completed_title || `${task.title} (completata parte)`,
+        task_type: 'single_task',
+        category: task.category || "Varie",
+        created_by: task.created_by || "Famiglia",
+        task_created_at: task.created_at || nowIso,
+        is_personal: ptsDone === 0,
+        is_partial: true,
+        partial_pct: null,
+        partial_note: `Splittato da: "${task.title}". Rimane in sospeso: "${remaining_title}"`,
+        points: dividedPts,
+        edit_history: [],
+        created_at: nowIso
+      });
+    }
+  });
+
+  // 2. Update remaining task in pending list
+  const oldTitle = task.title;
+  task.title = remaining_title || `${oldTitle} (rimanente)`;
+  task.points = parseInt(remaining_points) || 0;
+  if (!task.notes) task.notes = [];
+  task.notes.push({
+    id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 3)}`,
+    text: `✂️ Task splittato: "${completed_title}" completato da ${workerList.join(', ')} (+${ptsDone}pt). Rimane da fare: "${task.title}".`,
+    author: author || "Famiglia",
+    created_at: nowIso
+  });
+
+  saveData(appData);
+  syncToHomeAssistant();
+  res.json({ status: "split_success", task });
+});
+
+// API: Single Task Complete (with optional custom date)
 app.post('/api/single_tasks/complete', (req, res) => {
-  const { id, completed_by, execution_date, is_partial = false, partial_pct = 100, partial_note = "" } = req.body;
+  const { id, completed_by, execution_date } = req.body;
   const task = (appData.single_tasks || []).find(t => t.id === id && t.status === 'pending');
   if (task) {
     const nowIso = new Date().toISOString();
@@ -1020,9 +1103,6 @@ app.post('/api/single_tasks/complete', (req, res) => {
 
     const workerList = Array.isArray(completed_by) ? completed_by : [completed_by || 'Famiglia'];
     let totalPts = task.points || 0;
-    if (is_partial) {
-      totalPts = Math.max(1, Math.round(totalPts * (parseInt(partial_pct) || 50) / 100));
-    }
     const dividedPts = totalPts > 0 ? Math.max(1, Math.round(totalPts / workerList.length)) : 0;
 
     workerList.forEach(wName => {
@@ -1038,9 +1118,7 @@ app.post('/api/single_tasks/complete', (req, res) => {
           created_by: task.created_by || "Famiglia",
           task_created_at: task.created_at || nowIso,
           is_personal: totalPts === 0,
-          is_partial: !!is_partial,
-          partial_pct: is_partial ? (parseInt(partial_pct) || 50) : null,
-          partial_note: is_partial ? partial_note : null,
+          is_partial: false,
           points: dividedPts,
           edit_history: [],
           created_at: effectiveExecDate
