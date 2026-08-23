@@ -1,15 +1,16 @@
-# 🏆 ChoreQuest (v1.0.0)
+# 🏆 ChoreQuest (v2.5.0)
 
 > **Add-on Ufficiale Home Assistant per la Gamification e Gestione delle Faccende di Casa e Famiglia**
 
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)
-![Version](https://img.shields.io/badge/Version-1.0.0-emerald.svg)
+![Version](https://img.shields.io/badge/Version-2.5.0-emerald.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
 ## ✨ Funzionalità Principali
 
+- 🔄 **Controllo Aggiornamenti Live dal Menu Admin:** Verifica direttamente dall'app lo stato della versione su GitHub e le istruzioni di aggiornamento.
 - 📅 **Posticipo Scadenza Routine:** Tocca qualsiasi routine in Home o nel Catalogo per posticipare la scadenza (+1g, +3g, +1 sett o data a scelta con motivazione).
 - ✂️ **Task Splitting Intelligente:** Completa una parte del compito (0 pt) e rinomina la parte rimanente; i punti totali originari matureranno al completamento del task finale.
 - 🕒 **Data/Ora Esecuzione Opzionale:** Inserimento rapido delle faccende con selettore data/ora nascosto e attivabile tramite icona calendario.
@@ -26,4 +27,4 @@
 1. Vai in **Impostazioni** ➔ **Add-on** ➔ **Store degli Add-on**.
 2. Clicca sui tre pallini in alto a destra (**⋮**) ➔ **Repository**.
 3. Inserisci: `https://github.com/filidam89/chore-quest-addon` e premi **Aggiungi**.
-4. Cerca **ChoreQuest**, clicca su **Installa** e poi su **Avvia**!
+4. Cerca **ChoreQuest**, clicca su **Installa** (o **Aggiorna**) e poi su **Avvia**!
