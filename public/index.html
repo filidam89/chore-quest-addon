@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.4.1</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v1.0.0</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -102,29 +102,29 @@
       <div id="members-bar" class="w-full"></div>
     </div>
 
-    <!-- 2. ACTION GRID DEI PULSANTI PRINCIPALI -->
+    <!-- 2. ACTION GRID DEI PULSANTI PRINCIPALI (PULITI, SOLIDI SENZA SFUMATURE CONFUSE) -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 w-full">
-      <button onclick="openSpontaneousCatalogModal()" class="p-4 bg-gradient-to-br from-indigo-500 to-indigo-700 hover:from-indigo-600 text-white rounded-3xl shadow-md hover:shadow-lg transition flex flex-col items-center justify-center text-center space-y-1.5 group">
+      <button onclick="openSpontaneousCatalogModal()" class="p-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-3xl shadow-sm hover:shadow-md transition flex flex-col items-center justify-center text-center space-y-1.5 group border border-indigo-700">
         <span class="text-3xl group-hover:scale-110 transition"><i class="mdi mdi-washing-machine"></i></span>
         <div><div class="font-extrabold text-xs sm:text-sm">Attività Spontanee</div><div class="text-[10px] text-indigo-100 font-medium">Faccende per categoria</div></div>
       </button>
-      <button onclick="openQuickTaskModal()" class="p-4 bg-gradient-to-br from-purple-600 to-purple-800 hover:from-purple-700 text-white rounded-3xl shadow-md hover:shadow-lg transition flex flex-col items-center justify-center text-center space-y-1.5 group">
+      <button onclick="openQuickTaskModal()" class="p-4 bg-purple-600 hover:bg-purple-700 text-white rounded-3xl shadow-sm hover:shadow-md transition flex flex-col items-center justify-center text-center space-y-1.5 group border border-purple-700">
         <span class="text-3xl group-hover:scale-110 transition"><i class="mdi mdi-plus-circle-outline"></i></span>
         <div><div class="font-extrabold text-xs sm:text-sm">Assegna Task Rapido</div><div class="text-[10px] text-purple-100 font-medium">Nuovo compito o promemoria</div></div>
       </button>
-      <button onclick="openAdhdModal()" class="p-4 bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 text-white rounded-3xl shadow-md hover:shadow-lg transition flex flex-col items-center justify-center text-center space-y-1.5 group">
+      <button onclick="openAdhdModal()" class="p-4 bg-amber-500 hover:bg-amber-600 text-white rounded-3xl shadow-sm hover:shadow-md transition flex flex-col items-center justify-center text-center space-y-1.5 group border border-amber-600">
         <span class="text-3xl group-hover:scale-125 transition"><i class="mdi mdi-dice-5-outline"></i></span>
         <div><div class="font-extrabold text-xs sm:text-sm">ADHD Dice</div><div class="text-[10px] text-amber-100 font-medium">Pesca una faccenda a caso!</div></div>
       </button>
-      <button onclick="openRoutineCatalogModal()" class="p-4 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xs hover:shadow-md transition flex flex-col items-center justify-center text-center space-y-1.5 group">
+      <button onclick="openRoutineCatalogModal()" class="p-4 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 text-slate-800 dark:text-slate-100 rounded-3xl shadow-xs hover:shadow-sm transition flex flex-col items-center justify-center text-center space-y-1.5 group">
         <span class="text-3xl group-hover:scale-110 transition text-indigo-600 dark:text-indigo-400"><i class="mdi mdi-calendar-sync-outline"></i></span>
         <div><div class="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">Catalogo Routine</div><div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Scadenze in gg e mesi</div></div>
       </button>
-      <button onclick="openStatsModal()" class="p-4 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xs hover:shadow-md transition flex flex-col items-center justify-center text-center space-y-1.5 group">
+      <button onclick="openStatsModal()" class="p-4 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 hover:border-amber-400 text-slate-800 dark:text-slate-100 rounded-3xl shadow-xs hover:shadow-sm transition flex flex-col items-center justify-center text-center space-y-1.5 group">
         <span class="text-3xl group-hover:scale-110 transition text-amber-500"><i class="mdi mdi-podium-gold"></i></span>
         <div><div class="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">Classifica & Stats</div><div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Podio, grafici e report</div></div>
       </button>
-      <button onclick="openHistoryModal()" class="p-4 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-3xl shadow-2xs hover:shadow-md transition flex flex-col items-center justify-center text-center space-y-1.5 group">
+      <button onclick="openHistoryModal()" class="p-4 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 text-slate-800 dark:text-slate-100 rounded-3xl shadow-xs hover:shadow-sm transition flex flex-col items-center justify-center text-center space-y-1.5 group">
         <span class="text-3xl group-hover:scale-110 transition text-indigo-500"><i class="mdi mdi-history"></i></span>
         <div><div class="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">Storico & Modifiche</div><div class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Registro con note & audit</div></div>
       </button>
@@ -144,6 +144,7 @@
           <input id="filter-routine-search" type="text" oninput="renderHomeWidgets()" placeholder="🔍 Cerca routine per nome o categoria..." class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs focus:ring-2 focus:ring-indigo-500 font-medium">
           <div class="flex items-center gap-1.5 flex-wrap text-xs">
             <button onclick="setHomeRoutineFilter('due_default')" id="hrf-due_default" class="px-2.5 py-1 rounded-xl font-extrabold transition bg-indigo-600 text-white shadow-2xs">🚨 Scadute + In Scadenza</button>
+            <button onclick="setHomeRoutineFilter('urgent')" id="hrf-urgent" class="px-2.5 py-1 rounded-xl font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center gap-1"><span>🔥 Urgenti / ⭐ Alte</span></button>
             <button onclick="setHomeRoutineFilter('overdue')" id="hrf-overdue" class="px-2.5 py-1 rounded-xl font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800">🔴 Scadute</button>
             <button onclick="setHomeRoutineFilter('warning')" id="hrf-warning" class="px-2.5 py-1 rounded-xl font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800">🟡 In Scadenza</button>
             <button onclick="setHomeRoutineFilter('personal')" id="hrf-personal" class="px-2.5 py-1 rounded-xl font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800">👤 Personali</button>
@@ -273,6 +274,51 @@
     </div>
   </main>
 
+  <!-- ==================== MODAL: POSTICIPA SCADENZA ROUTINE (Z-[75]) ==================== -->
+  <div id="modal-routine-postpone" class="fixed inset-0 z-[75] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div>
+          <div class="text-[11px] font-extrabold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">Gestione Scadenza Routine</div>
+          <h3 id="modal-postpone-routine-title" class="font-extrabold text-lg text-slate-900 dark:text-white">Nome Routine</h3>
+        </div>
+        <button onclick="closeRoutinePostponeModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
+        <div class="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">Cadenza standard:</span>
+            <b id="modal-postpone-freq" class="text-slate-900 dark:text-white">-</b>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">Scadenza attuale:</span>
+            <b id="modal-postpone-current-due" class="text-slate-900 dark:text-white">-</b>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <label class="block text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase">📅 Posticipa / Scegli Nuova Scadenza:</label>
+          
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="quickPostponeDays(1)" class="flex-1 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-700">+1 Giorno</button>
+            <button type="button" onclick="quickPostponeDays(3)" class="flex-1 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-700">+3 Giorni</button>
+            <button type="button" onclick="quickPostponeDays(7)" class="flex-1 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 font-bold text-xs rounded-xl border border-slate-200 dark:border-slate-700">+1 Settimana</button>
+          </div>
+
+          <input id="modal-postpone-date-input" type="date" required class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200">
+          
+          <input id="modal-postpone-reason-input" type="text" placeholder="Motivo del posticipo (es. Weekend fuori, rimandato)..." class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" onclick="closeRoutinePostponeModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 font-bold text-xs rounded-xl">Annulla</button>
+          <button type="button" onclick="submitPostponeRoutine()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow">Salva Nuova Scadenza</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== MODAL: ATTIVITÀ & STORICO DEL SINGOLO MEMBRO (Z-70) ==================== -->
   <div id="modal-member-history" class="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[90vh] flex flex-col">
@@ -376,7 +422,7 @@
 
           <div id="task-split-form-container" class="hidden pt-3 border-t border-indigo-200/70 dark:border-indigo-800/70 space-y-3">
             <div class="text-[11px] text-slate-600 dark:text-slate-300">
-              Dichiara completata una porzione dell'attività e assegna un nuovo nome alla parte che resta da fare!
+              Dichiara completata una parte dell'attività (0 pt) e aggiorna il nome del task che rimane da fare. I punti iniziali verranno maturati al completamento finale!
             </div>
             
             <div class="space-y-1">
@@ -384,29 +430,18 @@
               <input id="split-completed-title" type="text" placeholder="Es. Spazzare (cucina)" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
             </div>
 
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">Punti parte fatta</label>
-                <input id="split-completed-points" type="number" min="0" value="5" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
-              </div>
-              <div>
-                <label class="block text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">Completato da</label>
-                <select id="split-completed-by" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></select>
-              </div>
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">Chi ha svolto questa parte?</label>
+              <select id="split-completed-by" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></select>
             </div>
 
             <div class="space-y-1 pt-1">
-              <label class="block text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">2. Cosa rimane da fare? (Nuovo nome task)</label>
+              <label class="block text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">2. Cosa rimane da fare? (Nuovo nome task in sospeso)</label>
               <input id="split-remaining-title" type="text" placeholder="Es. Spazzare (sala)" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
             </div>
 
-            <div class="space-y-1">
-              <label class="block text-[11px] font-bold text-indigo-900 dark:text-indigo-300 uppercase">Punti parte rimanente</label>
-              <input id="split-remaining-points" type="number" min="0" value="5" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
-            </div>
-
             <button type="button" onclick="submitTaskSplit()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
-              Conferma Split (Completa Parte & Rinomina Rimanente)
+              Conferma Split (Salva Porzione Fatta & Rinomina Rimanente)
             </button>
           </div>
         </div>
@@ -431,7 +466,7 @@
     </div>
   </div>
 
-  <!-- ==================== MODAL: WHO COMPLETED THE TASK ==================== -->
+  <!-- ==================== MODAL: WHO COMPLETED THE TASK (CON CALENDARIO OPZIONALE) ==================== -->
   <div id="modal-select-performer" class="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[92vh] flex flex-col">
       <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -444,10 +479,15 @@
 
       <div class="space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1">
         
-        <!-- DATA & ORA MODIFICABILE -->
-        <div class="bg-slate-50 dark:bg-slate-800/80 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
-          <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase">📅 Data & Ora di Esecuzione (Default: Adesso):</label>
-          <input id="performer-exec-datetime" type="datetime-local" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200">
+        <!-- DATA & ORA MODIFICABILE NASCOSTA DI DEFAULT -->
+        <div class="space-y-1">
+          <button type="button" onclick="togglePerformerDatePicker()" class="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1.5">
+            <i class="mdi mdi-calendar-edit"></i> <span>Modifica data/ora esecuzione (Opzionale)</span>
+          </button>
+          <div id="performer-datetime-container" class="hidden bg-slate-50 dark:bg-slate-800/80 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase">📅 Data & Ora Effettiva:</label>
+            <input id="performer-exec-datetime" type="datetime-local" class="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200">
+          </div>
         </div>
 
         <div class="space-y-2">
@@ -506,7 +546,7 @@
       </div>
       <div class="py-2 space-y-3">
         <div id="adhd-dice-icon" class="text-7xl select-none transition cursor-pointer text-amber-500" onclick="rollAdhdTask()"><i class="mdi mdi-dice-5"></i></div>
-        <div id="adhd-task-box" class="hidden p-5 bg-gradient-to-br from-indigo-50 to-amber-50 dark:from-slate-800 dark:to-slate-800/70 rounded-3xl border-2 border-indigo-200 dark:border-indigo-800 space-y-3 transition">
+        <div id="adhd-task-box" class="hidden p-5 bg-slate-50 dark:bg-slate-800 rounded-3xl border-2 border-indigo-200 dark:border-indigo-800 space-y-3 transition">
           <div id="adhd-task-icon" class="text-5xl text-indigo-600 dark:text-indigo-400">⚡</div>
           <div><div id="adhd-task-name" class="font-extrabold text-lg text-slate-900 dark:text-white leading-tight">Lavatrice</div><div id="adhd-task-category" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">🧺 Bucato & Panni</div></div>
           <div class="flex items-center justify-center gap-2 pt-1"><span id="adhd-task-pts" class="text-xs font-extrabold bg-indigo-600 text-white px-3 py-1 rounded-full shadow-2xs">+5 pt</span><span id="adhd-task-reason" class="text-xs font-bold text-amber-900 dark:text-amber-200 bg-amber-100 dark:bg-amber-950/80 px-3 py-1 rounded-full">⏳ Non eseguita da tempo</span></div>
@@ -738,7 +778,7 @@
           <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Assegnato a</label><select id="rout-edit-member" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"><option value="all">👥 Famiglia</option></select></div>
         </div>
 
-        <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Priorità</label><select id="rout-edit-priority" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"><option value="medium">Media (Default)</option><option value="high">⭐ Alta</option><option value="urgent">🔥 Urgente</option><option value="low">🟢 Bassa</option></select></div>
+        <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Priorità</label><select id="rout-edit-priority" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"><option value="medium">Media (Default)</option><option value="high">⭐ Alta</option><option value="urgent">🔥 Urgente</option><option value="low">🟢 Bassa</option></select></div>
         <div class="pt-1"><div class="flex items-center gap-2"><input id="rout-edit-personal" type="checkbox" onchange="toggleRoutPersonal(this.checked)" class="w-4 h-4 text-indigo-600 rounded"><label for="rout-edit-personal" class="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">Promemoria Personale (0 pt, escluso da classifiche)</label></div></div>
         <div class="flex justify-end gap-2 pt-2"><button type="button" onclick="closeRoutineModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 font-bold text-xs rounded-xl">Annulla</button><button type="submit" class="px-5 py-2 bg-indigo-600 text-white font-extrabold text-xs rounded-xl shadow">Salva Routine</button></div>
       </form>
@@ -762,6 +802,7 @@
     let pendingExecutionTask = null;
     let pendingQuickTaskPayload = null;
     let activeEditingTaskId = null;
+    let activePostponingRoutineId = null;
     let currentAdhdExtractedTask = null;
     let lastAdhdExtractedTaskName = null;
 
@@ -922,7 +963,7 @@
     }
 
     function closeAllModals() {
-      ['modal-adhd', 'modal-spontaneous-catalog', 'modal-quick-task', 'modal-routine-catalog', 'modal-stats-view', 'modal-history-view', 'modal-select-performer', 'modal-assign-task', 'modal-task-notes', 'modal-emoji-picker', 'modal-category', 'modal-member', 'modal-spontaneous', 'modal-routine', 'modal-member-history', 'modal-edit-log'].forEach(id => {
+      ['modal-adhd', 'modal-spontaneous-catalog', 'modal-quick-task', 'modal-routine-catalog', 'modal-stats-view', 'modal-history-view', 'modal-select-performer', 'modal-assign-task', 'modal-task-notes', 'modal-emoji-picker', 'modal-category', 'modal-member', 'modal-spontaneous', 'modal-routine', 'modal-member-history', 'modal-edit-log', 'modal-routine-postpone'].forEach(id => {
         document.getElementById(id)?.classList.add('hidden');
       });
     }
@@ -958,6 +999,52 @@
 
     function toggleCustomTaskBox() { document.getElementById('custom-task-box').classList.toggle('hidden'); }
 
+    // ==================== ROUTINE POSTPONE MODAL ====================
+    function openRoutinePostponeModal(routineId) {
+      const rout = (appData?.routine_tasks || []).find(r => r.id === routineId || r.name.toLowerCase() === (routineId || '').toLowerCase());
+      if (!rout) return;
+
+      activePostponingRoutineId = rout.id;
+      document.getElementById('modal-postpone-routine-title').textContent = rout.name;
+      document.getElementById('modal-postpone-freq').textContent = rout.frequency_text || `${rout.frequency_days} gg`;
+      
+      const currentDueObj = rout.due_date ? new Date(rout.due_date) : new Date();
+      document.getElementById('modal-postpone-current-due').textContent = formatDateTime(rout.due_date);
+      
+      const isoDateStr = currentDueObj.toISOString().split('T')[0];
+      document.getElementById('modal-postpone-date-input').value = isoDateStr;
+      document.getElementById('modal-postpone-reason-input').value = '';
+
+      document.getElementById('modal-routine-postpone').classList.remove('hidden');
+    }
+    function closeRoutinePostponeModal() { document.getElementById('modal-routine-postpone').classList.add('hidden'); activePostponingRoutineId = null; }
+
+    function quickPostponeDays(daysToAdd) {
+      const input = document.getElementById('modal-postpone-date-input');
+      const base = input.value ? new Date(input.value) : new Date();
+      base.setDate(base.getDate() + daysToAdd);
+      input.value = base.toISOString().split('T')[0];
+    }
+
+    async function submitPostponeRoutine() {
+      if (!activePostponingRoutineId) return;
+      const newDueDate = document.getElementById('modal-postpone-date-input').value;
+      const reason = document.getElementById('modal-postpone-reason-input').value.trim();
+
+      if (!newDueDate) { showToast("Seleziona una data valida!", "⚠️"); return; }
+
+      try {
+        await fetch(`${apiBase}/routine_tasks/postpone`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: activePostponingRoutineId, new_due_date: newDueDate, reason })
+        });
+        closeRoutinePostponeModal();
+        showToast("Scadenza routine posticipata!", "📅");
+        await loadStats();
+      } catch (e) {}
+    }
+
     // ==================== MEMBER ACTIVITIES POPUP ====================
     function openMemberHistoryModal(memberId, memberName) {
       const modal = document.getElementById('modal-member-history');
@@ -987,8 +1074,8 @@
         memberLogs.forEach(l => {
           const dt = formatDateTime(l.created_at);
           const ptsBadge = l.is_personal ? '<span class="text-[11px] font-bold text-slate-400">0 pt</span>' : `<span class="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm">+${l.points} pt</span>`;
-          const partialTag = l.is_partial ? `<span class="bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-300 text-[10px] font-extrabold px-1.5 py-0.2 rounded">✂️ Parziale</span>` : '';
-          const editBadge = (l.edit_history && l.edit_history.length > 0) ? `<span class="bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 text-[10px] font-bold px-1.5 py-0.2 rounded">✏️ Modificato</span>` : '';
+          const partialTag = l.is_partial ? `<span class="bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 text-[10px] font-extrabold px-1.5 py-0.2 rounded">✂️ Parziale</span>` : '';
+          const editBadge = (l.edit_history && l.edit_history.length > 0) ? `<span class="bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 text-[10px] font-bold px-1.5 py-0.2 rounded">✏️ Modificato</span>` : '';
 
           listEl.innerHTML += `
             <div class="p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-center justify-between gap-3 text-xs">
@@ -1265,7 +1352,7 @@
 
     function setHomeRoutineFilter(flt) {
       activeHomeRoutineFilter = flt;
-      ['due_default', 'overdue', 'warning', 'personal', 'all'].forEach(k => {
+      ['due_default', 'urgent', 'overdue', 'warning', 'personal', 'all'].forEach(k => {
         const btn = document.getElementById(`hrf-${k}`);
         if (btn) btn.className = (k === flt) ? 'px-2.5 py-1 rounded-xl font-extrabold transition bg-indigo-600 text-white shadow-2xs' : 'px-2.5 py-1 rounded-xl font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900 bg-slate-100 dark:bg-slate-800';
       });
@@ -1292,6 +1379,7 @@
 
       let filteredDueRoutines = allRoutines;
       if (activeHomeRoutineFilter === 'due_default') filteredDueRoutines = allRoutines.filter(r => r.status === 'overdue' || r.status === 'warning');
+      else if (activeHomeRoutineFilter === 'urgent') filteredDueRoutines = allRoutines.filter(r => r.priority === 'high' || r.priority === 'urgent' || r.status === 'overdue');
       else if (activeHomeRoutineFilter === 'overdue') filteredDueRoutines = overdueRoutines;
       else if (activeHomeRoutineFilter === 'warning') filteredDueRoutines = warningRoutines;
       else if (activeHomeRoutineFilter === 'personal') filteredDueRoutines = allRoutines.filter(r => r.is_personal);
@@ -1309,9 +1397,9 @@
             const catBadge = r.category ? `<span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.2 rounded-md">${r.category}</span>` : '';
 
             dueBox.innerHTML += `
-              <div class="p-3.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl flex items-center justify-between gap-3 text-xs hover:border-indigo-300 dark:hover:border-indigo-500 transition">
-                <div class="flex items-center gap-3 overflow-hidden">
-                  <span class="text-2xl text-indigo-600 dark:text-indigo-400 shrink-0">${renderIconHtml(r.icon || 'mdi:calendar-sync')}</span>
+              <div onclick="openRoutinePostponeModal('${r.id}')" title="Clicca per visualizzare o posticipare la scadenza di questa routine" class="p-3.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl flex items-center justify-between gap-3 text-xs hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xs transition cursor-pointer group">
+                <div class="flex items-center gap-3 overflow-hidden flex-1">
+                  <span class="text-2xl text-indigo-600 dark:text-indigo-400 shrink-0 group-hover:scale-110 transition">${renderIconHtml(r.icon || 'mdi:calendar-sync')}</span>
                   <div class="truncate">
                     <div class="font-extrabold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
                       <span>${r.name}</span>
@@ -1327,16 +1415,18 @@
                     </div>
                   </div>
                 </div>
-                <button onclick="promptPerformerSelection('${r.name}', ${r.points}, 'routine', ${!!r.is_personal}, '${r.category || 'Routine'}')" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow shrink-0">
-                  Fatto ✓
-                </button>
+                <div class="flex items-center gap-2 shrink-0" onclick="event.stopPropagation()">
+                  <button onclick="promptPerformerSelection('${r.name}', ${r.points}, 'routine', ${!!r.is_personal}, '${r.category || 'Routine'}')" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">
+                    Fatto ✓
+                  </button>
+                </div>
               </div>
             `;
           });
         }
       }
 
-      // Pending Single Tasks (INTERAMENTE CLICCABILI SENZA IL PULSANTE NOTE DUPLICATO)
+      // Pending Single Tasks (INTERAMENTE CLICCABILI)
       const pendingBox = document.getElementById('home-pending-tasks-list');
       const pendingBadge = document.getElementById('pending-tasks-count-badge');
       const singleSearch = (document.getElementById('filter-single-search')?.value || '').toLowerCase().trim();
@@ -1467,9 +1557,9 @@
         const nextDueDateFormatted = r.due_date ? new Date(r.due_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }) : '-';
 
         routineList.innerHTML += `
-          <div class="p-4 sm:p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition">
+          <div onclick="openRoutinePostponeModal('${r.id}')" title="Clicca per visualizzare o posticipare la scadenza di questa routine" class="p-4 sm:p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition cursor-pointer hover:border-indigo-400 group">
             <div class="flex items-start gap-4">
-              <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-slate-800 text-indigo-700 dark:text-indigo-400 flex items-center justify-center text-2xl shrink-0 shadow-2xs">${renderIconHtml(r.icon || 'mdi:calendar-sync')}</div>
+              <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-slate-800 text-indigo-700 dark:text-indigo-400 flex items-center justify-center text-2xl shrink-0 shadow-2xs group-hover:scale-105 transition">${renderIconHtml(r.icon || 'mdi:calendar-sync')}</div>
               <div class="space-y-1.5">
                 <div class="flex items-center gap-2 flex-wrap">
                   <h4 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">${r.name}</h4>
@@ -1486,9 +1576,11 @@
                 </div>
               </div>
             </div>
-            <button onclick="promptPerformerSelection('${r.name}', ${r.points}, 'routine', ${!!r.is_personal}, '${r.category || 'Routine'}')" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">
-              ${r.is_personal ? 'Fatto ✓' : '+' + r.points + ' pt (Fatto)'}
-            </button>
+            <div class="w-full sm:w-auto" onclick="event.stopPropagation()">
+              <button onclick="promptPerformerSelection('${r.name}', ${r.points}, 'routine', ${!!r.is_personal}, '${r.category || 'Routine'}')" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition shrink-0">
+                ${r.is_personal ? 'Fatto ✓' : '+' + r.points + ' pt (Fatto)'}
+              </button>
+            </div>
           </div>
         `;
       });
@@ -1507,10 +1599,11 @@
         titleEl.textContent = `${taskName} ${isPersonal ? '(0 pt)' : '(+' + points + ' pt)'}`;
       }
 
-      // Default Date/Time to current local datetime
+      // Default Date/Time to current local datetime and hide by default
       const now = new Date();
       const localDatetime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
       document.getElementById('performer-exec-datetime').value = localDatetime;
+      document.getElementById('performer-datetime-container').classList.add('hidden');
 
       const members = Object.values(appData?.members || {});
       if (singleBox) {
@@ -1543,6 +1636,10 @@
       document.getElementById('multi-author-section').classList.add('hidden');
       document.getElementById('btn-toggle-multi').textContent = 'Mostra selezione multipla ▼';
       modal.classList.remove('hidden');
+    }
+
+    function togglePerformerDatePicker() {
+      document.getElementById('performer-datetime-container').classList.toggle('hidden');
     }
 
     function selectAllMultiCheckboxes(check) {
@@ -1717,9 +1814,6 @@
       document.getElementById('btn-toggle-task-split').textContent = 'Apri Split ▼';
       document.getElementById('split-completed-title').value = `${task.title} (completata parte)`;
       document.getElementById('split-remaining-title').value = `${task.title} (rimanente)`;
-      const halfPts = Math.max(1, Math.round((task.points || 10) / 2));
-      document.getElementById('split-completed-points').value = halfPts;
-      document.getElementById('split-remaining-points').value = halfPts;
 
       const splitMemberSelect = document.getElementById('split-completed-by');
       if (splitMemberSelect) {
@@ -1760,10 +1854,8 @@
     async function submitTaskSplit() {
       if (!activeEditingTaskId) return;
       const completedTitle = document.getElementById('split-completed-title').value.trim();
-      const completedPoints = parseInt(document.getElementById('split-completed-points').value) || 0;
       const completedBy = document.getElementById('split-completed-by').value;
       const remainingTitle = document.getElementById('split-remaining-title').value.trim();
-      const remainingPoints = parseInt(document.getElementById('split-remaining-points').value) || 0;
 
       if (!completedTitle || !remainingTitle) {
         showToast("Inserisci i nomi per la parte completata e rimanente!", "⚠️");
@@ -1777,10 +1869,8 @@
           body: JSON.stringify({
             id: activeEditingTaskId,
             completed_title: completedTitle,
-            completed_points: completedPoints,
             completed_by: completedBy,
             remaining_title: remainingTitle,
-            remaining_points: remainingPoints,
             author: completedBy
           })
         });
