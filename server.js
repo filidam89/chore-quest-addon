@@ -380,17 +380,19 @@ function calculateStats() {
     };
   });
 
-  // Evaluate Routine Due Statuses & Next Due Dates (supporting Days & Months)
+  // Evaluate Routine Due Statuses & Next Due Dates (supporting Days & Months, and Postponed Dates)
   const routineStatus = (appData.routine_tasks || []).map(r => {
     const warning = parseInt(r.warning_days) || 1;
     const freqUnit = r.frequency_unit || 'days';
     const freqNum = parseInt(r.frequency_number || r.frequency_days) || (freqUnit === 'months' ? 1 : 7);
 
     let dueDate;
-    if (r.schedule_type === 'from_last' && r.last_completed_at) {
+    if (r.postponed_due_date && new Date(r.postponed_due_date + 'T23:59:59') > now) {
+      dueDate = new Date(r.postponed_due_date + 'T23:59:59');
+    } else if (r.schedule_type === 'from_last' && r.last_completed_at) {
       dueDate = calculateRoutineDueDate(r, r.last_completed_at, now);
     } else if (r.start_date) {
-      dueDate = new Date(r.start_date);
+      dueDate = new Date(r.start_date + 'T23:59:59');
     } else {
       dueDate = calculateRoutineDueDate(r, null, now);
     }
@@ -471,7 +473,7 @@ function calculateStats() {
 
 // Comprehensive Home Assistant Sensors Synchronization via Supervisor API
 async function syncToHomeAssistant() {
-  const supervisorToken = process.env.SUPERIOR_TOKEN || process.env.SUPERVISOR_TOKEN;
+  const supervisorToken = process.env.SUPERVISOR_TOKEN;
   if (!supervisorToken) return;
 
   const haBase = "http://supervisor/core/api";
@@ -860,6 +862,7 @@ app.post('/api/log', (req, res) => {
     if (rout) {
       rout.last_completed_at = effectiveExecDate;
       rout.last_completed_by = targetMembers.join(', ');
+      rout.postponed_due_date = null; // Clear any postponement when completed
     }
   }
 
@@ -868,7 +871,7 @@ app.post('/api/log', (req, res) => {
   res.status(201).json(createdLogs);
 });
 
-// API: Update Log Entry with Audit Trail & Notes
+// API: Update Log Entry with Audit Trail & Accurate Timestamp Comparison
 app.post('/api/logs/update', (req, res) => {
   const { id, task_name, points, created_at, member_name, note = "", edited_by = "Famiglia" } = req.body;
   if (!id) return res.status(400).json({ error: "ID required" });
@@ -879,17 +882,22 @@ app.post('/api/logs/update', (req, res) => {
   if (!log.edit_history) log.edit_history = [];
 
   const changes = [];
-  if (task_name && task_name !== log.task_name) {
-    changes.push(`Attività: "${log.task_name}" ➔ "${task_name}"`);
-    log.task_name = task_name;
+  if (task_name && task_name.trim() !== log.task_name) {
+    changes.push(`Attività: "${log.task_name}" ➔ "${task_name.trim()}"`);
+    log.task_name = task_name.trim();
   }
   if (points !== undefined && parseInt(points) !== parseInt(log.points)) {
     changes.push(`Punti: ${log.points}pt ➔ ${points}pt`);
     log.points = parseInt(points) || 0;
   }
-  if (created_at && created_at !== log.created_at) {
-    changes.push(`Data esecuzione modificata`);
-    log.created_at = new Date(created_at).toISOString();
+  if (created_at) {
+    const newTime = new Date(created_at).getTime();
+    const oldTime = new Date(log.created_at).getTime();
+    // Only register change if difference is greater than 60 seconds
+    if (!isNaN(newTime) && Math.abs(newTime - oldTime) > 60000) {
+      changes.push(`Data esecuzione modificata`);
+      log.created_at = new Date(created_at).toISOString();
+    }
   }
   if (member_name && member_name !== log.member_name) {
     changes.push(`Esecutore: ${log.member_name} ➔ ${member_name}`);
@@ -1026,15 +1034,13 @@ app.post('/api/single_tasks/note', (req, res) => {
   res.json({ status: "saved", task });
 });
 
-// API: Single Task Split (Complete one part, keep the remaining in pending with a new name)
+// API: Single Task Split (Split subtask awards 0 pt, full points remain on the parent task)
 app.post('/api/single_tasks/split', (req, res) => {
   const { 
     id, 
     completed_title, 
-    completed_points = 0, 
     completed_by = "Famiglia", 
     remaining_title, 
-    remaining_points = 0,
     author = "Famiglia"
   } = req.body;
 
@@ -1043,10 +1049,8 @@ app.post('/api/single_tasks/split', (req, res) => {
 
   const nowIso = new Date().toISOString();
   const workerList = Array.isArray(completed_by) ? completed_by : [completed_by || 'Famiglia'];
-  const ptsDone = parseInt(completed_points) || 0;
-  const dividedPts = ptsDone > 0 ? Math.max(1, Math.round(ptsDone / workerList.length)) : 0;
 
-  // 1. Log the completed part
+  // 1. Log the completed sub-part with 0 points (points will be awarded when the parent task finishes)
   workerList.forEach(wName => {
     let memberObj = Object.values(appData.members).find(m => m.name.toLowerCase() === wName.toLowerCase());
     if (!memberObj) {
@@ -1062,25 +1066,24 @@ app.post('/api/single_tasks/split', (req, res) => {
         category: task.category || "Varie",
         created_by: task.created_by || "Famiglia",
         task_created_at: task.created_at || nowIso,
-        is_personal: ptsDone === 0,
+        is_personal: true,
         is_partial: true,
         partial_pct: null,
-        partial_note: `Splittato da: "${task.title}". Rimane in sospeso: "${remaining_title}"`,
-        points: dividedPts,
+        partial_note: `Splittato da: "${task.title}". Rimane da fare: "${remaining_title}" (I punti matureranno al completamento)`,
+        points: 0,
         edit_history: [],
         created_at: nowIso
       });
     }
   });
 
-  // 2. Update remaining task in pending list
+  // 2. Update remaining task in pending list (PRESERVES the full original points of the task)
   const oldTitle = task.title;
   task.title = remaining_title || `${oldTitle} (rimanente)`;
-  task.points = parseInt(remaining_points) || 0;
   if (!task.notes) task.notes = [];
   task.notes.push({
     id: `n_${Date.now()}_${Math.random().toString(36).substr(2, 3)}`,
-    text: `✂️ Task splittato: "${completed_title}" completato da ${workerList.join(', ')} (+${ptsDone}pt). Rimane da fare: "${task.title}".`,
+    text: `✂️ Task splittato: "${completed_title}" eseguito da ${workerList.join(', ')}. Rimane da fare: "${task.title}".`,
     author: author || "Famiglia",
     created_at: nowIso
   });
@@ -1090,7 +1093,7 @@ app.post('/api/single_tasks/split', (req, res) => {
   res.json({ status: "split_success", task });
 });
 
-// API: Single Task Complete (with optional custom date)
+// API: Single Task Complete (awards full points)
 app.post('/api/single_tasks/complete', (req, res) => {
   const { id, completed_by, execution_date } = req.body;
   const task = (appData.single_tasks || []).find(t => t.id === id && t.status === 'pending');
@@ -1164,6 +1167,40 @@ app.post('/api/single_tasks/delete', (req, res) => {
     syncToHomeAssistant();
   }
   res.json({ status: "deleted" });
+});
+
+// API: Postpone Routine Due Date
+app.post('/api/routine_tasks/postpone', (req, res) => {
+  const { id, new_due_date, reason = "", author = "Famiglia" } = req.body;
+  const rout = (appData.routine_tasks || []).find(r => r.id === id || r.name.toLowerCase() === (id || '').toLowerCase());
+
+  if (!rout) return res.status(404).json({ error: "Routine non trovata" });
+
+  const nowIso = new Date().toISOString();
+  rout.postponed_due_date = new_due_date;
+
+  let memberObj = Object.values(appData.members).find(m => m.name.toLowerCase() === (author || '').toLowerCase());
+  const mId = memberObj ? memberObj.id : Object.keys(appData.members)[0] || 'm_1';
+  const mName = memberObj ? memberObj.name : (author || 'Famiglia');
+
+  appData.logs.push({
+    id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+    member_id: mId,
+    member_name: mName,
+    task_name: `📅 Posticipata routine "${rout.name}" al ${new_due_date}${reason ? ' • Motivo: ' + reason : ''}`,
+    task_type: 'task_note',
+    category: rout.category || "Routine",
+    created_by: mName,
+    task_created_at: nowIso,
+    is_personal: true,
+    points: 0,
+    edit_history: [],
+    created_at: nowIso
+  });
+
+  saveData(appData);
+  syncToHomeAssistant();
+  res.json({ status: "postponed", routine: rout });
 });
 
 // API: Save / Add Member
