@@ -1353,6 +1353,33 @@ app.post('/api/settings', (req, res) => {
   res.json({ status: "saved", settings: appData.settings });
 });
 
+// API: Check for Updates via GitHub Raw Config
+app.get('/api/system/check_update', async (req, res) => {
+  const currentVersion = "2.5.0";
+  try {
+    const githubRes = await fetch("https://raw.githubusercontent.com/filidam89/chore-quest-addon/main/config.yaml");
+    if (githubRes.ok) {
+      const text = await githubRes.text();
+      const match = text.match(/version:\s*["']?([^"'\r\n]+)["']?/);
+      const remoteVersion = match ? match[1] : currentVersion;
+      return res.json({
+        current_version: currentVersion,
+        remote_version: remoteVersion,
+        update_available: remoteVersion !== currentVersion,
+        checked_at: new Date().toISOString()
+      });
+    }
+  } catch (err) {
+    console.error("Error checking updates:", err);
+  }
+  res.json({
+    current_version: currentVersion,
+    remote_version: currentVersion,
+    update_available: false,
+    checked_at: new Date().toISOString()
+  });
+});
+
 // Fallback for SPA
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
