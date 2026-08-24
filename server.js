@@ -1355,7 +1355,7 @@ app.post('/api/settings', (req, res) => {
 
 // API: Check for Updates via GitHub Raw Config
 app.get('/api/system/check_update', async (req, res) => {
-  const currentVersion = "2.5.0";
+  const currentVersion = "2.6.0";
   try {
     const githubRes = await fetch("https://raw.githubusercontent.com/filidam89/chore-quest-addon/main/config.yaml");
     if (githubRes.ok) {
@@ -1377,6 +1377,48 @@ app.get('/api/system/check_update', async (req, res) => {
     remote_version: currentVersion,
     update_available: false,
     checked_at: new Date().toISOString()
+  });
+});
+
+// API: Get Current Logged-in Home Assistant User & Person entities
+app.get('/api/current_user', async (req, res) => {
+  const supervisorToken = process.env.SUPERVISOR_TOKEN;
+  let haUserId = req.headers['x-hass-user-id'] || req.headers['x-remote-user-id'] || req.headers['x-ingress-user'] || req.headers['x-forwarded-user'] || req.headers['remote-user'] || null;
+  let haUserName = null;
+  let detectedPersons = [];
+
+  if (supervisorToken) {
+    try {
+      const statesRes = await fetch("http://supervisor/core/api/states", {
+        headers: { 'Authorization': `Bearer ${supervisorToken}` }
+      });
+      if (statesRes.ok) {
+        const states = await statesRes.json();
+        const persons = states.filter(s => s.entity_id && s.entity_id.startsWith('person.'));
+        detectedPersons = persons.map(p => ({
+          entity_id: p.entity_id,
+          name: p.attributes.friendly_name || p.entity_id.replace('person.', ''),
+          user_id: p.attributes.user_id || null,
+          picture: p.attributes.entity_picture || null
+        }));
+
+        if (haUserId) {
+          const matchedPerson = detectedPersons.find(p => p.user_id === haUserId);
+          if (matchedPerson) {
+            haUserName = matchedPerson.name;
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Error detecting HA user:", e);
+    }
+  }
+
+  res.json({
+    ha_user_id: haUserId,
+    ha_user_name: haUserName,
+    detected_persons: detectedPersons,
+    members: Object.values(appData.members || {})
   });
 });
 
