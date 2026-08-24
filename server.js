@@ -1355,7 +1355,7 @@ app.post('/api/settings', (req, res) => {
 
 // API: Check for Updates via GitHub Raw Config
 app.get('/api/system/check_update', async (req, res) => {
-  const currentVersion = "2.6.2";
+  const currentVersion = "2.6.3";
   try {
     const githubRes = await fetch("https://raw.githubusercontent.com/filidam89/chore-quest-addon/main/config.yaml");
     if (githubRes.ok) {
@@ -1384,6 +1384,8 @@ app.get('/api/system/check_update', async (req, res) => {
 app.get('/api/current_user', async (req, res) => {
   const supervisorToken = process.env.SUPERVISOR_TOKEN;
   
+  const clientProfileParam = req.query.client_profile || req.query.ha_profile || null;
+
   // Collect all possible headers from Ingress and proxies
   const haUserId = req.headers['x-hass-user-id'] || 
                    req.headers['x-remote-user-id'] || 
@@ -1401,7 +1403,7 @@ app.get('/api/current_user', async (req, res) => {
                         req.headers['x-user-name'] || 
                         null;
 
-  let haProfileName = null;
+  let haProfileName = clientProfileParam || null;
   let haUsername = rawHeaderName;
   let detectedPersons = [];
 
