@@ -1355,7 +1355,7 @@ app.post('/api/settings', (req, res) => {
 
 // API: Check for Updates via GitHub Raw Config
 app.get('/api/system/check_update', async (req, res) => {
-  const currentVersion = "2.6.1";
+  const currentVersion = "2.6.2";
   try {
     const githubRes = await fetch("https://raw.githubusercontent.com/filidam89/chore-quest-addon/main/config.yaml");
     if (githubRes.ok) {
@@ -1385,27 +1385,29 @@ app.get('/api/current_user', async (req, res) => {
   const supervisorToken = process.env.SUPERVISOR_TOKEN;
   
   // Collect all possible headers from Ingress and proxies
-  let haUserId = req.headers['x-hass-user-id'] || 
-                 req.headers['x-remote-user-id'] || 
-                 req.headers['x-ingress-user'] || 
-                 req.headers['x-remote-user'] || 
-                 req.headers['x-forwarded-user'] || 
-                 req.headers['remote-user'] || 
-                 req.headers['x-ha-user'] || 
-                 req.query.ha_user || 
-                 null;
-
-  let haUserName = req.headers['x-hass-user-name'] || 
-                   req.headers['x-ha-username'] || 
-                   req.headers['x-remote-user-name'] || 
-                   req.headers['x-user-name'] || 
+  const haUserId = req.headers['x-hass-user-id'] || 
+                   req.headers['x-remote-user-id'] || 
+                   req.headers['x-ingress-user'] || 
+                   req.headers['x-remote-user'] || 
+                   req.headers['x-forwarded-user'] || 
+                   req.headers['remote-user'] || 
+                   req.headers['x-ha-user'] || 
+                   req.query.ha_user || 
                    null;
 
+  const rawHeaderName = req.headers['x-hass-user-name'] || 
+                        req.headers['x-ha-username'] || 
+                        req.headers['x-remote-user-name'] || 
+                        req.headers['x-user-name'] || 
+                        null;
+
+  let haProfileName = null;
+  let haUsername = rawHeaderName;
   let detectedPersons = [];
 
   if (supervisorToken) {
     try {
-      // 1. Check person.* states
+      // 1. Check person.* entities from Home Assistant states (attributes.friendly_name is the Profile Name)
       const statesRes = await fetch("http://supervisor/core/api/states", {
         headers: { 'Authorization': `Bearer ${supervisorToken}` }
       });
@@ -1419,16 +1421,28 @@ app.get('/api/current_user', async (req, res) => {
           picture: p.attributes.entity_picture || null
         }));
 
-        if (haUserId && !haUserName) {
-          const matchedPerson = detectedPersons.find(p => p.user_id === haUserId || p.name.toLowerCase() === String(haUserId).toLowerCase());
-          if (matchedPerson) {
-            haUserName = matchedPerson.name;
+        // Search by user_id first (most accurate for logged-in profile)
+        if (haUserId) {
+          const matchedPerson = detectedPersons.find(p => p.user_id === haUserId);
+          if (matchedPerson && matchedPerson.name) {
+            haProfileName = matchedPerson.name;
+          }
+        }
+
+        // If not matched by user_id, check if person entity_id or name matches rawHeaderName
+        if (!haProfileName && rawHeaderName) {
+          const matchedPerson = detectedPersons.find(p => 
+            p.entity_id.toLowerCase() === `person.${rawHeaderName.toLowerCase()}` ||
+            p.name.toLowerCase() === rawHeaderName.toLowerCase()
+          );
+          if (matchedPerson && matchedPerson.name) {
+            haProfileName = matchedPerson.name;
           }
         }
       }
 
       // 2. Try supervisor auth/users if still not resolved
-      if (haUserId && !haUserName) {
+      if (!haProfileName && haUserId) {
         try {
           const authRes = await fetch("http://supervisor/auth", {
             headers: { 'Authorization': `Bearer ${supervisorToken}` }
@@ -1436,16 +1450,17 @@ app.get('/api/current_user', async (req, res) => {
           if (authRes.ok) {
             const authData = await authRes.json();
             const users = authData.data?.users || authData.users || [];
-            const foundUser = users.find(u => u.id === haUserId || u.username === haUserId);
+            const foundUser = users.find(u => u.id === haUserId || u.username === haUserId || u.username === rawHeaderName);
             if (foundUser) {
-              haUserName = foundUser.name || foundUser.username;
+              haProfileName = foundUser.name || foundUser.display_name || foundUser.friendly_name || null;
+              if (foundUser.username) haUsername = foundUser.username;
             }
           }
         } catch (e) {}
       }
 
       // 3. Try supervisor/users or supervisor/core/api/config
-      if (haUserId && !haUserName) {
+      if (!haProfileName && haUserId) {
         try {
           const usersRes = await fetch("http://supervisor/users", {
             headers: { 'Authorization': `Bearer ${supervisorToken}` }
@@ -1453,30 +1468,32 @@ app.get('/api/current_user', async (req, res) => {
           if (usersRes.ok) {
             const usersData = await usersRes.json();
             const users = usersData.data?.users || usersData.users || [];
-            const foundUser = users.find(u => u.id === haUserId || u.username === haUserId);
+            const foundUser = users.find(u => u.id === haUserId || u.username === haUserId || u.username === rawHeaderName);
             if (foundUser) {
-              haUserName = foundUser.name || foundUser.username;
+              haProfileName = foundUser.name || foundUser.display_name || foundUser.friendly_name || null;
+              if (foundUser.username) haUsername = foundUser.username;
             }
           }
         } catch (e) {}
       }
     } catch (e) {
-      console.error("Error detecting HA user:", e);
+      console.error("Error detecting HA profile:", e);
     }
   }
 
-  // If haUserId was provided as a simple name (e.g., "tablet", "kiosk"), use that directly
-  if (!haUserName && haUserId) {
-    if (!/^[0-9a-f]{20,}$/i.test(haUserId)) {
-      haUserName = haUserId.charAt(0).toUpperCase() + haUserId.slice(1);
-    } else {
-      haUserName = `Utente HA (${haUserId.slice(0, 6)})`;
-    }
+  // Final fallback
+  let finalProfileName = haProfileName;
+  if (!finalProfileName && rawHeaderName) {
+    finalProfileName = rawHeaderName.charAt(0).toUpperCase() + rawHeaderName.slice(1);
+  } else if (!finalProfileName && haUserId && !/^[0-9a-f]{20,}$/i.test(haUserId)) {
+    finalProfileName = haUserId.charAt(0).toUpperCase() + haUserId.slice(1);
   }
 
   res.json({
     ha_user_id: haUserId,
-    ha_user_name: haUserName,
+    ha_user_name: finalProfileName,
+    ha_profile_name: finalProfileName,
+    ha_username: haUsername,
     detected_persons: detectedPersons,
     members: Object.values(appData.members || {})
   });
