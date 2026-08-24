@@ -1,17 +1,17 @@
-# 🏆 ChoreQuest (v2.6.2)
+# 🏆 ChoreQuest (v2.6.3)
 
 > **Add-on Ufficiale Home Assistant per la Gamification e Gestione delle Faccende di Casa e Famiglia**
 
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)
-![Version](https://img.shields.io/badge/Version-2.6.2-emerald.svg)
+![Version](https://img.shields.io/badge/Version-2.6.3-emerald.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
-## ✨ Novità & Funzionalità Chiave v2.6.2
+## ✨ Novità & Funzionalità Chiave v2.6.3
 
-- 👤 **Risoluzione del Nome Profilo Reale di Home Assistant (Friendly Name):**
-  - Il sistema estrae il **Nome Profilo / Nome Visualizzato** reale di Home Assistant (es. *"Daniele"*, *"Tablet Cucina"*, *"Papà"*, *"Mamma"*) dalle entità `person.*` e dalla configurazione Auth di Home Assistant, anziché limitarsi al semplice username tecnico di login (es. *`filidam89`*).
+- 👤 **Rilevamento Diretto del Nome Profilo Home Assistant (`hass.user.name`):**
+  - Il frontend estrae direttamente dal contesto Ingress del browser l'oggetto `window.parent.hass.user.name`, garantendo al 100% l'acquisizione del vero **Nome Profilo Visualizzato** (es. *"Daniele"*, *"Tablet Cucina"*, *"Mamma"*, *"Papà"*), ignorando lo username tecnico di login.
   - Se il dispositivo è un tablet o un utente esterno, viene visualizzato con la sua icona dedicata (es. `📱 Tablet (Home Assistant)`).
   - L'autore viene associato a tutte le note, modifiche, split e creazioni di task.
 - ✨ **Libreria Icone & Emoji Immensa (450+ Icone):**
@@ -32,4 +32,4 @@
 
 1. Vai in **Impostazioni** ➔ **Add-on** ➔ **Store degli Add-on**.
 2. Clicca sui tre pallini in alto a destra (**⋮**) ➔ **Controlla aggiornamenti** (o ricarica con `F5`).
-3. Clicca su **Aggiorna (Update)** alla versione **v2.6.2** e avvia l'Add-on!
+3. Clicca su **Aggiorna (Update)** alla versione **v2.6.3** e avvia l'Add-on!
