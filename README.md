@@ -1,29 +1,32 @@
-# 🏆 ChoreQuest (v2.6.0)
+# 🏆 ChoreQuest (v2.6.1)
 
 > **Add-on Ufficiale Home Assistant per la Gamification e Gestione delle Faccende di Casa e Famiglia**
 
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)
-![Version](https://img.shields.io/badge/Version-2.6.0-emerald.svg)
+![Version](https://img.shields.io/badge/Version-2.6.1-emerald.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
-## ✨ Novità & Funzionalità Chiave v2.6.0
+## ✨ Novità & Funzionalità Chiave v2.6.1
 
-- 👤 **Riconoscimento Utente Home Assistant & Profilo Attivo:**
-  - L'Add-on rileva automaticamente l'utente loggato in Home Assistant (Ingress) e lo associa al membro della famiglia corrispondente.
-  - Selettore del profilo attivo nella barra superiore per cambiare rapidamente identità anche su tablet a parete o dispositivi condivisi.
-  - L'utente attivo viene preimpostato automaticamente come **autore** di note, inserimento task rapidi, split, modifiche allo storico ed esecuzioni.
+- 👤 **Riconoscimento Automatico Utenti Home Assistant & Dispositivi Dedicati (es. Tablet a parete):**
+  - All'avvio dell'Add-on, il sistema acquisisce di default il nome dell'utente loggato in Home Assistant (es. **`Tablet`**, **`Papà`**, **`Mamma`**, **`Kiosk`**), anche se non è registrato come operatore/membro della classifica in ChoreQuest!
+  - Gli utenti esterni o dispositivi di controllo vengono mostrati con icone dedicate (es. `📱 Tablet (Home Assistant)`).
+  - L'utente HA loggato diventa automaticamente l'autore predefinito per:
+    - 📝 **Note e commenti sui compiti**.
+    - 📋 **Creazione ed assegnazione di task rapidi**.
+    - ✂️ **Task Splitting**.
+    - ✏️ **Modifiche allo storico con motivazione**.
+    - ⚡ **Registrazione esecuzioni:** se un tablet registra un'attività, i punti vengono assegnati al membro della famiglia selezionato, e l'audit registra: *"Registrato da: Tablet"*.
 - ✨ **Libreria Icone & Emoji Immensa (450+ Icone):**
-  - Oltre **300 Icone Material Design (MDI)** suddivise in 12 categorie specializzate (Bucato, Cucina, Pulizia, Bagno, Arredo, Giardino, Animali, Auto, Brico/Fai-da-te, Ufficio, Bambini/Salute).
-  - Oltre **150 Emoji** categorizzate per persone, casa, cibo, animali, strumenti e simboli gamification.
-  - Ricerca istantanea bilingue per parole chiave in italiano e inglese.
+  - Oltre **300 Icone Material Design (MDI)** in 12 categorie e oltre **150 Emoji**.
 - 🔄 **Controllo Aggiornamenti Live dal Menu Admin:** Verifica direttamente dall'app lo stato della versione su GitHub e le istruzioni di aggiornamento.
 - 📅 **Posticipo Scadenza Routine:** Tocca qualsiasi routine in Home o nel Catalogo per posticipare la scadenza (+1g, +3g, +1 sett o data a scelta con motivazione).
-- ✂️ **Task Splitting Intelligente:** Completa una parte del compito (0 pt) e rinomina la parte rimanente; i punti totali originari matureranno al completamento del task finale.
-- 🕒 **Data/Ora Esecuzione Opzionale:** Inserimento rapido delle faccende con selettore data/ora nascosto e attivabile tramite icona calendario.
+- ✂️ **Task Splitting Intelligente:** Completa una parte del compito (0 pt) e rinomina la parte rimanente.
+- 🕒 **Data/Ora Esecuzione Opzionale:** Inserimento rapido delle faccende con selettore data/ora compresso sotto il pulsante calendario.
 - 🔥 **Filtro Routine Urgenti & Alte:** Filtra con 1 tap le routine con priorità elevata o scadute.
-- 📱 **Pulsanti Home Puliti & Solidi:** Design piatto moderno ad alto contrasto senza sfumature confuse.
+- 📱 **Pulsanti Home Solidi & Moderni:** Design piatto ad alto contrasto senza sfumature confuse.
 - 📊 **Audit Trail & Storico Modifiche:** Ogni riga modificata nello storico mostra chi ha fatto la modifica, quando e perché.
 - 🔄 **Sensori Home Assistant Real-Time:** Punti membri, routine in scadenza, task in sospeso e sensore binario `binary_sensor.chorequest_all_chores_done`.
 - 💾 **Backup & Ripristino:** Esportazione e importazione JSON del database in qualsiasi momento.
@@ -34,4 +37,4 @@
 
 1. Vai in **Impostazioni** ➔ **Add-on** ➔ **Store degli Add-on**.
 2. Clicca sui tre pallini in alto a destra (**⋮**) ➔ **Controlla aggiornamenti** (o ricarica con `F5`).
-3. Clicca su **Aggiorna (Update)** alla versione **v2.6.0** e avvia l'Add-on!
+3. Clicca su **Aggiorna (Update)** alla versione **v2.6.1** e avvia l'Add-on!
