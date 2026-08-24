@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.6.0</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.6.1</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -300,11 +300,11 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Versione Installata</div>
-          <div class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">v2.6.0</div>
+          <div class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">v2.6.1</div>
         </div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Ultima Versione su GitHub</div>
-          <div id="update-remote-version" class="text-xl font-extrabold text-slate-900 dark:text-white">v2.6.0</div>
+          <div id="update-remote-version" class="text-xl font-extrabold text-slate-900 dark:text-white">v2.6.1</div>
         </div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Stato Sistema</div>
@@ -544,8 +544,10 @@
           </div>
         </div>
 
+        <div id="performer-operator-badge"></div>
+
         <div class="space-y-2">
-          <div class="text-xs font-bold text-slate-500 dark:text-slate-400">Tocca il membro che ha completato l'attività:</div>
+          <div class="text-xs font-bold text-slate-500 dark:text-slate-400">Tocca il membro a cui assegnare i punti:</div>
           <div id="modal-single-member-buttons" class="grid grid-cols-2 gap-3"></div>
         </div>
 
@@ -1150,6 +1152,16 @@
       renderIconLibrary();
     });
 
+    function getHaUserIcon(name) {
+      const n = (name || '').toLowerCase();
+      if (n.includes('tablet') || n.includes('ipad') || n.includes('kiosk') || n.includes('schermo') || n.includes('wall') || n.includes('parete')) return '📱';
+      if (n.includes('admin') || n.includes('root') || n.includes('gestore')) return '⚙️';
+      if (n.includes('guest') || n.includes('ospite') || n.includes('visitatore')) return '👋';
+      if (n.includes('pc') || n.includes('computer') || n.includes('laptop') || n.includes('macbook')) return '💻';
+      if (n.includes('tv') || n.includes('smart')) return '📺';
+      return '🏠';
+    }
+
     async function initActiveProfile() {
       const select = document.getElementById('header-active-user-select');
       if (!select || !appData) return;
@@ -1161,19 +1173,27 @@
         
         select.innerHTML = '';
         const members = Object.values(appData.members || {});
-        
-        if (detectedHaUser && !members.some(m => m.name.toLowerCase() === detectedHaUser.toLowerCase())) {
-          select.innerHTML += `<option value="${detectedHaUser}">👤 ${detectedHaUser} (Loggato HA)</option>`;
+        const isExternalHaUser = detectedHaUser && !members.some(m => m.name.toLowerCase() === detectedHaUser.toLowerCase());
+
+        // Add external HA user (e.g. Tablet, Kiosk) at the very top with distinct icon
+        if (isExternalHaUser) {
+          const icon = getHaUserIcon(detectedHaUser);
+          select.innerHTML += `<option value="${detectedHaUser}">${icon} ${detectedHaUser} (Home Assistant)</option>`;
         }
         
         members.forEach(m => {
           const isDetected = detectedHaUser && m.name.toLowerCase() === detectedHaUser.toLowerCase();
-          select.innerHTML += `<option value="${m.name}">${m.icon || '👤'} ${m.name}${isDetected ? ' (Loggato)' : ''}</option>`;
+          select.innerHTML += `<option value="${m.name}">${m.icon || '👤'} ${m.name}${isDetected ? ' (⭐ Loggato HA)' : ''}</option>`;
         });
 
         select.innerHTML += `<option value="Famiglia">👥 Tutta la Famiglia</option>`;
 
-        if (!currentActiveUser) {
+        // Auto-select: Always default to detected HA user on load unless manually overridden in this tab
+        const hasSessionOverride = sessionStorage.getItem('chorequest_session_user_overridden');
+        if (!hasSessionOverride && detectedHaUser) {
+          currentActiveUser = detectedHaUser;
+          localStorage.setItem('chorequest_active_user', currentActiveUser);
+        } else if (!currentActiveUser) {
           if (detectedHaUser) {
             currentActiveUser = detectedHaUser;
           } else if (members.length > 0) {
@@ -1192,6 +1212,7 @@
 
     function setActiveProfile(name) {
       currentActiveUser = name;
+      sessionStorage.setItem('chorequest_session_user_overridden', 'true');
       localStorage.setItem('chorequest_active_user', name);
       showToast(`Profilo attivo: ${name}`, '👤');
       
@@ -1918,6 +1939,19 @@
       document.getElementById('performer-exec-datetime').value = localDatetime;
       document.getElementById('performer-datetime-container').classList.add('hidden');
 
+      const operatorBadge = document.getElementById('performer-operator-badge');
+      if (operatorBadge) {
+        operatorBadge.innerHTML = `
+          <div class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs flex items-center justify-between gap-2">
+            <span class="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1.5">
+              <span>${getHaUserIcon(currentActiveUser)}</span>
+              <span>Autore/Operatore attivo:</span>
+            </span>
+            <span class="font-extrabold text-indigo-600 dark:text-indigo-400">${currentActiveUser || 'Famiglia'}</span>
+          </div>
+        `;
+      }
+
       const members = Object.values(appData?.members || {});
       if (singleBox) {
         singleBox.innerHTML = '';
@@ -2149,15 +2183,26 @@
       const splitMemberSelect = document.getElementById('split-completed-by');
       if (splitMemberSelect) {
         splitMemberSelect.innerHTML = '';
+        if (detectedHaUser && !Object.values(appData?.members || {}).some(m => m.name.toLowerCase() === detectedHaUser.toLowerCase())) {
+          splitMemberSelect.innerHTML += `<option value="${detectedHaUser}">${getHaUserIcon(detectedHaUser)} ${detectedHaUser} (HA)</option>`;
+        }
         Object.values(appData?.members || {}).forEach(m => {
-          const isSelected = currentActiveUser && (m.name.toLowerCase() === currentActiveUser.toLowerCase());
-          splitMemberSelect.innerHTML += `<option value="${m.name}" ${isSelected ? 'selected' : ''}>${m.name}</option>`;
+          splitMemberSelect.innerHTML += `<option value="${m.name}">${m.icon || '👤'} ${m.name}</option>`;
         });
+        splitMemberSelect.value = currentActiveUser || Object.values(appData?.members || {})[0]?.name || 'Famiglia';
       }
 
       const noteAuthorSelect = document.getElementById('modal-note-author');
-      if (noteAuthorSelect && currentActiveUser) {
-        noteAuthorSelect.value = currentActiveUser;
+      if (noteAuthorSelect) {
+        noteAuthorSelect.innerHTML = '';
+        if (detectedHaUser && !Object.values(appData?.members || {}).some(m => m.name.toLowerCase() === detectedHaUser.toLowerCase())) {
+          noteAuthorSelect.innerHTML += `<option value="${detectedHaUser}">${getHaUserIcon(detectedHaUser)} ${detectedHaUser} (HA)</option>`;
+        }
+        Object.values(appData?.members || {}).forEach(m => {
+          noteAuthorSelect.innerHTML += `<option value="${m.name}">${m.icon || '👤'} ${m.name}</option>`;
+        });
+        noteAuthorSelect.innerHTML += `<option value="Famiglia">👥 Famiglia</option>`;
+        noteAuthorSelect.value = currentActiveUser || 'Famiglia';
       }
 
       const notesList = document.getElementById('modal-notes-history-list');
