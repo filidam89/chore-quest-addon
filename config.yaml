@@ -1,5 +1,5 @@
 name: "ChoreQuest"
-version: "2.6.1"
+version: "2.6.2"
 slug: "chorequest"
 description: "Gamified family chore & routine management for Home Assistant with Home Assistant Logged-in User Detection, Active Profile Switcher, Massive Material Icon & Emoji Library (300+ MDI & 150+ Emojis), Task Splitting, and Routine Postponement."
 url: "https://github.com/filidam89/chore-quest-addon"
