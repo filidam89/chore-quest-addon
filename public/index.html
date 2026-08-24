@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.5.0</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.6.0</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -73,7 +73,16 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2.5">
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- ACTIVE USER PROFILE SELECTOR (AUTO-DETECTED FROM HOME ASSISTANT) -->
+        <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs shadow-2xs">
+          <span class="text-xs text-slate-400 select-none"><i class="mdi mdi-account-circle text-base text-indigo-600 dark:text-indigo-400"></i></span>
+          <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 hidden sm:inline">Profilo:</span>
+          <select id="header-active-user-select" onchange="setActiveProfile(this.value)" class="bg-transparent text-xs font-extrabold text-indigo-700 dark:text-indigo-300 outline-none cursor-pointer">
+            <!-- Populated with Members & Auto-Detected HA User -->
+          </select>
+        </div>
+
         <!-- THEME BUTTON -->
         <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs">
           <button onclick="setTheme('light')" id="theme-btn-light" title="Tema Chiaro" class="px-2.5 py-1 rounded-xl transition font-bold text-slate-600 dark:text-slate-400">☀️</button>
@@ -291,11 +300,11 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Versione Installata</div>
-          <div class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">v2.5.0</div>
+          <div class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">v2.6.0</div>
         </div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Ultima Versione su GitHub</div>
-          <div id="update-remote-version" class="text-xl font-extrabold text-slate-900 dark:text-white">v2.5.0</div>
+          <div id="update-remote-version" class="text-xl font-extrabold text-slate-900 dark:text-white">v2.6.0</div>
         </div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Stato Sistema</div>
@@ -862,6 +871,9 @@
       return `<span class="${extraClass}">${iconStr}</span>`;
     }
 
+    let currentActiveUser = localStorage.getItem('chorequest_active_user') || '';
+    let detectedHaUser = null;
+
     const MDI_ICON_DATABASE = [
       { category: "🧺 Bucato, Stirare & Armadio", icons: [
         { id: "mdi:washing-machine", name: "Lavatrice", t: "lavatrice bucato lavaggio panni centrifuga" },
@@ -869,47 +881,213 @@
         { id: "mdi:tshirt-crew-outline", name: "Ritirare Panni", t: "ritirare panni stendino asciutti piegare" },
         { id: "mdi:hanger", name: "Panni a posto / Gruccia", t: "panni a posto gruccia armadio appendiabiti vestiti" },
         { id: "mdi:iron", name: "Ferro da Stiro", t: "ferro da stiro stirare asse da stiro pieghe" },
+        { id: "mdi:iron-outline", name: "Stirare Delicati", t: "stirare camicie vapore ferro" },
         { id: "mdi:tumble-dryer", name: "Asciugatrice", t: "asciugatrice asciugare panni caldaia" },
         { id: "mdi:basket", name: "Cesto Panni", t: "cesto bucato sporco panni contenitore" },
-        { id: "mdi:spray-bottle", name: "Smacchiatore Spray", t: "smacchiatore spray detersivo pulizia" }
+        { id: "mdi:spray-bottle", name: "Smacchiatore Spray", t: "smacchiatore spray detersivo pulizia" },
+        { id: "mdi:wardrobe-outline", name: "Armadio / Cambio Stagione", t: "armadio cambio stagione vestiti guardaroba" },
+        { id: "mdi:dresser-outline", name: "Cassettiera / Biancheria", t: "cassettiera calze mutande intimo cassetti" },
+        { id: "mdi:shoe-sneaker", name: "Scarpe / Pulizia Scarpe", t: "scarpe scarpiere sneakers pulire calzature" },
+        { id: "mdi:shoe-formal", name: "Lucidare Scarpe", t: "scarpe eleganti lucido spazzola" },
+        { id: "mdi:socks", name: "Calzini / Paia", t: "calzini appaiare lavare bucato" },
+        { id: "mdi:tag-outline", name: "Etichette Vestiti", t: "etichette piegare ordine maglie" }
       ]},
-      { category: "🍳 Cucina, Stoviglie & Spesa", icons: [
+      { category: "🍳 Cucina, Stoviglie & Pasti", icons: [
         { id: "mdi:stove", name: "Cucinare / Fornelli", t: "cucinare fornelli piano cottura fuoco cena pranzo" },
         { id: "mdi:silverware-clean", name: "Piatti / Stoviglie", t: "piatti lavare piatti posate lavastoviglie pulite" },
+        { id: "mdi:silverware-fork-knife", name: "Apparecchiare / Sparecchiare", t: "apparecchiare sparecchiare tavola posate forchetta coltello" },
         { id: "mdi:dishwasher", name: "Lavastoviglie", t: "lavastoviglie svuotare caricare pastiglia" },
         { id: "mdi:coffee-maker", name: "Macchina Caffè", t: "macchina caffe cialde capsule espresso" },
         { id: "mdi:coffee", name: "Caffè / Moka", t: "caffe moka espresso pausa colazione" },
-        { id: "mdi:cart", name: "Spesa / Carrello", t: "spesa carrello supermercato provviste cibo" },
-        { id: "mdi:fridge-outline", name: "Frigorifero", t: "frigorifero pulire frigo sbrinare" },
-        { id: "mdi:trash-can-outline", name: "Spazzatura", t: "spazzatura immondizia umido secco differenziata" }
+        { id: "mdi:fridge-outline", name: "Frigorifero", t: "frigorifero pulire frigo sbrinare verdura" },
+        { id: "mdi:fridge-bottom", name: "Freezer / Congelatore", t: "freezer congelatore sbrinare surgelati" },
+        { id: "mdi:microwave", name: "Microonde", t: "microonde scaldare pulire forno micro" },
+        { id: "mdi:toaster-oven", name: "Fornetto / Tostapane", t: "fornetto tostapane briciole pane" },
+        { id: "mdi:pot-steam-outline", name: "Pentole / Padelle", t: "pentole padelle incrostazioni lavare" },
+        { id: "mdi:pan", name: "Padella / Friggere", t: "padella friggere olio cappa" },
+        { id: "mdi:blender-outline", name: "Frullatore / Robot Cucina", t: "frullatore minipimer bimby mixer" },
+        { id: "mdi:kettle-outline", name: "Bollitore / Tisana", t: "bollitore acqua the tisana calcare" },
+        { id: "mdi:cart", name: "Spesa Supermercato", t: "spesa carrello supermercato provviste cibo" },
+        { id: "mdi:pizza", name: "Pizza / Cena Asporto", t: "pizza forno impasto farina" },
+        { id: "mdi:bread-slice-outline", name: "Pane / Forno", t: "pane panetteria grattugiato fette" },
+        { id: "mdi:noodles", name: "Pasta / Primo", t: "pasta spaghetti riso sugo sughi" },
+        { id: "mdi:egg-fried", name: "Uova / Colazione", t: "uova colazione frittata dolce" },
+        { id: "mdi:food-apple-outline", name: "Frutta & Verdura", t: "frutta verdura lavare sbucciare orto" },
+        { id: "mdi:cup-water", name: "Acqua / Brocca", t: "acqua caraffa filtrante filtro bottiglie" },
+        { id: "mdi:bottle-tonic-outline", name: "Olio / Condimenti", t: "olio aceto spezie sale salse" }
       ]},
-      { category: "🧹 Pulizia Casa & Bagno", icons: [
-        { id: "mdi:toilet", name: "Bagno / Water", t: "bagno wc tazza sanitari disinfettare candeggina" },
-        { id: "mdi:vacuum", name: "Polvere / Aspirapolvere", t: "polvere aspirapolvere robot folletto passata" },
-        { id: "mdi:feather", name: "Spolverare / Piumino", t: "spolverare piumino mobili mensole polvere" },
-        { id: "mdi:window-closed-variant", name: "Vetri / Finestre", t: "vetri finestre balcone persiane pulire" },
+      { category: "🧹 Pulizia, Pavimenti & Spazzatura", icons: [
+        { id: "mdi:vacuum", name: "Aspirapolvere / Folletto", t: "polvere aspirapolvere robot folletto passata" },
+        { id: "mdi:robot-vacuum", name: "Robot Aspirapolvere", t: "robot aspirapolvere roomba svuotare cassetto" },
         { id: "mdi:broom", name: "Scopa / Spazzare", t: "scopa spazzare raccogliere paletta briciole" },
         { id: "mdi:bucket-outline", name: "Secchio & Mocio", t: "secchio mocio straccio lavare pavimenti" },
-        { id: "mdi:shower-head", name: "Doccia", t: "doccia box doccia calcare vetri" },
-        { id: "mdi:sparkles", name: "Pulito Brillante", t: "splendore pulito brillante disinfettato" }
+        { id: "mdi:feather", name: "Spolverare / Piumino", t: "spolverare piumino mobili mensole polvere" },
+        { id: "mdi:window-closed-variant", name: "Vetri / Finestre", t: "vetri finestre balcone persiane pulire" },
+        { id: "mdi:spray", name: "Detersivo / Igienizzante", t: "detersivo spray disinfettante sgrassatore" },
+        { id: "mdi:sparkles", name: "Pulito Brillante / Profondo", t: "splendore pulito brillante disinfettato lucido" },
+        { id: "mdi:trash-can-outline", name: "Spazzatura / Cestini", t: "spazzatura immondizia umido secco differenziata sacchetto" },
+        { id: "mdi:recycle", name: "Raccolta Differenziata", t: "differenziata carta plastica vetro umido riciclo" },
+        { id: "mdi:hand-wash-outline", name: "Igienizzare Mani / Piani", t: "igienizzare piani lavoro disinfettare" },
+        { id: "mdi:air-filter", name: "Filtri Aria / Condizionatore", t: "filtri aria condizionatore purificatore cappa" },
+        { id: "mdi:radiator", name: "Termosifoni / Caloriferi", t: "termosifoni caloriferi spurgare pulire polvere" },
+        { id: "mdi:fan", name: "Ventilatore / Cappa", t: "ventilatore cappa aspirante pale" }
       ]},
-      { category: "🛏️ Ambienti & Persona", icons: [
-        { id: "mdi:bed", name: "Letto / Lenzuola", t: "letto rifare letto lenzuola camera dormire" },
-        { id: "mdi:sofa-outline", name: "Divano / Salotto", t: "divano salotto cuscini riordinare sala" },
-        { id: "mdi:flower-tulip-outline", name: "Piante / Annaffiare", t: "piante fiori annaffiare balcone vaso" },
-        { id: "mdi:content-cut", name: "Barbiere / Capelli", t: "barbiere parrucchiere taglio capelli barba" },
-        { id: "mdi:car", name: "Auto / Macchina", t: "macchina auto lavare benzina tagliando" },
-        { id: "mdi:dog-side", name: "Cane / Passeggiata", t: "cane passeggiata pappa veterinario" },
-        { id: "mdi:book-open-page-variant", name: "Compiti / Studio", t: "compiti scuola studio libri diario" }
+      { category: "🚿 Bagno, Doccia & Cura Personale", icons: [
+        { id: "mdi:toilet", name: "Water / Sanitari", t: "bagno wc tazza sanitari disinfettare candeggina" },
+        { id: "mdi:shower-head", name: "Doccia / Box Doccia", t: "doccia box doccia calcare vetri piatto doccia" },
+        { id: "mdi:bathtub-outline", name: "Vasca da Bagno", t: "vasca bagno idromassaggio lavare" },
+        { id: "mdi:toothbrush-paste", name: "Denti / Spazzolini", t: "spazzolino dentifricio bicchiere cambio" },
+        { id: "mdi:soap", name: "Sapone / Dispenser", t: "sapone mani ricarica dispenser bagnoschiuma" },
+        { id: "mdi:towel", name: "Asciugamani / Teli", t: "asciugamani teli cambio ospite lavaggio" },
+        { id: "mdi:paper-roll-outline", name: "Carta Igienica", t: "carta igienica scorta rotolo rotoli" },
+        { id: "mdi:mirror", name: "Specchio Bagno", t: "specchio aloni vetri bagno" },
+        { id: "mdi:content-cut", name: "Barbiere / Capelli / Barba", t: "barbiere parrucchiere taglio capelli barba rasoio" },
+        { id: "mdi:face-man-shimmer", name: "Cura Viso Uomo", t: "rasatura crema viso idratante dopobarba" },
+        { id: "mdi:face-woman-shimmer", name: "Skincare / Trucchi", t: "trucchi cosmetici maschera viso struccarsi" }
+      ]},
+      { category: "🛋️ Camere, Salotto & Arredo", icons: [
+        { id: "mdi:bed", name: "Rifare il Letto", t: "letto rifare letto lenzuola camera dormire" },
+        { id: "mdi:bed-double-outline", name: "Cambio Lenzuola Matrimoniale", t: "lenzuola copripiumino federe federa matrimoniale" },
+        { id: "mdi:bed-king-outline", name: "Materasso / Girare", t: "materasso girare aspirare acari coprimaterasso" },
+        { id: "mdi:sofa-outline", name: "Divano / Cuscini", t: "divano salotto cuscini riordinare sala plaid" },
+        { id: "mdi:television", name: "TV / Mobile Sala", t: "tv televisione schermo telecomando polvere" },
+        { id: "mdi:table-furniture", name: "Tavolo / Sedie", t: "tavolo sedie gambe feltrini pulizia" },
+        { id: "mdi:lamp-outline", name: "Lampade / Lampadari", t: "lampade lampadario lampadina luce paralume" },
+        { id: "mdi:curtains", name: "Tende / Lavaggio Tende", t: "tende lavare tende tendaggi bastone" },
+        { id: "mdi:door-closed", name: "Porte / Maniglie", t: "porte maniglie infissi pulire" },
+        { id: "mdi:home-heart", name: "Riordino Generale Casa", t: "riordino mettere a posto sistemare casa decluttering" }
+      ]},
+      { category: "🌿 Giardino, Balcone & Piante", icons: [
+        { id: "mdi:flower-tulip-outline", name: "Piante / Annaffiare", t: "piante fiori annaffiare balcone vaso terra" },
+        { id: "mdi:sprout-outline", name: "Concimare / Rinvaso", t: "concime rinvaso terra vaso germogli" },
+        { id: "mdi:leaf", name: "Foglie Secche / Potatura", t: "foglie secche raccogliere potare rami" },
+        { id: "mdi:tree-outline", name: "Alberi / Siepe", t: "alberi siepe tagliasiepi giardino" },
+        { id: "mdi:grass", name: "Tagliare Erba / Prato", t: "prato erba tosaerba rasaerba decespugliatore" },
+        { id: "mdi:watering-can-outline", name: "Annaffiatoio", t: "annaffiatoio acqua balcone fioriere" },
+        { id: "mdi:hose", name: "Canna dell'Acqua / Tubo", t: "tubo gomma canna acqua lavare cortile" },
+        { id: "mdi:grill-outline", name: "Barbecue / Griglia", t: "barbecue griglia bbq carbonella pulire griglie" },
+        { id: "mdi:pool", name: "Piscina / Manutenzione", t: "piscina cloro filtro skimmer fondo" }
+      ]},
+      { category: "🐶 Animali Domestici", icons: [
+        { id: "mdi:dog-side", name: "Cane / Passeggiata", t: "cane passeggiata pappa veterinario guinzaglio" },
+        { id: "mdi:cat", name: "Gatto / Lettiera", t: "gatto lettiera sabbietta tiragraffi pappa" },
+        { id: "mdi:paw", name: "Spazzolare Animale / Zampe", t: "spazzola pelo zampe pulizia animale" },
+        { id: "mdi:bone", name: "Cibo / Crocchette", t: "crocchette pappa ciotola umido biscottini" },
+        { id: "mdi:fishbowl-outline", name: "Acquario / Pesci", t: "acquario pesci filtro pulizia acqua mangime" },
+        { id: "mdi:medical-bag", name: "Veterinario / Medicine", t: "veterinario vaccino antiparassitario collare" }
+      ]},
+      { category: "🚗 Auto, Garage & Mobilità", icons: [
+        { id: "mdi:car", name: "Auto / Macchina", t: "macchina auto lavare benzina tagliando olio" },
+        { id: "mdi:car-wash", name: "Lavaggio Auto Esterno / Interno", t: "lavaggio auto lavare vetri aspirare sedili cera" },
+        { id: "mdi:tire", name: "Pressione Gomme / Cambio Gomme", t: "gomme pneumatici pressione cambio invernali estive" },
+        { id: "mdi:gas-station-outline", name: "Rifornimento / Benzina", t: "benzina diesel gpl metano ricarica colonnina" },
+        { id: "mdi:bicycle", name: "Bicicletta / Catena", t: "bici bicicletta catena camera d'aria freni" },
+        { id: "mdi:scooter", name: "Monopattino / Moto", t: "monopattino scooter moto casco ricarica" },
+        { id: "mdi:garage-open-variant", name: "Garage / Cantina", t: "garage cantina riordino scaffali scatole" }
+      ]},
+      { category: "🛠️ Fai da Te, Manutenzione & Attrezzi", icons: [
+        { id: "mdi:hammer", name: "Martello / Chiodi", t: "martello chiodi appendere quadri fissare" },
+        { id: "mdi:wrench", name: "Chiave Inglese / Idraulica", t: "chiave inglese bulloni stringere rubinetto" },
+        { id: "mdi:screwdriver", name: "Cacciavite / Viti", t: "cacciavite viti stringere montare mobili ikea" },
+        { id: "mdi:toolbox-outline", name: "Cassetta Attrezzi", t: "cassetta attrezzi cassetta arnesi utensili" },
+        { id: "mdi:paint-roller", name: "Tinteggiare / Pittura", t: "pittura rullo pennello tinteggiare stucco muri" },
+        { id: "mdi:ladder", name: "Scala / Soppalco", t: "scala salire soffitta soffitto lampadine" },
+        { id: "mdi:lightning-bolt", name: "Elettricità / Prese", t: "luce corrente interruttore ciabatta fusibile" },
+        { id: "mdi:pipe-wrench", name: "Idraulico / Tubature", t: "tubi scarico sifone sturare calcare guarnizione" }
+      ]},
+      { category: "📚 Studio, Lavoro & Ufficio", icons: [
+        { id: "mdi:book-open-page-variant", name: "Compiti / Studio / Libri", t: "compiti scuola studio libri diario quaderno" },
+        { id: "mdi:laptop", name: "Computer / Smart Working", t: "computer portatile pc lavoro email smart working" },
+        { id: "mdi:printer", name: "Stampante / Carta", t: "stampante carta toner cartucce scanner" },
+        { id: "mdi:clipboard-text-outline", name: "Pratiche / Documenti", t: "documenti fatture bollette archivio moduli burocrazia" },
+        { id: "mdi:cash-multiple", name: "Conti / Spese di Casa", t: "conti banca budget spese scontrini bonifici" },
+        { id: "mdi:email-outline", name: "Posta / Casella Lettere", t: "posta lettere buca pacchi corriere raccomandata" }
+      ]},
+      { category: "👶 Bambini, Giochi & Salute", icons: [
+        { id: "mdi:baby-carriage", name: "Passeggino / Bebè", t: "bambino passeggino pannolini culla neonato" },
+        { id: "mdi:teddy-bear", name: "Giochi / Riordino Giocattoli", t: "giocattoli lego pupazzi riordinare stanza bimbi" },
+        { id: "mdi:gamepad-variant-outline", name: "Console / Videogiochi", t: "videogiochi playstation switch console tempo" },
+        { id: "mdi:pill", name: "Medicine / Farmacia", t: "medicine farmacia integratori pastiglie scadenze" },
+        { id: "mdi:heart-pulse", name: "Salute / Visita Medica", t: "medico controllo salute pressione analisi" },
+        { id: "mdi:dumbbell", name: "Allenamento / Palestra", t: "palestra pesi allenamento tapis roulant ginnastica" },
+        { id: "mdi:run", name: "Corsa / Camminata", t: "corsa camminata passi sport jogging" }
       ]}
     ];
 
     const EMOJI_DATABASE = [
-      { category: "😀 Faccine & Emoji", emojis: [
-        { e: "😀", t: "faccia felice sorriso" }, { e: "😄", t: "occhi ridenti gioia" }, { e: "😂", t: "risate piangere" },
-        { e: "😎", t: "occhiali sole relax" }, { e: "🥳", t: "festa party compleanno" }, { e: "👑", t: "corona re vincitore" },
-        { e: "⭐", t: "stella super premio" }, { e: "🔥", t: "fuoco record urgente" }, { e: "👨‍💻", t: "papà computer" },
-        { e: "👩‍🎨", t: "mamma arte pittura" }, { e: "👦", t: "ragazzo figlio" }, { e: "👧", t: "ragazza figlia" }
+      { category: "👨‍👩‍👧‍👦 Persone, Famiglia & Volti", emojis: [
+        { e: "👨‍💻", t: "papà computer uomo tecnologia" }, { e: "👩‍🎨", t: "mamma arte pittura donna creatività" },
+        { e: "👦", t: "ragazzo figlio bimbo maschio" }, { e: "👧", t: "ragazza figlia bimba femmina" },
+        { e: "👶", t: "bebè neonato bimbo piccolo" }, { e: "👴", t: "nonno anziano saggio" },
+        { e: "👵", t: "nonna anziana casa" }, { e: "👨‍🍳", t: "cuoco cucina chef pasto" },
+        { e: "👩‍🔧", t: "meccanico attrezzi riparazioni" }, { e: "🦸‍♂️", t: "supereroe papà eroe forte" },
+        { e: "🦸‍♀️", t: "supereroina mamma eroina super" }, { e: "🧙‍♂️", t: "mago magia fantasy" },
+        { e: "😀", t: "faccia felice sorriso" }, { e: "😄", t: "occhi ridenti gioia contentezza" },
+        { e: "😂", t: "risate piangere divertente" }, { e: "😎", t: "occhiali sole fico relax" },
+        { e: "🥳", t: "festa party compleanno festeggia" }, { e: "💪", t: "muscoli forza energia impegno" },
+        { e: "🤝", t: "accordo stretta mano squadra insieme" }, { e: "❤️", t: "cuore amore famiglia affetto" }
+      ]},
+      { category: "🧹 Pulizia, Casa & Oggetti", emojis: [
+        { e: "🧹", t: "scopa spazzare polvere pavimenti" }, { e: "🧺", t: "cesto bucato panni lavatrice" },
+        { e: "🧽", t: "spugna piatti lavare pulire" }, { e: "🧼", t: "sapone igiene schiuma mani" },
+        { e: "🪣", t: "secchio acqua mocio lavare" }, { e: "🪥", t: "spazzolino denti igiene" },
+        { e: "🧻", t: "carta igienica rotolo bagno" }, { e: "🛏️", t: "letto lenzuola camera dormire" },
+        { e: "🛋️", t: "divano salotto cuscini relax" }, { e: "🚪", t: "porta ingresso serratura" },
+        { e: "🪟", t: "finestra vetri balcone persiane" }, { e: "💡", t: "lampadina luce idea accendere" },
+        { e: "📦", t: "scatola pacco trasloco ordine" }, { e: "🗑️", t: "cestino spazzatura eliminare" },
+        { e: "🧴", t: "flacone crema detersivo shampoo" }, { e: "🚿", t: "doccia bagno acqua lavarsi" },
+        { e: "🛁", t: "vasca bagno idromassaggio relax" }, { e: "🚽", t: "water wc bagno tazza" },
+        { e: "🔑", t: "chiavi casa cancello garage" }
+      ]},
+      { category: "🍳 Cibo, Bevande & Cucina", emojis: [
+        { e: "🍳", t: "uovo padella cucinare colazione" }, { e: "🍲", t: "zuppa pasta pentola minestra" },
+        { e: "🍕", t: "pizza cena asporto forno" }, { e: "🍝", t: "spaghetti pasta primo sugo" },
+        { e: "🥗", t: "insalata verdura fresco dietetico" }, { e: "🍞", t: "pane fette tostato panetteria" },
+        { e: "🥪", t: "toast tramezzino panino merenda" }, { e: "🍔", t: "hamburger panino patatine cena" },
+        { e: "☕", t: "caffe espresso tazzina colazione" }, { e: "🍵", t: "te tisana infuso tazza" },
+        { e: "🧃", t: "succo frutta cannuccia merenda" }, { e: "🥛", t: "latte bicchiere colazione" },
+        { e: "🍎", t: "mela frutta sana spesa" }, { e: "🍌", t: "banana frutta potassio" },
+        { e: "🍇", t: "uva frutta dolce vino" }, { e: "🥕", t: "carota verdura cucina orto" },
+        { e: "🥔", t: "patate patatine purè contorno" }, { e: "🛒", t: "carrello spesa supermercato compere" },
+        { e: "🍽️", t: "piatto forchetta coltello tavola" }, { e: "🔪", t: "coltello tagliare cucina affettare" }
+      ]},
+      { category: "🐶 Animali, Natura & Piante", emojis: [
+        { e: "🐶", t: "cane cucciolo cagnolino zampa" }, { e: "🐱", t: "gatto gattino micio fusa" },
+        { e: "🐭", t: "topolino piccolo animale" }, { e: "🐰", t: "coniglio coniglietto pasqua" },
+        { e: "🦊", t: "volpe bosco furba" }, { e: "🐻", t: "orso montagna peluche" },
+        { e: "🦁", t: "leone re savana forza" }, { e: "🐮", t: "mucca latte fattoria" },
+        { e: "🐷", t: "maialino fattoria rosa" }, { e: "🐸", t: "rana stagno verde salto" },
+        { e: "🐔", t: "gallina uova pollo fattoria" }, { e: "🐦", t: "uccellino nido volare canto" },
+        { e: "🐝", t: "ape miele insetto fiori" }, { e: "🦋", t: "farfalla primavera colori ali" },
+        { e: "🐠", t: "pesce acquario mare nuoto" }, { e: "🌱", t: "germoglio piantina crescita orto" },
+        { e: "🌿", t: "foglia erba spezie aroma" }, { e: "🍀", t: "quadrifoglio fortuna verde prato" },
+        { e: "🌸", t: "fiore ciliegio primavera rosa" }, { e: "🌻", t: "girasole sole estate giallo" },
+        { e: "🪴", t: "pianta vaso appartamento fioriera" }, { e: "🌳", t: "albero parco bosco ombra" }
+      ]},
+      { category: "🚗 Mobilità, Sport & Attrezzi", emojis: [
+        { e: "🚗", t: "auto macchina viaggio garage" }, { e: "🚲", t: "bicicletta bici pedalare sport" },
+        { e: "🛵", t: "scooter motorino vespa traffico" }, { e: "🚙", t: "suv fuoristrada viaggio strada" },
+        { e: "⛽", t: "pompa benzina carburante rifornimento" }, { e: "🔨", t: "martello chiodi riparazioni brico" },
+        { e: "🔧", t: "chiave inglese meccanico aggiustare" }, { e: "🪛", t: "cacciavite viti montaggio ikea" },
+        { e: "🪚", t: "sega legno tagliare falegname" }, { e: "🪜", t: "scala salire soffitta altezza" },
+        { e: "🧰", t: "cassetta attrezzi arnesi valigetta" }, { e: "🔌", t: "spina presa corrente elettricità" },
+        { e: "🔋", t: "batteria pila ricarica energia" }, { e: "💻", t: "computer portatile pc lavoro studio" },
+        { e: "📱", t: "telefono cellulare smartphone app" }, { e: "⚽", t: "calcio pallone partita stadio" },
+        { e: "🏀", t: "basket canestro palla sport" }, { e: "🎾", t: "tennis racchetta campo set" },
+        { e: "🏋️", t: "pesi palestra sollevamento fitness" }, { e: "🏃", t: "corsa running podismo allenamento" }
+      ]},
+      { category: "🏆 Punti, Gamification & Simboli", emojis: [
+        { e: "🏆", t: "trofeo coppa vittoria primo premio campione" }, { e: "🥇", t: "medaglia oro primo posto" },
+        { e: "🥈", t: "medaglia argento secondo posto" }, { e: "🥉", t: "medaglia bronzo terzo posto" },
+        { e: "👑", t: "corona re regina leader vittoria" }, { e: "⭐", t: "stella preferito speciale punti" },
+        { e: "🔥", t: "fuoco urgente record calore streak" }, { e: "💎", t: "diamante prezioso totale punti" },
+        { e: "🌟", t: "stella brillante luccichio super" }, { e: "🎯", t: "bersaglio obiettivo centro target" },
+        { e: "🎲", t: "dado adhd gioco casuale estrazione" }, { e: "⏰", t: "sveglia ora tempo orologio suoneria" },
+        { e: "📅", t: "calendario data scadenza giorno" }, { e: "🗓️", t: "calendario appuntamenti programma" },
+        { e: "⏳", t: "clessidra tempo attesa scaduto" }, { e: "🔔", t: "campanella notifica promemoria avviso" },
+        { e: "📝", t: "nota appunto scrivere foglio" }, { e: "📌", t: "puntina promemoria fissare bacheca" },
+        { e: "💯", t: "cento massimo perfetto punteggio" }, { e: "✅", t: "fatto completato visto spunta" },
+        { e: "🚀", t: "razzo lancio velocità super" }, { e: "🎉", t: "festa coriandoli traguardo evviva" }
       ]}
     ];
 
@@ -972,11 +1150,65 @@
       renderIconLibrary();
     });
 
+    async function initActiveProfile() {
+      const select = document.getElementById('header-active-user-select');
+      if (!select || !appData) return;
+
+      try {
+        const res = await fetch(`${apiBase}/current_user`);
+        const data = await res.json();
+        detectedHaUser = data.ha_user_name || null;
+        
+        select.innerHTML = '';
+        const members = Object.values(appData.members || {});
+        
+        if (detectedHaUser && !members.some(m => m.name.toLowerCase() === detectedHaUser.toLowerCase())) {
+          select.innerHTML += `<option value="${detectedHaUser}">👤 ${detectedHaUser} (Loggato HA)</option>`;
+        }
+        
+        members.forEach(m => {
+          const isDetected = detectedHaUser && m.name.toLowerCase() === detectedHaUser.toLowerCase();
+          select.innerHTML += `<option value="${m.name}">${m.icon || '👤'} ${m.name}${isDetected ? ' (Loggato)' : ''}</option>`;
+        });
+
+        select.innerHTML += `<option value="Famiglia">👥 Tutta la Famiglia</option>`;
+
+        if (!currentActiveUser) {
+          if (detectedHaUser) {
+            currentActiveUser = detectedHaUser;
+          } else if (members.length > 0) {
+            currentActiveUser = members[0].name;
+          } else {
+            currentActiveUser = 'Famiglia';
+          }
+          localStorage.setItem('chorequest_active_user', currentActiveUser);
+        }
+
+        select.value = currentActiveUser;
+      } catch (e) {
+        console.error("Error initActiveProfile:", e);
+      }
+    }
+
+    function setActiveProfile(name) {
+      currentActiveUser = name;
+      localStorage.setItem('chorequest_active_user', name);
+      showToast(`Profilo attivo: ${name}`, '👤');
+      
+      const noteAuthor = document.getElementById('modal-note-author');
+      if (noteAuthor) noteAuthor.value = name;
+      const splitBy = document.getElementById('split-completed-by');
+      if (splitBy) splitBy.value = name;
+      const editMember = document.getElementById('edit-log-member');
+      if (editMember) editMember.value = name;
+    }
+
     async function loadStats() {
       try {
         const res = await fetch(`${apiBase}/stats`);
         appData = await res.json();
         applyTheme(appData?.settings?.theme_mode || 'auto');
+        await initActiveProfile();
         render();
         if (activeMode === 'admin') renderAdmin();
       } catch (e) {
@@ -1187,7 +1419,8 @@
       const memSelect = document.getElementById('edit-log-member');
       memSelect.innerHTML = '';
       Object.values(appData?.members || {}).forEach(m => {
-        memSelect.innerHTML += `<option value="${m.name}" ${m.name === log.member_name ? 'selected' : ''}>${m.name}</option>`;
+        const isSelected = log.member_name ? (m.name === log.member_name) : (currentActiveUser && m.name.toLowerCase() === currentActiveUser.toLowerCase());
+        memSelect.innerHTML += `<option value="${m.name}" ${isSelected ? 'selected' : ''}>${m.name}</option>`;
       });
 
       document.getElementById('modal-edit-log').classList.remove('hidden');
@@ -1207,7 +1440,15 @@
         await fetch(`${apiBase}/logs/update`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, task_name, points, member_name, created_at, note, edited_by: "Famiglia" })
+          body: JSON.stringify({ 
+            id, 
+            task_name, 
+            points, 
+            member_name, 
+            created_at, 
+            note, 
+            edited_by: currentActiveUser || "Famiglia" 
+          })
         });
         closeEditLogModal();
         showToast("Attività aggiornata e registrata nello storico!", "✏️");
@@ -1681,12 +1922,22 @@
       if (singleBox) {
         singleBox.innerHTML = '';
         members.forEach(m => {
+          const isActiveUser = currentActiveUser && (m.name.toLowerCase() === currentActiveUser.toLowerCase());
+          const highlightClass = isActiveUser 
+            ? 'border-indigo-600 dark:border-indigo-500 bg-indigo-50/90 dark:bg-indigo-950/70 shadow-xs ring-2 ring-indigo-500/50' 
+            : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50';
+
           singleBox.innerHTML += `
-            <button onclick="executeTaskWithSingleAuthor('${m.name}')" class="p-3.5 bg-slate-50 dark:bg-slate-800 hover:bg-indigo-50 border-2 border-slate-200 dark:border-slate-700 hover:border-indigo-500 rounded-2xl text-left flex items-center gap-3 transition">
-              <span class="text-3xl">${m.icon || '👤'}</span>
-              <div>
-                <div class="font-extrabold text-sm text-slate-900 dark:text-white">${m.name}</div>
-                <div class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">${isPersonal ? 'Registra' : '+' + points + ' pt'}</div>
+            <button onclick="executeTaskWithSingleAuthor('${m.name}')" class="p-3.5 ${highlightClass} border-2 rounded-2xl text-left flex items-center justify-between gap-3 transition">
+              <div class="flex items-center gap-3">
+                <span class="text-3xl">${m.icon || '👤'}</span>
+                <div>
+                  <div class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>${m.name}</span>
+                    ${isActiveUser ? '<span class="text-[10px] bg-indigo-600 text-white font-bold px-1.5 py-0.2 rounded-full">⭐ Tu</span>' : ''}
+                  </div>
+                  <div class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">${isPersonal ? 'Registra' : '+' + points + ' pt'}</div>
+                </div>
               </div>
             </button>
           `;
@@ -1749,7 +2000,7 @@
             task_type: taskType, 
             category: category || "Generale",
             is_personal: isPersonal,
-            created_by: "Famiglia",
+            created_by: currentActiveUser || memberName || "Famiglia",
             execution_date: customDate ? new Date(customDate).toISOString() : new Date().toISOString()
           })
         });
@@ -1781,7 +2032,7 @@
             task_type: taskType, 
             category: category || "Generale",
             is_personal: isPersonal,
-            created_by: "Famiglia",
+            created_by: currentActiveUser || "Famiglia",
             execution_date: customDate ? new Date(customDate).toISOString() : new Date().toISOString()
           })
         });
@@ -1854,7 +2105,15 @@
         await fetch(`${apiBase}/single_tasks`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, assigned_to: assignedList, points, due_date: date, category: category || "Varie", priority: priority || "medium", created_by: "Famiglia" })
+          body: JSON.stringify({ 
+            title, 
+            assigned_to: assignedList, 
+            points, 
+            due_date: date, 
+            category: category || "Varie", 
+            priority: priority || "medium", 
+            created_by: currentActiveUser || "Famiglia" 
+          })
         });
         document.getElementById('quick-task-title').value = '';
         showToast("Task rapido assegnato!");
@@ -1891,8 +2150,14 @@
       if (splitMemberSelect) {
         splitMemberSelect.innerHTML = '';
         Object.values(appData?.members || {}).forEach(m => {
-          splitMemberSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
+          const isSelected = currentActiveUser && (m.name.toLowerCase() === currentActiveUser.toLowerCase());
+          splitMemberSelect.innerHTML += `<option value="${m.name}" ${isSelected ? 'selected' : ''}>${m.name}</option>`;
         });
+      }
+
+      const noteAuthorSelect = document.getElementById('modal-note-author');
+      if (noteAuthorSelect && currentActiveUser) {
+        noteAuthorSelect.value = currentActiveUser;
       }
 
       const notesList = document.getElementById('modal-notes-history-list');
@@ -1926,7 +2191,7 @@
     async function submitTaskSplit() {
       if (!activeEditingTaskId) return;
       const completedTitle = document.getElementById('split-completed-title').value.trim();
-      const completedBy = document.getElementById('split-completed-by').value;
+      const completedBy = document.getElementById('split-completed-by').value || currentActiveUser || 'Famiglia';
       const remainingTitle = document.getElementById('split-remaining-title').value.trim();
 
       if (!completedTitle || !remainingTitle) {
@@ -1943,7 +2208,7 @@
             completed_title: completedTitle,
             completed_by: completedBy,
             remaining_title: remainingTitle,
-            author: completedBy
+            author: currentActiveUser || completedBy
           })
         });
         closeTaskNotesModal();
@@ -1956,7 +2221,7 @@
       if (!activeEditingTaskId) return;
       const noteText = document.getElementById('modal-new-note-text').value.trim();
       const newDueDate = document.getElementById('modal-notes-due-date').value;
-      const author = document.getElementById('modal-note-author').value || 'Famiglia';
+      const author = document.getElementById('modal-note-author').value || currentActiveUser || 'Famiglia';
 
       try {
         await fetch(`${apiBase}/single_tasks/note`, {
@@ -1973,7 +2238,7 @@
     async function deleteSingleTaskWithConfirmation() {
       if (!activeEditingTaskId) return;
       if (!confirm("Eliminare definitivamente questo task? L'operazione verrà registrata nello storico.")) return;
-      const author = document.getElementById('modal-note-author')?.value || 'Famiglia';
+      const author = document.getElementById('modal-note-author')?.value || currentActiveUser || 'Famiglia';
       const taskIdToDelete = activeEditingTaskId;
       closeTaskNotesModal();
 
