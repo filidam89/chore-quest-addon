@@ -1,24 +1,19 @@
-# 🏆 ChoreQuest (v2.6.1)
+# 🏆 ChoreQuest (v2.6.2)
 
 > **Add-on Ufficiale Home Assistant per la Gamification e Gestione delle Faccende di Casa e Famiglia**
 
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)
-![Version](https://img.shields.io/badge/Version-2.6.1-emerald.svg)
+![Version](https://img.shields.io/badge/Version-2.6.2-emerald.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
-## ✨ Novità & Funzionalità Chiave v2.6.1
+## ✨ Novità & Funzionalità Chiave v2.6.2
 
-- 👤 **Riconoscimento Automatico Utenti Home Assistant & Dispositivi Dedicati (es. Tablet a parete):**
-  - All'avvio dell'Add-on, il sistema acquisisce di default il nome dell'utente loggato in Home Assistant (es. **`Tablet`**, **`Papà`**, **`Mamma`**, **`Kiosk`**), anche se non è registrato come operatore/membro della classifica in ChoreQuest!
-  - Gli utenti esterni o dispositivi di controllo vengono mostrati con icone dedicate (es. `📱 Tablet (Home Assistant)`).
-  - L'utente HA loggato diventa automaticamente l'autore predefinito per:
-    - 📝 **Note e commenti sui compiti**.
-    - 📋 **Creazione ed assegnazione di task rapidi**.
-    - ✂️ **Task Splitting**.
-    - ✏️ **Modifiche allo storico con motivazione**.
-    - ⚡ **Registrazione esecuzioni:** se un tablet registra un'attività, i punti vengono assegnati al membro della famiglia selezionato, e l'audit registra: *"Registrato da: Tablet"*.
+- 👤 **Risoluzione del Nome Profilo Reale di Home Assistant (Friendly Name):**
+  - Il sistema estrae il **Nome Profilo / Nome Visualizzato** reale di Home Assistant (es. *"Daniele"*, *"Tablet Cucina"*, *"Papà"*, *"Mamma"*) dalle entità `person.*` e dalla configurazione Auth di Home Assistant, anziché limitarsi al semplice username tecnico di login (es. *`filidam89`*).
+  - Se il dispositivo è un tablet o un utente esterno, viene visualizzato con la sua icona dedicata (es. `📱 Tablet (Home Assistant)`).
+  - L'autore viene associato a tutte le note, modifiche, split e creazioni di task.
 - ✨ **Libreria Icone & Emoji Immensa (450+ Icone):**
   - Oltre **300 Icone Material Design (MDI)** in 12 categorie e oltre **150 Emoji**.
 - 🔄 **Controllo Aggiornamenti Live dal Menu Admin:** Verifica direttamente dall'app lo stato della versione su GitHub e le istruzioni di aggiornamento.
@@ -37,4 +32,4 @@
 
 1. Vai in **Impostazioni** ➔ **Add-on** ➔ **Store degli Add-on**.
 2. Clicca sui tre pallini in alto a destra (**⋮**) ➔ **Controlla aggiornamenti** (o ricarica con `F5`).
-3. Clicca su **Aggiorna (Update)** alla versione **v2.6.1** e avvia l'Add-on!
+3. Clicca su **Aggiorna (Update)** alla versione **v2.6.2** e avvia l'Add-on!
