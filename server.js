@@ -866,6 +866,22 @@ app.post('/api/log', (req, res) => {
     }
   }
 
+  if (task_type === 'single_task' || req.body.task_id) {
+    const sId = req.body.task_id;
+    let sTask = null;
+    if (sId) {
+      sTask = (appData.single_tasks || []).find(t => t.id === sId && t.status === 'pending');
+    }
+    if (!sTask) {
+      sTask = (appData.single_tasks || []).find(t => t.title.toLowerCase() === task_name.toLowerCase() && t.status === 'pending');
+    }
+    if (sTask) {
+      sTask.status = 'completed';
+      sTask.completed_at = effectiveExecDate;
+      sTask.completed_by = targetMembers.join(', ');
+    }
+  }
+
   saveData(appData);
   syncToHomeAssistant();
   res.status(201).json(createdLogs);
@@ -1095,44 +1111,52 @@ app.post('/api/single_tasks/split', (req, res) => {
 
 // API: Single Task Complete (awards full points)
 app.post('/api/single_tasks/complete', (req, res) => {
-  const { id, completed_by, execution_date } = req.body;
+  const { id, completed_by, members, created_by, execution_date } = req.body;
   const task = (appData.single_tasks || []).find(t => t.id === id && t.status === 'pending');
   if (task) {
     const nowIso = new Date().toISOString();
     const effectiveExecDate = execution_date ? new Date(execution_date).toISOString() : nowIso;
     task.status = 'completed';
     task.completed_at = effectiveExecDate;
-    task.completed_by = completed_by || 'Famiglia';
 
-    const workerList = Array.isArray(completed_by) ? completed_by : [completed_by || 'Famiglia'];
+    const workerList = Array.isArray(members) && members.length > 0 
+      ? members 
+      : (Array.isArray(completed_by) ? completed_by : [completed_by || 'Famiglia']);
+
+    task.completed_by = workerList.join(', ');
+
     let totalPts = task.points || 0;
     const dividedPts = totalPts > 0 ? Math.max(1, Math.round(totalPts / workerList.length)) : 0;
 
     workerList.forEach(wName => {
       let memberObj = Object.values(appData.members).find(m => m.name.toLowerCase() === wName.toLowerCase());
-      if (memberObj) {
-        appData.logs.push({
-          id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-          member_id: memberObj.id,
-          member_name: memberObj.name,
-          task_name: task.title,
-          task_type: 'single_task',
-          category: task.category || "Varie",
-          created_by: task.created_by || "Famiglia",
-          task_created_at: task.created_at || nowIso,
-          is_personal: totalPts === 0,
-          is_partial: false,
-          points: dividedPts,
-          edit_history: [],
-          created_at: effectiveExecDate
-        });
+      if (!memberObj) {
+        const mId = `m_${Date.now()}`;
+        memberObj = { id: mId, name: wName, icon: "👤", color: "#6366f1" };
+        appData.members[mId] = memberObj;
       }
+      appData.logs.push({
+        id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        member_id: memberObj.id,
+        member_name: memberObj.name,
+        task_name: task.title,
+        task_type: 'single_task',
+        category: task.category || "Varie",
+        created_by: created_by || task.created_by || "Famiglia",
+        task_created_at: task.created_at || nowIso,
+        is_personal: totalPts === 0,
+        is_partial: false,
+        points: dividedPts,
+        edit_history: [],
+        created_at: effectiveExecDate
+      });
     });
 
     saveData(appData);
     syncToHomeAssistant();
+    return res.json({ status: "completed", task });
   }
-  res.json({ status: "completed" });
+  res.status(404).json({ error: "Task not found or already completed" });
 });
 
 // API: Single Task Delete with confirmation & audit log
@@ -1355,7 +1379,7 @@ app.post('/api/settings', (req, res) => {
 
 // API: Check for Updates via GitHub Raw Config
 app.get('/api/system/check_update', async (req, res) => {
-  const currentVersion = "2.6.3";
+  const currentVersion = "2.6.4";
   try {
     const githubRes = await fetch("https://raw.githubusercontent.com/filidam89/chore-quest-addon/main/config.yaml");
     if (githubRes.ok) {
