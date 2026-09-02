@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.6.3</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.6.4</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -300,11 +300,11 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Versione Installata</div>
-          <div class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">v2.6.3</div>
+          <div class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">v2.6.4</div>
         </div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Ultima Versione su GitHub</div>
-          <div id="update-remote-version" class="text-xl font-extrabold text-slate-900 dark:text-white">v2.6.3</div>
+          <div id="update-remote-version" class="text-xl font-extrabold text-slate-900 dark:text-white">v2.6.4</div>
         </div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Stato Sistema</div>
@@ -513,8 +513,9 @@
           </div>
         </div>
         
-        <div class="pt-3 border-t border-rose-100 dark:border-rose-950 flex justify-end">
-          <button onclick="deleteSingleTaskWithConfirmation()" class="px-4 py-2 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-extrabold text-xs rounded-xl border border-rose-200 dark:border-rose-800 transition flex items-center gap-1.5"><i class="mdi mdi-trash-can-outline"></i> <span>Elimina Definitivamente Task</span></button>
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+          <button type="button" onclick="if (activeEditingTaskId) { const tid = activeEditingTaskId; closeTaskNotesModal(); completeSingleTask(tid); }" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center gap-1.5"><i class="mdi mdi-check-circle-outline"></i> <span>Segna come Fatto</span></button>
+          <button type="button" onclick="deleteSingleTaskWithConfirmation()" class="px-4 py-2 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-extrabold text-xs rounded-xl border border-rose-200 dark:border-rose-800 transition flex items-center gap-1.5"><i class="mdi mdi-trash-can-outline"></i> <span>Elimina Definitivamente</span></button>
         </div>
       </div>
     </div>
@@ -1949,8 +1950,8 @@
     }
 
     // ==================== TASK PERFORMER SELECTION POPUP ====================
-    function promptPerformerSelection(taskName, points, taskType = 'spontaneous', isPersonal = false, category = "Generale") {
-      pendingExecutionTask = { taskName, points, taskType, isPersonal, category };
+    function promptPerformerSelection(taskName, points, taskType = 'spontaneous', isPersonal = false, category = "Generale", taskId = null) {
+      pendingExecutionTask = { taskName, points, taskType, isPersonal, category, taskId };
 
       const titleEl = document.getElementById('modal-performer-task-title');
       const singleBox = document.getElementById('modal-single-member-buttons');
@@ -2045,27 +2046,41 @@
 
     async function executeTaskWithSingleAuthor(memberName) {
       if (!pendingExecutionTask) return;
-      const { taskName, points, taskType, isPersonal, category } = pendingExecutionTask;
+      const { taskName, points, taskType, isPersonal, category, taskId } = pendingExecutionTask;
       const customDate = document.getElementById('performer-exec-datetime').value;
 
       closePerformerModal();
       closeSpontaneousCatalogModal();
 
       try {
-        await fetch(`${apiBase}/log`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            member: memberName, 
-            task_name: taskName, 
-            points: points, 
-            task_type: taskType, 
-            category: category || "Generale",
-            is_personal: isPersonal,
-            created_by: currentActiveUser || memberName || "Famiglia",
-            execution_date: customDate ? new Date(customDate).toISOString() : new Date().toISOString()
-          })
-        });
+        if (taskType === 'single_task' && taskId) {
+          await fetch(`${apiBase}/single_tasks/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              id: taskId,
+              completed_by: memberName,
+              created_by: currentActiveUser || memberName || "Famiglia",
+              execution_date: customDate ? new Date(customDate).toISOString() : new Date().toISOString()
+            })
+          });
+        } else {
+          await fetch(`${apiBase}/log`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              member: memberName, 
+              task_name: taskName, 
+              points: points, 
+              task_type: taskType, 
+              category: category || "Generale",
+              is_personal: isPersonal,
+              created_by: currentActiveUser || memberName || "Famiglia",
+              execution_date: customDate ? new Date(customDate).toISOString() : new Date().toISOString(),
+              task_id: taskId
+            })
+          });
+        }
         showToast(isPersonal ? `Promemoria registrato per ${memberName}!` : `+${points} pt assegnati a ${memberName}!`);
         await loadStats();
       } catch (e) {}
@@ -2077,27 +2092,42 @@
       const selected = Array.from(checkboxes).map(c => c.value);
       if (selected.length === 0) { showToast("Seleziona almeno un partecipante!", "⚠️"); return; }
 
-      const { taskName, points, taskType, isPersonal, category } = pendingExecutionTask;
+      const { taskName, points, taskType, isPersonal, category, taskId } = pendingExecutionTask;
       const customDate = document.getElementById('performer-exec-datetime').value;
 
       closePerformerModal();
       closeSpontaneousCatalogModal();
 
       try {
-        await fetch(`${apiBase}/log`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            members: selected, 
-            task_name: taskName, 
-            points: points, 
-            task_type: taskType, 
-            category: category || "Generale",
-            is_personal: isPersonal,
-            created_by: currentActiveUser || "Famiglia",
-            execution_date: customDate ? new Date(customDate).toISOString() : new Date().toISOString()
-          })
-        });
+        if (taskType === 'single_task' && taskId) {
+          await fetch(`${apiBase}/single_tasks/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              id: taskId,
+              members: selected,
+              completed_by: selected,
+              created_by: currentActiveUser || "Famiglia",
+              execution_date: customDate ? new Date(customDate).toISOString() : new Date().toISOString()
+            })
+          });
+        } else {
+          await fetch(`${apiBase}/log`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              members: selected, 
+              task_name: taskName, 
+              points: points, 
+              task_type: taskType, 
+              category: category || "Generale",
+              is_personal: isPersonal,
+              created_by: currentActiveUser || "Famiglia",
+              execution_date: customDate ? new Date(customDate).toISOString() : new Date().toISOString(),
+              task_id: taskId
+            })
+          });
+        }
         const dividedPts = isPersonal ? 0 : Math.max(1, Math.round(points / selected.length));
         showToast(`+${dividedPts} pt a testa assegnati a ${selected.join(' e ')}!`);
         await loadStats();
@@ -2328,7 +2358,8 @@
 
     async function completeSingleTask(taskId) {
       const task = (appData?.pending_single_tasks || []).find(t => t.id === taskId);
-      promptPerformerSelection(task?.title || 'Task Singolo', task?.points || 0, 'single_task', (task?.points || 0) === 0, task?.category || 'Varie');
+      if (!task) return;
+      promptPerformerSelection(task.title || 'Task Singolo', task.points || 0, 'single_task', (task.points || 0) === 0, task.category || 'Varie', taskId);
     }
 
     // ==================== CLASSIFICA & STATISTICHE ====================
