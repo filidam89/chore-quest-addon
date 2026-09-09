@@ -897,13 +897,17 @@ app.post('/api/logs/update', (req, res) => {
 
   if (!log.edit_history) log.edit_history = [];
 
-  const changes = [];
+  const detailedChanges = [];
+  const textChanges = [];
+
   if (task_name && task_name.trim() !== log.task_name) {
-    changes.push(`Attività: "${log.task_name}" ➔ "${task_name.trim()}"`);
+    detailedChanges.push({ type: 'task_name', old_val: log.task_name, new_val: task_name.trim() });
+    textChanges.push(`Attività: "${log.task_name}" ➔ "${task_name.trim()}"`);
     log.task_name = task_name.trim();
   }
   if (points !== undefined && parseInt(points) !== parseInt(log.points)) {
-    changes.push(`Punti: ${log.points}pt ➔ ${points}pt`);
+    detailedChanges.push({ type: 'points', old_val: log.points, new_val: parseInt(points) || 0 });
+    textChanges.push(`Punti: ${log.points}pt ➔ ${parseInt(points) || 0}pt`);
     log.points = parseInt(points) || 0;
   }
   if (created_at) {
@@ -911,30 +915,26 @@ app.post('/api/logs/update', (req, res) => {
     const oldTime = new Date(log.created_at).getTime();
     // Only register change if difference is greater than 60 seconds
     if (!isNaN(newTime) && Math.abs(newTime - oldTime) > 60000) {
-      const formatDt = (iso) => {
-        try {
-          const d = new Date(iso);
-          const pad = (n) => String(n).padStart(2, '0');
-          return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-        } catch(e) { return iso; }
-      };
-      changes.push(`Data: ${formatDt(log.created_at)} ➔ ${formatDt(created_at)}`);
+      detailedChanges.push({ type: 'date', old_val: log.created_at, new_val: new Date(created_at).toISOString() });
+      textChanges.push(`Data esecuzione modificata`);
       log.created_at = new Date(created_at).toISOString();
     }
   }
   if (member_name && member_name !== log.member_name) {
-    changes.push(`Esecutore: ${log.member_name} ➔ ${member_name}`);
+    detailedChanges.push({ type: 'member_name', old_val: log.member_name, new_val: member_name });
+    textChanges.push(`Esecutore: ${log.member_name} ➔ ${member_name}`);
     log.member_name = member_name;
     const mObj = Object.values(appData.members).find(m => m.name.toLowerCase() === member_name.toLowerCase());
     if (mObj) log.member_id = mObj.id;
   }
 
-  if (changes.length > 0 || note.trim()) {
+  if (detailedChanges.length > 0 || note.trim()) {
     log.edit_history.push({
       edited_at: new Date().toISOString(),
       edited_by: edited_by || "Famiglia",
       note: note.trim() || "Modifica dati attività",
-      changes_summary: changes.join(', ') || "Aggiunta nota"
+      changes: detailedChanges,
+      changes_summary: textChanges.join(', ') || "Aggiunta nota"
     });
   }
 
@@ -1399,7 +1399,7 @@ app.post('/api/settings', (req, res) => {
 
 // API: Check for Updates via GitHub Raw Config
 app.get('/api/system/check_update', async (req, res) => {
-  const currentVersion = "2.6.5";
+  const currentVersion = "2.6.6";
   try {
     const githubRes = await fetch("https://raw.githubusercontent.com/filidam89/chore-quest-addon/main/config.yaml");
     if (githubRes.ok) {
