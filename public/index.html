@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.6.4</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.6.5</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -300,11 +300,11 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Versione Installata</div>
-          <div class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">v2.6.4</div>
+          <div class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">v2.6.5</div>
         </div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Ultima Versione su GitHub</div>
-          <div id="update-remote-version" class="text-xl font-extrabold text-slate-900 dark:text-white">v2.6.4</div>
+          <div id="update-remote-version" class="text-xl font-extrabold text-slate-900 dark:text-white">v2.6.5</div>
         </div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Stato Sistema</div>
@@ -435,8 +435,8 @@
         </div>
 
         <div class="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-200 dark:border-amber-800 space-y-2">
-          <label class="block text-xs font-extrabold text-amber-900 dark:text-amber-200 uppercase">Motivo della Modifica / Nota (Tracciato nello Storico):</label>
-          <input id="edit-log-note" type="text" required placeholder="Es. Corretto punteggio errato, spostato orario corretto..." class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-xl text-xs font-medium">
+          <label class="block text-xs font-extrabold text-amber-900 dark:text-amber-200 uppercase">Motivo della Modifica / Nota (Opzionale):</label>
+          <input id="edit-log-note" type="text" placeholder="Es. Corretto orario, modificato punteggio..." class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700 rounded-xl text-xs font-medium">
         </div>
 
         <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -1365,8 +1365,9 @@
       const currentDueObj = rout.due_date ? new Date(rout.due_date) : new Date();
       document.getElementById('modal-postpone-current-due').textContent = formatDateTime(rout.due_date);
       
-      const isoDateStr = currentDueObj.toISOString().split('T')[0];
-      document.getElementById('modal-postpone-date-input').value = isoDateStr;
+      const pad = (n) => String(n).padStart(2, '0');
+      const localDateStr = `${currentDueObj.getFullYear()}-${pad(currentDueObj.getMonth() + 1)}-${pad(currentDueObj.getDate())}`;
+      document.getElementById('modal-postpone-date-input').value = localDateStr;
       document.getElementById('modal-postpone-reason-input').value = '';
 
       document.getElementById('modal-routine-postpone').classList.remove('hidden');
@@ -1375,9 +1376,10 @@
 
     function quickPostponeDays(daysToAdd) {
       const input = document.getElementById('modal-postpone-date-input');
-      const base = input.value ? new Date(input.value) : new Date();
+      const base = input.value ? new Date(input.value + 'T00:00:00') : new Date();
       base.setDate(base.getDate() + daysToAdd);
-      input.value = base.toISOString().split('T')[0];
+      const pad = (n) => String(n).padStart(2, '0');
+      input.value = `${base.getFullYear()}-${pad(base.getMonth() + 1)}-${pad(base.getDate())}`;
     }
 
     async function submitPostponeRoutine() {
@@ -1463,7 +1465,8 @@
       document.getElementById('edit-log-note').value = '';
 
       const logDt = new Date(log.created_at);
-      const localDatetime = new Date(logDt.getTime() - logDt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      const pad = (n) => String(n).padStart(2, '0');
+      const localDatetime = `${logDt.getFullYear()}-${pad(logDt.getMonth() + 1)}-${pad(logDt.getDate())}T${pad(logDt.getHours())}:${pad(logDt.getMinutes())}`;
       document.getElementById('edit-log-datetime').value = localDatetime;
 
       const memSelect = document.getElementById('edit-log-member');
@@ -1483,8 +1486,9 @@
       const task_name = document.getElementById('edit-log-task-name').value.trim();
       const points = parseInt(document.getElementById('edit-log-points').value) || 0;
       const member_name = document.getElementById('edit-log-member').value;
-      const created_at = document.getElementById('edit-log-datetime').value;
-      const note = document.getElementById('edit-log-note').value.trim();
+      const rawDateVal = document.getElementById('edit-log-datetime').value;
+      const created_at = rawDateVal ? new Date(rawDateVal).toISOString() : new Date().toISOString();
+      const note = document.getElementById('edit-log-note').value.trim() || "Modifica data/dati attività";
 
       try {
         await fetch(`${apiBase}/logs/update`, {
@@ -1575,11 +1579,18 @@
     function formatDateTime(isoString) {
       if (!isoString) return '-';
       const d = new Date(isoString);
+      if (isNaN(d.getTime())) return isoString;
       const now = new Date();
       const isToday = d.toDateString() === now.toDateString();
-      const timeStr = d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      const pad = (n) => String(n).padStart(2, '0');
+      const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
       if (isToday) return `Oggi ${timeStr}`;
-      return `${d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })} ${timeStr}`;
+
+      const yesterday = new Date(now);
+      yesterday.setDate(now.getDate() - 1);
+      if (d.toDateString() === yesterday.toDateString()) return `Ieri ${timeStr}`;
+
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${timeStr}`;
     }
 
     function getPeriodLabels() {
@@ -1964,7 +1975,8 @@
 
       // Default Date/Time to current local datetime and hide by default
       const now = new Date();
-      const localDatetime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      const pad = (n) => String(n).padStart(2, '0');
+      const localDatetime = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
       document.getElementById('performer-exec-datetime').value = localDatetime;
       document.getElementById('performer-datetime-container').classList.add('hidden');
 
