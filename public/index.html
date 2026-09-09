@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.6.5</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.6.6</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -300,11 +300,11 @@
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Versione Installata</div>
-          <div class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">v2.6.5</div>
+          <div class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">v2.6.6</div>
         </div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Ultima Versione su GitHub</div>
-          <div id="update-remote-version" class="text-xl font-extrabold text-slate-900 dark:text-white">v2.6.5</div>
+          <div id="update-remote-version" class="text-xl font-extrabold text-slate-900 dark:text-white">v2.6.6</div>
         </div>
         <div class="p-4 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1">
           <div class="text-[11px] font-bold text-slate-400 uppercase">Stato Sistema</div>
@@ -2538,12 +2538,26 @@
               <div class="text-[10px] font-extrabold uppercase text-purple-700 dark:text-purple-300 flex items-center gap-1">
                 <i class="mdi mdi-history"></i> <span>Storico Modifiche Registrate:</span>
               </div>
-              ${l.edit_history.map(h => `
-                <div class="text-[11px] text-slate-700 dark:text-slate-300 bg-purple-50 dark:bg-purple-950/40 p-2 rounded-xl border border-purple-100 dark:border-purple-900/50 space-y-0.5">
-                  <div><b>${h.edited_by || 'Famiglia'}</b> (${formatDateTime(h.edited_at)}): <i>"${h.note}"</i></div>
-                  <div class="text-[10px] text-purple-600 dark:text-purple-400 font-medium">${h.changes_summary || ''}</div>
-                </div>
-              `).join('')}
+              ${l.edit_history.map(h => {
+                let changeDetails = '';
+                if (h.changes && Array.isArray(h.changes) && h.changes.length > 0) {
+                  changeDetails = h.changes.map(c => {
+                    if (c.type === 'date') return `Data: ${formatDateTime(c.old_val)} ➔ ${formatDateTime(c.new_val)}`;
+                    if (c.type === 'points') return `Punti: ${c.old_val}pt ➔ ${c.new_val}pt`;
+                    if (c.type === 'task_name') return `Attività: "${c.old_val}" ➔ "${c.new_val}"`;
+                    if (c.type === 'member_name') return `Esecutore: ${c.old_val} ➔ ${c.new_val}`;
+                    return '';
+                  }).filter(Boolean).join(' • ');
+                }
+                if (!changeDetails) changeDetails = h.changes_summary || '';
+
+                return `
+                  <div class="text-[11px] text-slate-700 dark:text-slate-300 bg-purple-50 dark:bg-purple-950/40 p-2 rounded-xl border border-purple-100 dark:border-purple-900/50 space-y-0.5">
+                    <div><b>${h.edited_by || 'Famiglia'}</b> (${formatDateTime(h.edited_at)}): <i>"${h.note}"</i></div>
+                    <div class="text-[10px] text-purple-600 dark:text-purple-400 font-medium">${changeDetails}</div>
+                  </div>
+                `;
+              }).join('')}
             </div>
           `;
         }
