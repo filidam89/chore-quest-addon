@@ -10,9 +10,13 @@
 
 ## ✨ Novità & Funzionalità Chiave v2.6.6
 
+- 📊 **Ordinamento Cronologico Reale per Data/Ora:**
+  - Cliccando sul nome o punteggio di un membro, l'elenco delle attività svolte viene ora ordinato rigorosamente per **data e ora effettiva di esecuzione** (`created_at`), recependo all'istante qualsiasi modifica oraria retroattiva o futura.
+  - Ordinamento temporale corretto applicato anche alla tabella generale dello Storico.
+- ✏️ **Pulsante Modifica Diretto nelle Attività del Membro:**
+  - Aggiunto il pulsante **"Modifica"** accanto a ogni singola riga nella modale delle attività del componente della famiglia, per modificare subito data/ora, note, punti ed esecutore senza dover cercare la voce nello storico generale.
 - 🕒 **Formattazione Fuso Orario nell'Audit Trail Modifiche:**
-  - Risolto il disallineamento per cui la riga dell'attività mostrava l'orario locale (es. `Ieri 14:00`), mentre la riga delle modifiche registrate mostrava l'orario UTC calcolato dal server (es. `➔ 08/09 12:00`).
-  - Il server ora memorizza i timestamp ISO originali nelle modifiche e il client li formatta con il fuso orario locale del dispositivo (es. `Data: Ieri 23:59 ➔ Ieri 14:00`), garantendo perfetta coerenza.
+  - L'audit trail delle modifiche formatta gli orari prima/dopo nel fuso orario locale del dispositivo (es. `Data: Ieri 23:59 ➔ Ieri 14:00`), perfettamente coerente con la data visualizzata nella riga dell'evento.
 - 📅 **Risoluzione Bug Modifica Data Eventi & Timezone:**
   - Conversione precisa in formato ISO 8601 locale prima dell'invio al server e inizializzazione corretta del campo `datetime-local`.
   - Ricalcolo automatico della data di completamento delle routine collegate quando viene modificata la data di un'attività di routine nello storico.
