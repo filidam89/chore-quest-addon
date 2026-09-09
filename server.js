@@ -911,7 +911,14 @@ app.post('/api/logs/update', (req, res) => {
     const oldTime = new Date(log.created_at).getTime();
     // Only register change if difference is greater than 60 seconds
     if (!isNaN(newTime) && Math.abs(newTime - oldTime) > 60000) {
-      changes.push(`Data esecuzione modificata`);
+      const formatDt = (iso) => {
+        try {
+          const d = new Date(iso);
+          const pad = (n) => String(n).padStart(2, '0');
+          return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        } catch(e) { return iso; }
+      };
+      changes.push(`Data: ${formatDt(log.created_at)} ➔ ${formatDt(created_at)}`);
       log.created_at = new Date(created_at).toISOString();
     }
   }
@@ -929,6 +936,19 @@ app.post('/api/logs/update', (req, res) => {
       note: note.trim() || "Modifica dati attività",
       changes_summary: changes.join(', ') || "Aggiunta nota"
     });
+  }
+
+  // If this log is a routine, recalculate the routine's latest execution date & assignee
+  if (log.task_type === 'routine') {
+    const rout = (appData.routine_tasks || []).find(r => r.name.toLowerCase() === log.task_name.toLowerCase() || r.id === log.task_name);
+    if (rout) {
+      const routineLogs = (appData.logs || []).filter(l => l.task_type === 'routine' && (l.task_name.toLowerCase() === rout.name.toLowerCase() || l.task_name === rout.id));
+      if (routineLogs.length > 0) {
+        routineLogs.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        rout.last_completed_at = routineLogs[0].created_at;
+        rout.last_completed_by = routineLogs[0].member_name;
+      }
+    }
   }
 
   saveData(appData);
@@ -1379,7 +1399,7 @@ app.post('/api/settings', (req, res) => {
 
 // API: Check for Updates via GitHub Raw Config
 app.get('/api/system/check_update', async (req, res) => {
-  const currentVersion = "2.6.4";
+  const currentVersion = "2.6.5";
   try {
     const githubRes = await fetch("https://raw.githubusercontent.com/filidam89/chore-quest-addon/main/config.yaml");
     if (githubRes.ok) {
