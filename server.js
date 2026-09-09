@@ -292,12 +292,17 @@ function calculateStats() {
       }
 
       if (log.task_type !== 'task_note' && log.task_type !== 'task_deleted') {
-        memberLastLogs[m.id] = log;
+        if (!memberLastLogs[m.id] || new Date(log.created_at).getTime() > new Date(memberLastLogs[m.id].created_at).getTime()) {
+          memberLastLogs[m.id] = log;
+        }
       }
     }
 
     if (log.task_name && log.task_type !== 'task_note' && log.task_type !== 'task_deleted') {
-      taskLastLogs[log.task_name.toLowerCase()] = log;
+      const key = log.task_name.toLowerCase();
+      if (!taskLastLogs[key] || new Date(log.created_at).getTime() > new Date(taskLastLogs[key].created_at).getTime()) {
+        taskLastLogs[key] = log;
+      }
     }
   });
 
