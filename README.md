@@ -1,19 +1,20 @@
-# 🏆 ChoreQuest (v2.6.5)
+# 🏆 ChoreQuest (v2.6.6)
 
 > **Add-on Ufficiale Home Assistant per la Gamification e Gestione delle Faccende di Casa e Famiglia**
 
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)
-![Version](https://img.shields.io/badge/Version-2.6.5-emerald.svg)
+![Version](https://img.shields.io/badge/Version-2.6.6-emerald.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
-## ✨ Novità & Funzionalità Chiave v2.6.5
+## ✨ Novità & Funzionalità Chiave v2.6.6
 
+- 🕒 **Formattazione Fuso Orario nell'Audit Trail Modifiche:**
+  - Risolto il disallineamento per cui la riga dell'attività mostrava l'orario locale (es. `Ieri 14:00`), mentre la riga delle modifiche registrate mostrava l'orario UTC calcolato dal server (es. `➔ 08/09 12:00`).
+  - Il server ora memorizza i timestamp ISO originali nelle modifiche e il client li formatta con il fuso orario locale del dispositivo (es. `Data: Ieri 23:59 ➔ Ieri 14:00`), garantendo perfetta coerenza.
 - 📅 **Risoluzione Bug Modifica Data Eventi & Timezone:**
-  - Risolto lo slittamento d'orario (+2h / cambio giorno involontario) che si verificava salvando una modifica da Storico a causa della conversione fuso orario client/container.
   - Conversione precisa in formato ISO 8601 locale prima dell'invio al server e inizializzazione corretta del campo `datetime-local`.
-  - Tracciamento accurato nell'Audit Trail con formato chiaro (`Data: 09/09 14:30 ➔ 08/09 10:00`), senza più falsi positivi quando la data non viene cambiata.
   - Ricalcolo automatico della data di completamento delle routine collegate quando viene modificata la data di un'attività di routine nello storico.
 - 🎯 **Risoluzione Bug Completamento Task Singoli in Sospeso:**
   - Cliccando su **"✓ Fatto"** o **"Segna come Fatto"** il task singolo viene immediatamente contrassegnato come completato e rimosso dalla vista e dai contatori.
@@ -36,4 +37,4 @@
 
 1. Vai in **Impostazioni** ➔ **Add-on** ➔ **Store degli Add-on**.
 2. Clicca sui tre pallini in alto a destra (**⋮**) ➔ **Controlla aggiornamenti** (o ricarica con `F5`).
-3. Clicca su **Aggiorna (Update)** alla versione **v2.6.5** e avvia l'Add-on!
+3. Clicca su **Aggiorna (Update)** alla versione **v2.6.6** e avvia l'Add-on!
