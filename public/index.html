@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.8.1</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.8.2</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -280,6 +280,9 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
+          <button type="button" onclick="openHaDiagnosticModal()" class="px-3.5 py-1.5 bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 rounded-2xl text-xs font-extrabold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition flex items-center gap-1.5 shadow-2xs">
+            <i class="mdi mdi-stethoscope text-indigo-600"></i> <span>Diagnostica HA</span>
+          </button>
           <label class="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800 px-3.5 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
             <input id="notif-master-enable" type="checkbox" onchange="saveNotificationSettingsQuick()" class="w-4 h-4 text-indigo-600 rounded">
             <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200">Abilita Notifiche Master</span>
@@ -288,7 +291,7 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <!-- CARD 1: ORARI PROGRAMMATI (MATTINA & SERA) -->
+        <!-- CARD 1: ORARI PROGRAMMATI (MATTINA & SERA) & DISPOSITIVI FAMIGLIA -->
         <div class="bg-slate-50 dark:bg-slate-800/70 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
           <div class="font-extrabold text-xs uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
             <i class="mdi mdi-clock-outline text-base text-indigo-600"></i> <span>Orari Promemoria Programmati & Servizio Default</span>
@@ -322,12 +325,35 @@
             </div>
           </div>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">📢 Servizio Predefinito di Famiglia</label>
-            <select id="notif-default-service" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300 truncate">
-              <option value="notify.notify">notify.notify (Tutti i dispositivi)</option>
-            </select>
+          <div class="space-y-2 pt-1 border-t border-slate-200/80 dark:border-slate-700/80">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">📢 Dispositivi Predefiniti di Famiglia (Multipli)</label>
+              <span id="notif-family-services-counter" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">1 selezionato</span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Le faccende assegnate a tutta la famiglia o i promemoria generali verranno inviati a tutti i dispositivi selezionati:</p>
+            <div id="notif-family-services-list" class="max-h-44 overflow-y-auto p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl space-y-1">
+              <!-- Populated dynamically with checkboxes -->
+            </div>
           </div>
+
+          <!-- Connessione Avanzata / Override (Opzionale) -->
+          <details class="text-xs bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+            <summary class="font-bold text-slate-600 dark:text-slate-400 cursor-pointer flex items-center justify-between">
+              <span class="flex items-center gap-1.5"><i class="mdi mdi-tune"></i> Connessione Avanzata / Token Manuale (Opzionale)</span>
+              <i class="mdi mdi-chevron-down"></i>
+            </summary>
+            <div class="mt-3 space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <p class="text-[11px] text-slate-500">Usalo solo se Supervisor non inietta il token automaticamente o per connessioni personalizzate:</p>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase">URL API Home Assistant:</label>
+                <input id="notif-ha-custom-url" type="text" placeholder="http://supervisor/core/api (default)" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono">
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase">Long-Lived Access Token Home Assistant:</label>
+                <input id="notif-ha-custom-token" type="password" placeholder="Inserisci token se necessario" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono">
+              </div>
+            </div>
+          </details>
         </div>
 
         <!-- CARD 2: EVENTI IMMEDIATI -->
@@ -418,16 +444,24 @@
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-          <div class="sm:col-span-4">
-            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Dispositivo / Servizio Target:</label>
-            <select id="notif-test-service" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></select>
-          </div>
           <div class="sm:col-span-3">
-            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Membro di Riferimento:</label>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Destinatario:</label>
+            <select id="notif-test-target-mode" onchange="onTestTargetModeChange()" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300">
+              <option value="family">📢 Tutta la Famiglia</option>
+              <option value="member">👤 Membro Specifico</option>
+              <option value="single">📱 Singolo Dispositivo</option>
+            </select>
+          </div>
+          <div class="sm:col-span-3 hidden" id="notif-test-member-box">
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Membro Target:</label>
             <select id="notif-test-member" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></select>
           </div>
-          <div class="sm:col-span-3">
-            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Tipo di Test:</label>
+          <div class="sm:col-span-3 hidden" id="notif-test-service-box">
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Dispositivo Target:</label>
+            <select id="notif-test-service" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></select>
+          </div>
+          <div class="sm:col-span-4" id="notif-test-type-box">
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Tipo di Notifica:</label>
             <select id="notif-test-type" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
               <option value="evening_recap">🌙 Riepilogo Serale (Punti + Classifica)</option>
               <option value="morning_reminder">🌅 Promemoria Mattutino</option>
@@ -447,6 +481,35 @@
         <button type="button" onclick="saveNotificationSettings()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center gap-2">
           <i class="mdi mdi-content-save-check"></i> <span>Salva Tutte le Impostazioni Notifiche</span>
         </button>
+      </div>
+    </div>
+
+    <!-- MODALE DIAGNOSTICA HOME ASSISTANT -->
+    <div id="modal-ha-diagnostic" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+      <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div class="flex items-center gap-2">
+            <i class="mdi mdi-stethoscope text-2xl text-indigo-600"></i>
+            <div>
+              <h3 class="font-extrabold text-base text-slate-900 dark:text-white">Diagnostica Connessione Home Assistant</h3>
+              <p class="text-xs text-slate-400">Verifica in tempo reale token Supervisor, API ed entità</p>
+            </div>
+          </div>
+          <button type="button" onclick="closeHaDiagnosticModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900">
+            <i class="mdi mdi-close"></i>
+          </button>
+        </div>
+        <div id="modal-ha-diagnostic-body" class="space-y-3 max-h-[60vh] overflow-y-auto text-xs">
+          <div class="p-6 text-center text-slate-400"><i class="mdi mdi-loading mdi-spin text-2xl"></i> Interrogazione API Home Assistant...</div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" onclick="fetchAndDisplayHaDiagnostic()" class="px-4 py-2 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold rounded-xl hover:bg-indigo-100 flex items-center gap-1">
+            <i class="mdi mdi-refresh"></i> Ricarica
+          </button>
+          <button type="button" onclick="closeHaDiagnosticModal()" class="px-5 py-2 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700">
+            Chiudi
+          </button>
+        </div>
       </div>
     </div>
 
@@ -3228,7 +3291,7 @@
           if (data.connected_to_ha) {
             statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span class="text-emerald-600 dark:text-emerald-400 font-extrabold">Connesso a Home Assistant: ${data.discovered_count || cachedNotifyServices.length} dispositivi ed entità rilevati</span>`;
           } else {
-            statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-amber-500"></span> <span class="text-amber-600 dark:text-amber-400 font-bold">Modalità Standalone (Dispositivi standard: ${cachedNotifyServices.length})</span>`;
+            statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-amber-500"></span> <span class="text-amber-600 dark:text-amber-400 font-bold">Modalità Standalone / Token non iniettato (Dispositivi base: ${cachedNotifyServices.length})</span>`;
           }
         }
 
@@ -3264,6 +3327,32 @@
       } catch (e) {
         showToast("Errore di connessione", "❌");
       }
+    }
+
+    function updateFamilyServicesCounter() {
+      const counterEl = document.getElementById('notif-family-services-counter');
+      if (!counterEl) return;
+      const checkedBoxes = document.querySelectorAll('.family-service-chk:checked');
+      counterEl.textContent = `${checkedBoxes.length} ${checkedBoxes.length === 1 ? 'selezionato' : 'selezionati'}`;
+    }
+
+    function toggleMemberFamilyDefault(memberId) {
+      const chk = document.querySelector(`.member-use-family-chk[data-member-id="${memberId}"]`);
+      const box = document.getElementById(`member-devices-box-${memberId}`);
+      if (!chk || !box) return;
+      if (chk.checked) {
+        box.classList.add('hidden');
+      } else {
+        box.classList.remove('hidden');
+      }
+    }
+
+    function onTestTargetModeChange() {
+      const mode = document.getElementById('notif-test-target-mode')?.value || 'family';
+      const memberBox = document.getElementById('notif-test-member-box');
+      const serviceBox = document.getElementById('notif-test-service-box');
+      if (memberBox) memberBox.classList.toggle('hidden', mode !== 'member');
+      if (serviceBox) serviceBox.classList.toggle('hidden', mode !== 'single');
     }
 
     function renderNotificationSettings(cfg = {}) {
@@ -3303,37 +3392,69 @@
         document.getElementById('notif-chan-general').value = channels.general || "ChoreQuest_General";
       }
 
-      // Build options helper for real services
-      const buildServiceOptionsHtml = (selectedVal) => {
-        let opts = '';
-        cachedNotifyServices.forEach(srv => {
-          const sId = (typeof srv === 'object') ? srv.id : srv;
-          const sName = (typeof srv === 'object') ? srv.name : srv;
-          const isSel = (sId === selectedVal);
-          opts += `<option value="${sId}" ${isSel ? 'selected' : ''}>${sName}</option>`;
-        });
-        return opts;
-      };
+      // Custom HA connection inputs
+      if (document.getElementById('notif-ha-custom-url')) {
+        document.getElementById('notif-ha-custom-url').value = notif.ha_url || "";
+      }
+      if (document.getElementById('notif-ha-custom-token')) {
+        document.getElementById('notif-ha-custom-token').value = notif.ha_token || "";
+      }
 
-      const defServiceSelect = document.getElementById('notif-default-service');
+      // 1. Render Family Default Services (Multi-Checkbox List)
+      const familyServicesContainer = document.getElementById('notif-family-services-list');
+      if (familyServicesContainer) {
+        familyServicesContainer.innerHTML = '';
+        const defServicesList = Array.isArray(notif.default_services) && notif.default_services.length > 0 
+          ? notif.default_services 
+          : [notif.default_service || "notify.notify"];
+
+        if (cachedNotifyServices.length === 0) {
+          familyServicesContainer.innerHTML = '<div class="text-xs text-slate-400 p-2">Nessun servizio disponibile.</div>';
+        } else {
+          cachedNotifyServices.forEach(srv => {
+            const sId = (typeof srv === 'object') ? srv.id : srv;
+            const sName = (typeof srv === 'object') ? srv.name : srv;
+            const sIcon = (typeof srv === 'object' && srv.icon) ? srv.icon : '📱';
+            const isChecked = defServicesList.includes(sId);
+
+            familyServicesContainer.innerHTML += `
+              <label class="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
+                <input type="checkbox" value="${sId}" onchange="updateFamilyServicesCounter()" ${isChecked ? 'checked' : ''} class="family-service-chk w-4 h-4 text-indigo-600 rounded">
+                <span class="text-base">${sIcon}</span>
+                <div class="flex-1 min-w-0">
+                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">${sName}</div>
+                  <div class="text-[10px] text-slate-400 font-mono truncate">${sId}</div>
+                </div>
+              </label>
+            `;
+          });
+        }
+        updateFamilyServicesCounter();
+      }
+
+      // 2. Populate Test controls
       const testServiceSelect = document.getElementById('notif-test-service');
       const testMemberSelect = document.getElementById('notif-test-member');
 
-      if (defServiceSelect) {
-        defServiceSelect.innerHTML = buildServiceOptionsHtml(notif.default_service || "notify.notify");
-      }
       if (testServiceSelect) {
-        testServiceSelect.innerHTML = buildServiceOptionsHtml(notif.default_service || "notify.notify");
+        testServiceSelect.innerHTML = '';
+        cachedNotifyServices.forEach(srv => {
+          const sId = (typeof srv === 'object') ? srv.id : srv;
+          const sName = (typeof srv === 'object') ? srv.name : srv;
+          testServiceSelect.innerHTML += `<option value="${sId}">${sName}</option>`;
+        });
       }
+
       if (testMemberSelect) {
         testMemberSelect.innerHTML = '';
         const members = Object.values(appData?.members || {});
         members.forEach(m => {
-          testMemberSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
+          testMemberSelect.innerHTML += `<option value="${m.id}" data-name="${m.name}">👤 ${m.name}</option>`;
         });
       }
+      onTestTargetModeChange();
 
-      // Populate Per-Member Notification Preferences
+      // 3. Populate Per-Member Notification Preferences (Multi-Device per Member)
       const memberMapContainer = document.getElementById('notif-members-mapping-list');
       if (memberMapContainer) {
         memberMapContainer.innerHTML = '';
@@ -3346,21 +3467,40 @@
         } else {
           members.forEach(m => {
             const mCfg = membersConfig[m.id] || {};
-            const currentSelectedService = mCfg.service || memberServices[m.id] || "";
-            const isMemberEnabled = mCfg.enabled !== false;
             const morningOn = mCfg.morning_reminder !== false;
             const eveningOn = mCfg.evening_recap !== false;
             const urgentOn = mCfg.urgent_alerts !== false;
             const taskOn = mCfg.task_assigned !== false;
 
-            let memberOpts = `<option value="">📢 Usa servizio predefinito di famiglia</option>`;
-            memberOpts += `<option value="none" ${currentSelectedService === 'none' ? 'selected' : ''}>🔕 Nessun dispositivo / Notifiche disattivate</option>`;
+            // Determine active services for this member
+            let currentMemberServices = [];
+            if (Array.isArray(mCfg.services)) {
+              currentMemberServices = mCfg.services;
+            } else if (mCfg.service && mCfg.service !== 'none') {
+              currentMemberServices = [mCfg.service];
+            } else if (memberServices[m.id] && memberServices[m.id] !== 'none') {
+              currentMemberServices = [memberServices[m.id]];
+            }
 
+            const useFamilyDefaults = (mCfg.use_family_defaults === true) || (currentMemberServices.length === 0 && mCfg.service !== 'none');
+
+            // Build checkboxes for member devices
+            let memberDeviceCheckboxes = '';
             cachedNotifyServices.forEach(srv => {
               const sId = (typeof srv === 'object') ? srv.id : srv;
               const sName = (typeof srv === 'object') ? srv.name : srv;
-              const isSel = (sId === currentSelectedService);
-              memberOpts += `<option value="${sId}" ${isSel ? 'selected' : ''}>${sName}</option>`;
+              const sIcon = (typeof srv === 'object' && srv.icon) ? srv.icon : '📱';
+              const isChecked = currentMemberServices.includes(sId);
+              memberDeviceCheckboxes += `
+                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700/60 cursor-pointer transition">
+                  <input type="checkbox" data-member-id="${m.id}" value="${sId}" ${isChecked ? 'checked' : ''} class="member-device-chk w-4 h-4 text-indigo-600 rounded">
+                  <span class="text-sm">${sIcon}</span>
+                  <div class="flex-1 min-w-0">
+                    <span class="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">${sName}</span>
+                    <span class="text-[10px] text-slate-400 font-mono ml-1">(${sId})</span>
+                  </div>
+                </label>
+              `;
             });
 
             memberMapContainer.innerHTML += `
@@ -3370,13 +3510,22 @@
                     <span class="text-2xl">${m.icon || '👤'}</span>
                     <div>
                       <div>${m.name}</div>
-                      <div class="text-[10px] text-slate-400 font-semibold">Configurazione dispositivo & notifiche personali</div>
+                      <div class="text-[10px] text-slate-400 font-semibold">Configurazione dispositivi personali & notifiche</div>
                     </div>
                   </div>
-                  <div class="w-full sm:w-80">
-                    <select data-member-id="${m.id}" class="member-notif-device-select w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                      ${memberOpts}
-                    </select>
+                  <div class="flex items-center gap-2">
+                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                      <input type="checkbox" data-member-id="${m.id}" class="member-use-family-chk w-4 h-4 text-indigo-600 rounded" ${useFamilyDefaults ? 'checked' : ''} onchange="toggleMemberFamilyDefault('${m.id}')">
+                      <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Usa predefiniti di famiglia</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Lista Dispositivi Personali Membro -->
+                <div id="member-devices-box-${m.id}" class="${useFamilyDefaults ? 'hidden' : 'space-y-1.5'}">
+                  <div class="text-[10px] font-extrabold uppercase text-slate-400">Dispositivi personali di ${m.name} (seleziona uno o più smartphone/tablet):</div>
+                  <div class="max-h-40 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1">
+                    ${memberDeviceCheckboxes}
                   </div>
                 </div>
 
@@ -3414,9 +3563,17 @@
       const morning_reminder_time = document.getElementById('notif-morning-time')?.value || "08:30";
       const evening_recap_enabled = document.getElementById('notif-evening-enable')?.checked ?? true;
       const evening_recap_time = document.getElementById('notif-evening-time')?.value || "20:30";
-      const default_service = document.getElementById('notif-default-service')?.value || "notify.notify";
       const notify_on_task_assigned = document.getElementById('notif-task-assigned-toggle')?.checked ?? true;
       const notify_on_winner = document.getElementById('notif-winner-toggle')?.checked ?? true;
+      const ha_url = document.getElementById('notif-ha-custom-url')?.value.trim() || "";
+      const ha_token = document.getElementById('notif-ha-custom-token')?.value.trim() || "";
+
+      // Collect Family default services
+      const default_services = [];
+      document.querySelectorAll('.family-service-chk:checked').forEach(chk => {
+        default_services.push(chk.value);
+      });
+      const default_service = default_services[0] || "notify.notify";
 
       const channels = {
         urgent: document.getElementById('notif-chan-urgent')?.value.trim() || "ChoreQuest_Urgent",
@@ -3426,13 +3583,18 @@
 
       const members_config = {};
       const member_services = {};
+      const members = Object.values(appData?.members || {});
 
-      document.querySelectorAll('.member-notif-device-select').forEach(sel => {
-        const mId = sel.getAttribute('data-member-id');
-        const srvVal = sel.value;
-        if (!mId) return;
-
-        member_services[mId] = srvVal;
+      members.forEach(m => {
+        const mId = m.id;
+        const useFamily = document.querySelector(`.member-use-family-chk[data-member-id="${mId}"]`)?.checked ?? false;
+        
+        let mServices = [];
+        if (!useFamily) {
+          document.querySelectorAll(`.member-device-chk[data-member-id="${mId}"]:checked`).forEach(c => {
+            mServices.push(c.value);
+          });
+        }
 
         const morningChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="morning_reminder"]`)?.checked ?? true;
         const eveningChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="evening_recap"]`)?.checked ?? true;
@@ -3440,13 +3602,16 @@
         const taskChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="task_assigned"]`)?.checked ?? true;
 
         members_config[mId] = {
-          enabled: srvVal !== 'none',
-          service: srvVal,
+          enabled: true,
+          use_family_defaults: useFamily,
+          services: mServices,
+          service: mServices[0] || (useFamily ? "" : "none"),
           morning_reminder: morningChk,
           evening_recap: eveningChk,
           urgent_alerts: urgentChk,
           task_assigned: taskChk
         };
+        member_services[mId] = mServices[0] || "";
       });
 
       const payload = {
@@ -3456,6 +3621,9 @@
         evening_recap_enabled,
         evening_recap_time,
         default_service,
+        default_services: (default_services.length > 0) ? default_services : ["notify.notify"],
+        ha_url,
+        ha_token,
         notify_on_task_assigned,
         notify_on_winner,
         channels,
@@ -3473,6 +3641,7 @@
           const data = await res.json();
           if (appData?.settings) appData.settings.notifications = data.notifications;
           showToast("Impostazioni notifiche salvate con successo!", "🔔");
+          await loadNotificationSettings();
         } else {
           showToast("Errore durante il salvataggio", "❌");
         }
@@ -3496,9 +3665,23 @@
 
     async function sendTestNotification() {
       const btn = document.getElementById('btn-send-test-notif');
-      const service = document.getElementById('notif-test-service')?.value || "notify.notify";
+      const mode = document.getElementById('notif-test-target-mode')?.value || 'family';
       const test_type = document.getElementById('notif-test-type')?.value || "evening_recap";
-      const member_name = document.getElementById('notif-test-member')?.value || "Filippo";
+      const memberSelect = document.getElementById('notif-test-member');
+      const member_id = memberSelect?.value;
+      const member_name = memberSelect?.selectedOptions[0]?.getAttribute('data-name') || "Filippo";
+      const singleService = document.getElementById('notif-test-service')?.value || "notify.notify";
+
+      let payload = { test_type, member_name };
+
+      if (mode === 'family') {
+        payload.target_type = 'family';
+      } else if (mode === 'member') {
+        payload.target_type = 'member';
+        payload.member_id = member_id;
+      } else {
+        payload.service = singleService;
+      }
 
       if (btn) {
         btn.disabled = true;
@@ -3509,18 +3692,15 @@
         const res = await fetch(`${apiBase}/notifications/test`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            service,
-            test_type,
-            member_name
-          })
+          body: JSON.stringify(payload)
         });
 
         const data = await res.json();
         if (data.success) {
-          showToast(`Notifica di test (${test_type}) inviata a ${service}!`, "🚀");
+          const count = data.tested_services ? data.tested_services.length : (data.targets ? data.targets.length : 1);
+          showToast(`Notifica di test inviata con successo a ${count} dispositivi!`, "🚀");
         } else {
-          showToast(`Errore: ${data.error || data.reason || 'Impossibile inviare'}`, "❌");
+          showToast(`Errore invio: ${data.error || data.reason || 'Nessuna risposta'}`, "❌");
         }
       } catch (e) {
         showToast("Errore di connessione", "❌");
@@ -3529,6 +3709,94 @@
           btn.disabled = false;
           btn.innerHTML = '<i class="mdi mdi-send"></i> <span>Invia Test</span>';
         }
+      }
+    }
+
+    // Modal Diagnostica Home Assistant
+    function openHaDiagnosticModal() {
+      const modal = document.getElementById('modal-ha-diagnostic');
+      if (modal) modal.classList.remove('hidden');
+      fetchAndDisplayHaDiagnostic();
+    }
+
+    function closeHaDiagnosticModal() {
+      const modal = document.getElementById('modal-ha-diagnostic');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function fetchAndDisplayHaDiagnostic() {
+      const body = document.getElementById('modal-ha-diagnostic-body');
+      if (!body) return;
+      body.innerHTML = '<div class="p-6 text-center text-slate-400"><i class="mdi mdi-loading mdi-spin text-2xl"></i> Interrogazione API Home Assistant in corso...</div>';
+
+      try {
+        const res = await fetch(`${apiBase}/debug/ha`);
+        const diag = await res.json();
+
+        let tokenHtml = diag.has_token 
+          ? `<span class="text-emerald-600 font-bold">✅ Rilevato (${diag.token_preview || '***'})</span>`
+          : `<span class="text-rose-600 font-bold">❌ NON Rilevato</span>`;
+
+        let srcBadges = [];
+        if (diag.sources?.env_SUPERVISOR_TOKEN) srcBadges.push("process.env.SUPERVISOR_TOKEN");
+        if (diag.sources?.env_HASSIO_TOKEN) srcBadges.push("process.env.HASSIO_TOKEN");
+        if (diag.sources?.s6_container_env) srcBadges.push("S6 Container File");
+        if (diag.sources?.custom_ha_token) srcBadges.push("Token Manuale Salvato");
+
+        let statesHtml = diag.ha_states_ok 
+          ? `<span class="text-emerald-600 font-bold">✅ OK (${diag.states_count} entità caricate)</span>`
+          : `<span class="text-rose-600 font-bold">❌ Errore (${diag.states_status || ''}: ${diag.errors?.states || 'Connessione fallita'})</span>`;
+
+        let servicesHtml = diag.ha_services_ok 
+          ? `<span class="text-emerald-600 font-bold">✅ OK (${diag.notify_services_found?.length || 0} servizi notify)</span>`
+          : `<span class="text-rose-600 font-bold">❌ Errore (${diag.services_status || ''}: ${diag.errors?.services || 'Non raggiungibile'})</span>`;
+
+        let notifyEntitiesList = (diag.notify_entities_found && diag.notify_entities_found.length > 0)
+          ? diag.notify_entities_found.map(e => `<li class="font-mono text-[11px]"><span class="text-indigo-600 font-bold">${e.id}</span> - ${e.name}</li>`).join('')
+          : '<li class="text-slate-400">Nessuna entità notify.* trovata in /states</li>';
+
+        let notifyServicesList = (diag.notify_services_found && diag.notify_services_found.length > 0)
+          ? diag.notify_services_found.map(s => `<li class="font-mono text-[11px]"><span class="text-indigo-600 font-bold">${s}</span></li>`).join('')
+          : '<li class="text-slate-400">Nessun servizio notify.* trovato in /services</li>';
+
+        let mobileDevicesList = (diag.mobile_devices_found && diag.mobile_devices_found.length > 0)
+          ? diag.mobile_devices_found.map(d => `<li class="font-mono text-[11px]">${d.id} (${d.name})</li>`).join('')
+          : '<li class="text-slate-400">Nessun tracker mobile trovato</li>';
+
+        body.innerHTML = `
+          <div class="space-y-3">
+            <div class="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1.5">
+              <div class="flex justify-between items-center"><span class="font-bold text-slate-500 uppercase text-[10px]">Token Supervisor HA:</span> <div>${tokenHtml}</div></div>
+              <div class="flex justify-between items-center"><span class="font-bold text-slate-500 uppercase text-[10px]">Sorgente Token:</span> <span class="font-mono text-[10px] text-slate-700 dark:text-slate-300">${srcBadges.length > 0 ? srcBadges.join(', ') : 'Nessuna sorgente'}</span></div>
+              <div class="flex justify-between items-center"><span class="font-bold text-slate-500 uppercase text-[10px]">URL API HA:</span> <span class="font-mono text-[10px] text-slate-700 dark:text-slate-300">${diag.ha_base_url}</span></div>
+              <div class="flex justify-between items-center"><span class="font-bold text-slate-500 uppercase text-[10px]">Endpoint /states:</span> <div>${statesHtml}</div></div>
+              <div class="flex justify-between items-center"><span class="font-bold text-slate-500 uppercase text-[10px]">Endpoint /services:</span> <div>${servicesHtml}</div></div>
+            </div>
+
+            <div>
+              <div class="font-extrabold uppercase text-[11px] text-slate-600 dark:text-slate-300 mb-1">Entità Notify Rilevate (${diag.notify_entities_found?.length || 0}):</div>
+              <ul class="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1 max-h-32 overflow-y-auto">
+                ${notifyEntitiesList}
+              </ul>
+            </div>
+
+            <div>
+              <div class="font-extrabold uppercase text-[11px] text-slate-600 dark:text-slate-300 mb-1">Servizi Notify Registrati (${diag.notify_services_found?.length || 0}):</div>
+              <ul class="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1 max-h-32 overflow-y-auto">
+                ${notifyServicesList}
+              </ul>
+            </div>
+
+            <div>
+              <div class="font-extrabold uppercase text-[11px] text-slate-600 dark:text-slate-300 mb-1">Smartphone / Companion App Rilevati:</div>
+              <ul class="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 space-y-1 max-h-32 overflow-y-auto">
+                ${mobileDevicesList}
+              </ul>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        body.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 rounded-xl">Errore durante la diagnostica: ${err.message}</div>`;
       }
     }
 

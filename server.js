@@ -67,6 +67,10 @@ function loadData() {
   const defaultNotificationsSettings = {
     enabled: true,
     default_service: "notify.notify",
+    default_services: ["notify.notify"],
+    custom_services: [],
+    ha_url: "",
+    ha_token: "",
     morning_reminder_enabled: true,
     morning_reminder_time: "08:30",
     evening_recap_enabled: true,
@@ -79,7 +83,7 @@ function loadData() {
       general: "ChoreQuest_General"
     },
     member_services: {}, // legacy fallback
-    members_config: {}, // { [mId]: { enabled: true, service: "", morning_reminder: true, evening_recap: true, urgent_alerts: true, task_assigned: true } }
+    members_config: {}, // { [mId]: { enabled: true, service: "", services: [], use_family_defaults: false, morning_reminder: true, evening_recap: true, urgent_alerts: true, task_assigned: true } }
     last_morning_date: null,
     last_evening_date: null
   };
@@ -115,6 +119,10 @@ function loadData() {
         if (data.settings.notifications.evening_recap_enabled === undefined) data.settings.notifications.evening_recap_enabled = true;
         if (!data.settings.notifications.evening_recap_time) data.settings.notifications.evening_recap_time = "20:30";
         if (!data.settings.notifications.default_service) data.settings.notifications.default_service = "notify.notify";
+        if (!Array.isArray(data.settings.notifications.default_services) || data.settings.notifications.default_services.length === 0) {
+          data.settings.notifications.default_services = [data.settings.notifications.default_service || "notify.notify"];
+        }
+        if (!Array.isArray(data.settings.notifications.custom_services)) data.settings.notifications.custom_services = [];
         if (!data.settings.notifications.member_services) data.settings.notifications.member_services = {};
         if (!data.settings.notifications.members_config) data.settings.notifications.members_config = {};
         if (data.settings.notifications.notify_on_task_assigned === undefined) data.settings.notifications.notify_on_task_assigned = true;
@@ -522,12 +530,101 @@ function calculateStats() {
   };
 }
 
+// ==================== HOME ASSISTANT INTEGRATION HELPERS ====================
+
+function getSupervisorToken() {
+  if (process.env.SUPERVISOR_TOKEN && process.env.SUPERVISOR_TOKEN.trim()) {
+    return process.env.SUPERVISOR_TOKEN.trim();
+  }
+  if (process.env.HASSIO_TOKEN && process.env.HASSIO_TOKEN.trim()) {
+    return process.env.HASSIO_TOKEN.trim();
+  }
+  // Try reading directly from S6 container environment files
+  try {
+    const s6Paths = [
+      '/run/s6/container_environment/SUPERVISOR_TOKEN',
+      '/var/run/s6/container_environment/SUPERVISOR_TOKEN',
+      '/run/s6-rc/container_environment/SUPERVISOR_TOKEN',
+      '/run/s6/container_environment/HASSIO_TOKEN'
+    ];
+    for (const p of s6Paths) {
+      if (fs.existsSync(p)) {
+        const tok = fs.readFileSync(p, 'utf8').trim();
+        if (tok) return tok;
+      }
+    }
+  } catch (e) {
+    // ignore
+  }
+  // Optional fallback: manual Long-Lived Access Token in settings
+  if (appData?.settings?.notifications?.ha_token && appData.settings.notifications.ha_token.trim()) {
+    return appData.settings.notifications.ha_token.trim();
+  }
+  return null;
+}
+
+function getHomeAssistantBaseUrl() {
+  if (appData?.settings?.notifications?.ha_url && appData.settings.notifications.ha_url.trim()) {
+    let u = appData.settings.notifications.ha_url.trim().replace(/\/+$/, '');
+    if (!u.endsWith('/api')) u = `${u}/api`;
+    return u;
+  }
+  return "http://supervisor/core/api";
+}
+
+function getHaHeaders(token = getSupervisorToken()) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+    headers['X-Supervisor-Token'] = token;
+  }
+  return headers;
+}
+
+function getFamilyNotificationServices() {
+  const notifSettings = appData?.settings?.notifications || {};
+  if (Array.isArray(notifSettings.default_services) && notifSettings.default_services.length > 0) {
+    const list = notifSettings.default_services.filter(s => s && s !== 'none' && s !== 'disabled');
+    if (list.length > 0) return list;
+  }
+  if (notifSettings.default_service && notifSettings.default_service !== 'none' && notifSettings.default_service !== 'disabled') {
+    return [notifSettings.default_service];
+  }
+  return ["notify.notify"];
+}
+
+function getMemberNotificationServices(memberId) {
+  const notifSettings = appData?.settings?.notifications || {};
+  const mCfg = notifSettings.members_config?.[memberId] || {};
+
+  if (mCfg.use_family_defaults === true) {
+    return getFamilyNotificationServices();
+  }
+
+  if (Array.isArray(mCfg.services) && mCfg.services.length > 0) {
+    const list = mCfg.services.filter(s => s && s !== 'none' && s !== 'disabled');
+    if (list.length > 0) return list;
+  }
+
+  if (mCfg.service && mCfg.service !== 'none' && mCfg.service !== 'disabled') {
+    return [mCfg.service];
+  }
+
+  const legacySrv = notifSettings.member_services?.[memberId];
+  if (legacySrv && legacySrv !== 'none' && legacySrv !== 'disabled') {
+    return [legacySrv];
+  }
+
+  return getFamilyNotificationServices();
+}
+
 // Comprehensive Home Assistant Sensors Synchronization via Supervisor API
 async function syncToHomeAssistant() {
-  const supervisorToken = process.env.SUPERVISOR_TOKEN;
+  const supervisorToken = getSupervisorToken();
   if (!supervisorToken) return;
 
-  const haBase = "http://supervisor/core/api";
+  const haBase = getHomeAssistantBaseUrl();
+  const haHeaders = getHaHeaders(supervisorToken);
   const data = calculateStats();
 
   const overdueList = data.routine_tasks.filter(r => r.status === 'overdue');
@@ -748,18 +845,15 @@ syncToHomeAssistant();
 
 // ==================== HOME ASSISTANT NATIVE NOTIFICATIONS ENGINE ====================
 
-async function sendHomeAssistantNotification({ service, title, message, channelType = 'general', extraData = {} }) {
-  const supervisorToken = process.env.SUPERVISOR_TOKEN;
-  const haBase = "http://supervisor/core/api";
-  
+// Invio a singolo servizio / entità Home Assistant
+async function sendSingleHomeAssistantNotification({ service, title, message, channelType = 'general', extraData = {} }) {
+  const supervisorToken = getSupervisorToken();
+  const haBase = getHomeAssistantBaseUrl();
   const notifSettings = appData?.settings?.notifications || {};
-  if (notifSettings.enabled === false) {
-    return { success: false, reason: "Notifiche disattivate nelle impostazioni" };
-  }
 
-  const targetService = service || notifSettings.default_service || "notify.notify";
+  const targetService = (typeof service === 'string' && service.trim()) ? service.trim() : "notify.notify";
   if (!targetService || targetService === 'none' || targetService === 'disabled') {
-    return { success: false, reason: "Nessun servizio di notifica configurato" };
+    return { success: false, reason: "Servizio di notifica disattivato o non valido", target: targetService };
   }
 
   const channels = notifSettings.channels || {
@@ -806,7 +900,7 @@ async function sendHomeAssistantNotification({ service, title, message, channelT
 
   if (!supervisorToken) {
     console.log(`[Notification MOCK] Target: ${targetService} | Title: "${title}" | Message: "${message}" | Channel: ${channelName}`);
-    return { success: true, mocked: true };
+    return { success: true, mocked: true, target: targetService };
   }
 
   try {
@@ -829,10 +923,7 @@ async function sendHomeAssistantNotification({ service, title, message, channelT
 
     let response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${supervisorToken}`,
-        'Content-Type': 'application/json'
-      },
+      headers: getHaHeaders(supervisorToken),
       body: JSON.stringify(callPayload)
     });
 
@@ -850,10 +941,7 @@ async function sendHomeAssistantNotification({ service, title, message, channelT
       };
       response = await fetch(fallbackUrl, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supervisorToken}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getHaHeaders(supervisorToken),
         body: JSON.stringify(fallbackPayload)
       });
     }
@@ -861,15 +949,49 @@ async function sendHomeAssistantNotification({ service, title, message, channelT
     if (!response.ok) {
       const errText = await response.text();
       console.error(`[Notification ERROR] Target: ${targetService} - Status: ${response.status} - ${errText}`);
-      return { success: false, error: errText, status: response.status };
+      return { success: false, error: errText, status: response.status, target: targetService };
     }
 
     console.log(`[Notification SENT] Target: ${targetService} (${channelName})`);
-    return { success: true };
+    return { success: true, target: targetService };
   } catch (err) {
     console.error(`[Notification EXCEPTION] Target: ${targetService}:`, err);
-    return { success: false, error: err.message };
+    return { success: false, error: err.message, target: targetService };
   }
+}
+
+// Invio a destinazioni multiple (array di servizi o singolo servizio)
+async function sendHomeAssistantNotification({ service, title, message, channelType = 'general', extraData = {} }) {
+  const notifSettings = appData?.settings?.notifications || {};
+  if (notifSettings.enabled === false) {
+    return { success: false, reason: "Notifiche disattivate nelle impostazioni" };
+  }
+
+  let targets = [];
+  if (Array.isArray(service)) {
+    targets = service.filter(s => s && s !== 'none' && s !== 'disabled');
+  } else if (typeof service === 'string' && service.trim() && service !== 'none' && service !== 'disabled') {
+    targets = [service.trim()];
+  } else {
+    targets = getFamilyNotificationServices();
+  }
+
+  if (targets.length === 0) {
+    return { success: false, reason: "Nessun servizio di notifica valido selezionato" };
+  }
+
+  targets = Array.from(new Set(targets));
+
+  const results = await Promise.all(targets.map(srv =>
+    sendSingleHomeAssistantNotification({ service: srv, title, message, channelType, extraData })
+  ));
+
+  const anySuccess = results.some(r => r.success);
+  return {
+    success: anySuccess,
+    targets: targets,
+    results: results
+  };
 }
 
 // 🌅 Promemoria Mattutino Programmato (Faccende di oggi & in scadenza)
@@ -891,17 +1013,15 @@ async function checkAndSendDailyReminders() {
   saveData(appData);
 
   const stats = calculateStats();
-  const defaultService = notifSettings.default_service || "notify.notify";
   const membersConfig = notifSettings.members_config || {};
-  const memberServices = notifSettings.member_services || {};
 
   for (const m of Object.values(appData.members || {})) {
     const mCfg = membersConfig[m.id] || {};
     if (mCfg.enabled === false) continue; // utente ha disattivato notifiche
     if (mCfg.morning_reminder === false) continue; // utente ha disattivato promemoria mattutino
 
-    const targetService = mCfg.service || memberServices[m.id] || defaultService;
-    if (!targetService || targetService === 'none' || targetService === 'disabled') continue;
+    const targetServices = getMemberNotificationServices(m.id);
+    if (!targetServices || targetServices.length === 0) continue;
 
     // 1. Routine assegnate a questo membro o alla famiglia
     const memberRoutines = stats.routine_tasks.filter(r => {
@@ -945,7 +1065,7 @@ async function checkAndSendDailyReminders() {
       ].slice(0, 5);
 
       await sendHomeAssistantNotification({
-        service: targetService,
+        service: targetServices,
         title: `🚨 ChoreQuest: ${totalOverdue} Faccende Scadute!`,
         message: `Ciao ${m.name}, hai ${totalOverdue} attività scadute in attesa:\n${urgentNames.join('\n')}`,
         channelType: 'urgent',
@@ -964,7 +1084,7 @@ async function checkAndSendDailyReminders() {
       ].slice(0, 5);
 
       await sendHomeAssistantNotification({
-        service: targetService,
+        service: targetServices,
         title: `🌅 ChoreQuest: Buongiorno ${m.name}! (${totalReminders} attività)`,
         message: `Ecco le tue faccende in programma per oggi:\n${reminderNames.join('\n')}`,
         channelType: 'reminders',
@@ -993,9 +1113,7 @@ async function checkAndSendEveningRecap() {
   saveData(appData);
 
   const stats = calculateStats();
-  const defaultService = notifSettings.default_service || "notify.notify";
   const membersConfig = notifSettings.members_config || {};
-  const memberServices = notifSettings.member_services || {};
 
   // Calcola punti fatti oggi per ciascun membro dai logs
   const todayLogs = (appData.logs || []).filter(l => l.created_at && l.created_at.startsWith(todayIso));
@@ -1005,8 +1123,8 @@ async function checkAndSendEveningRecap() {
     if (mCfg.enabled === false) continue;
     if (mCfg.evening_recap === false) continue;
 
-    const targetService = mCfg.service || memberServices[m.id] || defaultService;
-    if (!targetService || targetService === 'none' || targetService === 'disabled') continue;
+    const targetServices = getMemberNotificationServices(m.id);
+    if (!targetServices || targetServices.length === 0) continue;
 
     const mTodayLogs = todayLogs.filter(l => l.member_name === m.name && !l.is_personal && l.points > 0);
     const todayPts = mTodayLogs.reduce((acc, l) => acc + (parseInt(l.points) || 0), 0);
@@ -1042,7 +1160,7 @@ async function checkAndSendEveningRecap() {
     const recapMessage = `Ciao ${m.name}!\n${pointsMsg}\n${standingMsg}\n${houseMsg}`;
 
     await sendHomeAssistantNotification({
-      service: targetService,
+      service: targetServices,
       title: `🌙 ChoreQuest: Riepilogo Serale`,
       message: recapMessage,
       channelType: 'reminders',
@@ -1059,8 +1177,8 @@ setInterval(() => {
 
 // API: Rilevamento Completo e Robusto dei Servizi ed Entità Notifica Home Assistant
 app.get('/api/notifications/services', async (req, res) => {
-  const supervisorToken = process.env.SUPERVISOR_TOKEN;
-  const haBase = "http://supervisor/core/api";
+  const supervisorToken = getSupervisorToken();
+  const haBase = getHomeAssistantBaseUrl();
   const discoveredMap = new Map();
   let connectedToHa = false;
 
@@ -1093,7 +1211,21 @@ app.get('/api/notifications/services', async (req, res) => {
     });
   }
 
-  // 3. Includi eventuali servizi già assegnati ai membri
+  // 3. Includi eventuali servizi già assegnati nei default o nei membri
+  const defServices = appData?.settings?.notifications?.default_services || [];
+  if (Array.isArray(defServices)) {
+    defServices.forEach(s => {
+      if (s && s !== 'none' && s !== 'disabled' && !discoveredMap.has(s)) {
+        discoveredMap.set(s, {
+          id: s,
+          name: `📢 ${s}`,
+          icon: "📢",
+          type: "family_configured"
+        });
+      }
+    });
+  }
+
   const memberServices = appData?.settings?.notifications?.member_services || {};
   Object.values(memberServices).forEach(srv => {
     if (srv && srv !== 'none' && srv !== 'disabled' && !discoveredMap.has(srv)) {
@@ -1106,11 +1238,27 @@ app.get('/api/notifications/services', async (req, res) => {
     }
   });
 
+  const membersConfig = appData?.settings?.notifications?.members_config || {};
+  Object.values(membersConfig).forEach(mCfg => {
+    if (Array.isArray(mCfg.services)) {
+      mCfg.services.forEach(srv => {
+        if (srv && srv !== 'none' && srv !== 'disabled' && !discoveredMap.has(srv)) {
+          discoveredMap.set(srv, {
+            id: srv,
+            name: `📱 ${srv}`,
+            icon: "📱",
+            type: "member_configured"
+          });
+        }
+      });
+    }
+  });
+
   if (supervisorToken) {
     // 4. Scansione Entità Reali da /states (notify.*, device_tracker.*, sensor.*_battery_level, person.*)
     try {
       const statesRes = await fetch(`${haBase}/states`, {
-        headers: { 'Authorization': `Bearer ${supervisorToken}` }
+        headers: getHaHeaders(supervisorToken)
       });
       if (statesRes.ok) {
         connectedToHa = true;
@@ -1171,7 +1319,7 @@ app.get('/api/notifications/services', async (req, res) => {
     // 5. Scansione Servizi Registrati sotto il dominio notify da /services
     try {
       const resp = await fetch(`${haBase}/services`, {
-        headers: { 'Authorization': `Bearer ${supervisorToken}` }
+        headers: getHaHeaders(supervisorToken)
       });
       if (resp.ok) {
         connectedToHa = true;
@@ -1208,6 +1356,83 @@ app.get('/api/notifications/services', async (req, res) => {
   });
 });
 
+// API: Diagnostica Connessione Home Assistant
+app.get('/api/debug/ha', async (req, res) => {
+  const token = getSupervisorToken();
+  const haBase = getHomeAssistantBaseUrl();
+  const envSuper = !!process.env.SUPERVISOR_TOKEN;
+  const envHassio = !!process.env.HASSIO_TOKEN;
+  let s6TokenFound = false;
+  try {
+    if (fs.existsSync('/run/s6/container_environment/SUPERVISOR_TOKEN') ||
+        fs.existsSync('/var/run/s6/container_environment/SUPERVISOR_TOKEN') ||
+        fs.existsSync('/run/s6-rc/container_environment/SUPERVISOR_TOKEN')) {
+      s6TokenFound = true;
+    }
+  } catch (e) {}
+
+  const debug = {
+    has_token: !!token,
+    token_preview: token ? `${token.substring(0, 6)}...${token.slice(-4)}` : null,
+    sources: {
+      env_SUPERVISOR_TOKEN: envSuper,
+      env_HASSIO_TOKEN: envHassio,
+      s6_container_env: s6TokenFound,
+      custom_ha_token: !!appData?.settings?.notifications?.ha_token
+    },
+    ha_base_url: haBase,
+    ha_states_ok: false,
+    ha_services_ok: false,
+    states_count: 0,
+    notify_entities_found: [],
+    notify_services_found: [],
+    mobile_devices_found: [],
+    errors: {}
+  };
+
+  if (token) {
+    try {
+      const statesRes = await fetch(`${haBase}/states`, { headers: getHaHeaders(token) });
+      debug.ha_states_ok = statesRes.ok;
+      debug.states_status = statesRes.status;
+      if (statesRes.ok) {
+        const states = await statesRes.json();
+        debug.states_count = states.length;
+        debug.notify_entities_found = states
+          .filter(s => s.entity_id && s.entity_id.startsWith('notify.'))
+          .map(s => ({ id: s.entity_id, name: s.attributes?.friendly_name || s.entity_id }));
+        debug.mobile_devices_found = states
+          .filter(s => s.entity_id && (s.entity_id.startsWith('device_tracker.') || (s.entity_id.startsWith('sensor.') && s.entity_id.endsWith('_battery_level'))))
+          .map(s => ({ id: s.entity_id, name: s.attributes?.friendly_name || s.entity_id }))
+          .slice(0, 15);
+      } else {
+        debug.errors.states = await statesRes.text();
+      }
+    } catch (e) {
+      debug.errors.states = e.message;
+    }
+
+    try {
+      const srvRes = await fetch(`${haBase}/services`, { headers: getHaHeaders(token) });
+      debug.ha_services_ok = srvRes.ok;
+      debug.services_status = srvRes.status;
+      if (srvRes.ok) {
+        const domains = await srvRes.json();
+        const notifyDomain = domains.find(d => d.domain === 'notify');
+        if (notifyDomain && notifyDomain.services) {
+          debug.notify_services_found = Object.keys(notifyDomain.services).map(k => `notify.${k}`);
+        }
+      } else {
+        debug.errors.services = await srvRes.text();
+      }
+    } catch (e) {
+      debug.errors.services = e.message;
+    }
+  }
+
+  res.json(debug);
+});
+
 // API: Aggiungi Servizio / Entità Notifica Personalizzata
 app.post('/api/notifications/custom_service', (req, res) => {
   const { service_id, name } = req.body;
@@ -1241,21 +1466,26 @@ app.post('/api/notifications/settings', (req, res) => {
   if (!appData.settings) appData.settings = {};
   if (!appData.settings.notifications) appData.settings.notifications = {};
 
+  const existing = appData.settings.notifications;
+
   appData.settings.notifications = {
-    ...appData.settings.notifications,
+    ...existing,
     ...newSettings,
     channels: {
-      ...appData.settings.notifications.channels,
+      ...existing.channels,
       ...(newSettings.channels || {})
     },
     members_config: {
-      ...appData.settings.notifications.members_config,
+      ...existing.members_config,
       ...(newSettings.members_config || {})
     },
     member_services: {
-      ...appData.settings.notifications.member_services,
+      ...existing.member_services,
       ...(newSettings.member_services || {})
-    }
+    },
+    default_services: Array.isArray(newSettings.default_services) && newSettings.default_services.length > 0 
+      ? newSettings.default_services 
+      : (existing.default_services || [newSettings.default_service || existing.default_service || "notify.notify"])
   };
 
   saveData(appData);
@@ -1263,10 +1493,20 @@ app.post('/api/notifications/settings', (req, res) => {
   res.json({ status: "saved", notifications: appData.settings.notifications });
 });
 
-// API: Invio Notifica di Test Immediata (Supporta tipi: urgent, reminders, evening_recap, generic)
+// API: Invio Notifica di Test Immediata (Supporta: family, member, o singolo servizio)
 app.post('/api/notifications/test', async (req, res) => {
-  const { service, channel_type, test_type, member_name, title, message } = req.body;
-  const targetService = service || appData?.settings?.notifications?.default_service || "notify.notify";
+  const { service, target_type, member_id, channel_type, test_type, member_name, title, message } = req.body;
+
+  let targetServices = [];
+  if (target_type === 'family') {
+    targetServices = getFamilyNotificationServices();
+  } else if (target_type === 'member' && member_id) {
+    targetServices = getMemberNotificationServices(member_id);
+  } else if (service) {
+    targetServices = Array.isArray(service) ? service : [service];
+  } else {
+    targetServices = getFamilyNotificationServices();
+  }
 
   let finalTitle = title;
   let finalMessage = message;
@@ -1292,12 +1532,13 @@ app.post('/api/notifications/test', async (req, res) => {
   }
 
   const result = await sendHomeAssistantNotification({
-    service: targetService,
+    service: targetServices,
     title: finalTitle,
     message: finalMessage,
-    channelType: finalChannel
+    channelType: finalChannel,
+    extraData: { tag: `chorequest_test_${Date.now()}` }
   });
-  res.json(result);
+  res.json({ ...result, tested_services: targetServices, test_type, channel: finalChannel });
 });
 
 // API: Stats & Data
@@ -1634,8 +1875,9 @@ app.post('/api/single_tasks', (req, res) => {
   if (notifCfg && notifCfg.enabled && notifCfg.notify_on_task_assigned && notification_policy !== 'nulla') {
     const isSharedAll = assignedList.includes('all') || assignedList.includes('Tutti') || assignedList.includes('Tutta la Famiglia');
     if (isSharedAll) {
+      const familyServices = getFamilyNotificationServices();
       sendHomeAssistantNotification({
-        service: notifCfg.default_service || "notify.notify",
+        service: familyServices,
         title: `📋 Nuovo Task Famiglia: ${newTask.title}`,
         message: `Assegnato a tutta la famiglia da ${newTask.created_by}. Scadenza: ${newTask.due_date}. Punti in palio: +${newTask.points}pt!`,
         channelType: 'general'
@@ -1645,10 +1887,10 @@ app.post('/api/single_tasks', (req, res) => {
         const mObj = Object.values(appData.members || {}).find(m => m.name.toLowerCase() === mName.toLowerCase());
         const mCfg = (mObj && notifCfg.members_config?.[mObj.id]) ? notifCfg.members_config[mObj.id] : null;
         if (mCfg && (mCfg.enabled === false || mCfg.task_assigned === false)) return;
-        const srv = mCfg?.service || (mObj && notifCfg.member_services?.[mObj.id]) || notifCfg.default_service;
-        if (srv && srv !== 'none' && srv !== 'disabled') {
+        const targetServices = mObj ? getMemberNotificationServices(mObj.id) : getFamilyNotificationServices();
+        if (targetServices && targetServices.length > 0) {
           sendHomeAssistantNotification({
-            service: srv,
+            service: targetServices,
             title: `📋 Nuovo Task Assegnato: ${newTask.title}`,
             message: `Ciao ${mName}, ti è stato assegnato un nuovo task da ${newTask.created_by}. Scadenza: ${newTask.due_date}. Punti: +${newTask.points}pt!`,
             channelType: 'general'
@@ -2074,7 +2316,8 @@ app.get('/api/system/check_update', async (req, res) => {
 
 // API: Get Current Logged-in Home Assistant User & Person entities
 app.get('/api/current_user', async (req, res) => {
-  const supervisorToken = process.env.SUPERVISOR_TOKEN;
+  const supervisorToken = getSupervisorToken();
+  const haBase = getHomeAssistantBaseUrl();
   
   const clientProfileParam = req.query.client_profile || req.query.ha_profile || null;
 
@@ -2102,8 +2345,8 @@ app.get('/api/current_user', async (req, res) => {
   if (supervisorToken) {
     try {
       // 1. Check person.* entities from Home Assistant states (attributes.friendly_name is the Profile Name)
-      const statesRes = await fetch("http://supervisor/core/api/states", {
-        headers: { 'Authorization': `Bearer ${supervisorToken}` }
+      const statesRes = await fetch(`${haBase}/states`, {
+        headers: getHaHeaders(supervisorToken)
       });
       if (statesRes.ok) {
         const states = await statesRes.json();

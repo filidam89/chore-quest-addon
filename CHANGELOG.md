@@ -4,6 +4,28 @@ Tutte le novità, miglioramenti e correzioni introdotte nelle versioni di ChoreQ
 
 ---
 
+## [2.8.2] - 2026-09-22
+
+### ✨ Novità & Multi-Dispositivo per Famiglia e Membri
+- **Supporto Multi-Dispositivo Completo**:
+  - **Membri della Famiglia**: Ogni membro può ora associare contemporaneamente **più smartphone, tablet e canali** (es. iPhone personale + Tablet Android + Notifica Persistente HA). Tutti i dispositivi selezionati riceveranno in parallelo promemoria, riepiloghi serali e avvisi per nuove faccende assegnate.
+  - **Dispositivi Predefiniti Famiglia**: La famiglia può ora selezionare una lista multipla di dispositivi predefiniti (`default_services`), con contatore dinamico e fallback automatico per i membri che scelgono di utilizzare le impostazioni generali.
+- **Risoluzione Definitiva Connessione Supervisor & Iniezione Token S6**:
+  - Risolto il mancato passaggio delle variabili d'ambiente in ambienti Docker HA Add-on tramite `/usr/bin/with-contenv sh` in `run.sh`.
+  - Motore di fallback a 4 livelli per il recupero del token Supervisor (`process.env.SUPERVISOR_TOKEN`, `process.env.HASSIO_TOKEN`, `/run/s6/container_environment/SUPERVISOR_TOKEN`, `/var/run/s6/container_environment/SUPERVISOR_TOKEN`, token Long-Lived manuale).
+  - Invio simultaneo delle intestazioni `Authorization: Bearer` e `X-Supervisor-Token`.
+- **Nuovo Strumento di Diagnostica Live Home Assistant**:
+  - Nuovo endpoint API `/api/debug/ha` e modale interattivo *"Diagnostica HA"* accessibile con un click dalla barra Notifiche, che mostra in tempo reale stato del token, sorgente, risposta degli endpoint `/states` e `/services` ed elenco di tutte le entità e smartphone rilevati.
+- **Pannello Test Notifiche Multi-Target**:
+  - Possibilità di testare istantaneamente l'invio verso:
+    - 📢 *Tutta la Famiglia* (tutti i dispositivi di default);
+    - 👤 *Membro Specifico* (tutti i dispositivi associati a quell'utente);
+    - 📱 *Singolo Dispositivo* specifico.
+- **Connessione Manuale Avanzata (Opzionale)**:
+  - Possibilità di inserire nelle impostazioni un URL personalizzato Home Assistant e un Token di Accesso a Lungo Termine per installazioni esterne o standalone.
+
+---
+
 ## [2.8.1] - 2026-09-22
 
 ### ✨ Novità & Rilevamento Esteso Dispositivi

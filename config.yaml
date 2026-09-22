@@ -1,5 +1,5 @@
 name: "ChoreQuest"
-version: "2.8.1"
+version: "2.8.2"
 slug: "chorequest"
 description: "Gamified family chore & routine management for Home Assistant with Native Home Assistant Notifications, Multi-channel Ringtones, Member-Device Mapping, Task Splitting, and Active Profile Detection."
 url: "https://github.com/filidam89/chore-quest-addon"
