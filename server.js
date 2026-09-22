@@ -51,10 +51,10 @@ function getDefaultSpontaneousTasks() {
 
 function getDefaultRoutineTasks(todayIso) {
   return [
-    { id: "r_lenzuola", name: "Cambio lenzuola", category: "Bucato & Panni", points: 25, frequency_number: 7, frequency_unit: "days", frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "mdi:bed", priority: "medium", is_personal: false, assigned_member: "all" },
-    { id: "r_bagno_profondo", name: "Pulizia profonda bagno", category: "Pulizia & Casa", points: 35, frequency_number: 5, frequency_unit: "days", frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "mdi:toilet", priority: "medium", is_personal: false, assigned_member: "all" },
-    { id: "r_pavimenti", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia & Casa", points: 30, frequency_number: 3, frequency_unit: "days", frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "mdi:vacuum", priority: "medium", is_personal: false, assigned_member: "all" },
-    { id: "r_barbiere", name: "Taglio capelli / Barbiere", category: "Cura Personale & Altro", points: 0, frequency_number: 1, frequency_unit: "months", frequency_days: 30, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "mdi:content-cut", priority: "medium", is_personal: true, assigned_member: "Papà" }
+    { id: "r_lenzuola", name: "Cambio lenzuola", category: "Bucato & Panni", points: 25, frequency_number: 7, frequency_unit: "days", frequency_days: 7, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "mdi:bed", priority: "medium", is_personal: false, assigned_member: "all", notification_policy: "scadenza" },
+    { id: "r_bagno_profondo", name: "Pulizia profonda bagno", category: "Pulizia & Casa", points: 35, frequency_number: 5, frequency_unit: "days", frequency_days: 5, warning_days: 2, start_date: todayIso, schedule_type: "from_last", icon: "mdi:toilet", priority: "medium", is_personal: false, assigned_member: "all", notification_policy: "scadenza" },
+    { id: "r_pavimenti", name: "Aspirapolvere & Lavaggio pavimenti", category: "Pulizia & Casa", points: 30, frequency_number: 3, frequency_unit: "days", frequency_days: 3, warning_days: 1, start_date: todayIso, schedule_type: "from_last", icon: "mdi:vacuum", priority: "medium", is_personal: false, assigned_member: "all", notification_policy: "scadenza" },
+    { id: "r_barbiere", name: "Taglio capelli / Barbiere", category: "Cura Personale & Altro", points: 0, frequency_number: 1, frequency_unit: "months", frequency_days: 30, warning_days: 3, start_date: todayIso, schedule_type: "from_last", icon: "mdi:content-cut", priority: "medium", is_personal: true, assigned_member: "Papà", notification_policy: "scadenza" }
   ];
 }
 
@@ -63,6 +63,22 @@ function loadData() {
   const defaultCategories = getDefaultCategories();
   const defaultSpontaneous = getDefaultSpontaneousTasks();
   const defaultRoutines = getDefaultRoutineTasks(todayIso);
+
+  const defaultNotificationsSettings = {
+    enabled: true,
+    daily_reminder_enabled: true,
+    reminder_time: "08:30",
+    default_service: "notify.notify",
+    member_services: {},
+    notify_on_task_assigned: true,
+    notify_on_winner: true,
+    channels: {
+      urgent: "ChoreQuest_Urgent",
+      reminders: "ChoreQuest_Reminders",
+      general: "ChoreQuest_General"
+    },
+    last_reminder_date: null
+  };
 
   if (fs.existsSync(DB_FILE)) {
     try {
@@ -85,6 +101,26 @@ function loadData() {
       if (!data.settings.leaderboard_period_mode) data.settings.leaderboard_period_mode = "calendar";
       if (!data.settings.theme_mode) data.settings.theme_mode = "auto";
 
+      // Notifications settings migration
+      if (!data.settings.notifications) {
+        data.settings.notifications = { ...defaultNotificationsSettings };
+      } else {
+        if (data.settings.notifications.enabled === undefined) data.settings.notifications.enabled = true;
+        if (data.settings.notifications.daily_reminder_enabled === undefined) data.settings.notifications.daily_reminder_enabled = true;
+        if (!data.settings.notifications.reminder_time) data.settings.notifications.reminder_time = "08:30";
+        if (!data.settings.notifications.default_service) data.settings.notifications.default_service = "notify.notify";
+        if (!data.settings.notifications.member_services) data.settings.notifications.member_services = {};
+        if (data.settings.notifications.notify_on_task_assigned === undefined) data.settings.notifications.notify_on_task_assigned = true;
+        if (data.settings.notifications.notify_on_winner === undefined) data.settings.notifications.notify_on_winner = true;
+        if (!data.settings.notifications.channels) {
+          data.settings.notifications.channels = { ...defaultNotificationsSettings.channels };
+        } else {
+          if (!data.settings.notifications.channels.urgent) data.settings.notifications.channels.urgent = "ChoreQuest_Urgent";
+          if (!data.settings.notifications.channels.reminders) data.settings.notifications.channels.reminders = "ChoreQuest_Reminders";
+          if (!data.settings.notifications.channels.general) data.settings.notifications.channels.general = "ChoreQuest_General";
+        }
+      }
+
       // Non-destructive schema enhancements for routine fields & frequency units
       data.routine_tasks.forEach(r => {
         if (!r.category) r.category = "Pulizia & Casa";
@@ -97,6 +133,7 @@ function loadData() {
         if (r.is_personal === undefined) r.is_personal = false;
         if (r.is_personal) r.points = 0;
         if (!r.assigned_member) r.assigned_member = 'all';
+        if (!r.notification_policy) r.notification_policy = 'scadenza';
       });
 
       // Migrations for spontaneous tasks
@@ -112,6 +149,7 @@ function loadData() {
         if (!st.priority) st.priority = "medium";
         if (!st.notes) st.notes = [];
         if (!st.due_date) st.due_date = st.created_at ? st.created_at.split('T')[0] : todayIso;
+        if (!st.notification_policy) st.notification_policy = 'scadenza';
       });
 
       // Ensure categories have clean sequential order without duplicate order numbers
@@ -128,7 +166,8 @@ function loadData() {
     settings: {
       leaderboard_period_mode: "calendar",
       primary_score_display: "weekly",
-      theme_mode: "auto"
+      theme_mode: "auto",
+      notifications: defaultNotificationsSettings
     },
     members: {
       "m_1": { id: "m_1", name: "Papà", icon: "👨‍💻", color: "#3b82f6" },
@@ -700,6 +739,279 @@ async function syncToHomeAssistant() {
 
 syncToHomeAssistant();
 
+// ==================== HOME ASSISTANT NATIVE NOTIFICATIONS ENGINE ====================
+
+async function sendHomeAssistantNotification({ service, title, message, channelType = 'general', extraData = {} }) {
+  const supervisorToken = process.env.SUPERVISOR_TOKEN;
+  const haBase = "http://supervisor/core/api";
+  
+  const notifSettings = appData?.settings?.notifications || {};
+  if (notifSettings.enabled === false) {
+    return { success: false, reason: "Notifiche disattivate nelle impostazioni" };
+  }
+
+  const targetService = service || notifSettings.default_service || "notify.notify";
+  if (!targetService || targetService === 'none' || targetService === 'disabled') {
+    return { success: false, reason: "Nessun servizio di notifica configurato" };
+  }
+
+  const channels = notifSettings.channels || {
+    urgent: "ChoreQuest_Urgent",
+    reminders: "ChoreQuest_Reminders",
+    general: "ChoreQuest_General"
+  };
+
+  let channelName = channels.general || "ChoreQuest_General";
+  let importance = "default";
+  let priority = "high";
+  let interruptionLevel = "active";
+
+  if (channelType === 'urgent') {
+    channelName = channels.urgent || "ChoreQuest_Urgent";
+    importance = "high";
+    priority = "high";
+    interruptionLevel = "time-sensitive";
+  } else if (channelType === 'reminders') {
+    channelName = channels.reminders || "ChoreQuest_Reminders";
+    importance = "default";
+    priority = "default";
+    interruptionLevel = "active";
+  }
+
+  const payload = {
+    title: title || "ChoreQuest",
+    message: message || "",
+    data: {
+      channel: channelName,
+      importance: importance,
+      priority: priority,
+      ttl: 0,
+      push: {
+        "interruption-level": interruptionLevel
+      },
+      tag: extraData.tag || `chorequest_${channelType}`,
+      group: "ChoreQuest",
+      ...extraData
+    }
+  };
+
+  if (!supervisorToken) {
+    console.log(`[Notification MOCK] Target: ${targetService} | Title: "${title}" | Message: "${message}" | Channel: ${channelName}`);
+    return { success: true, mocked: true };
+  }
+
+  try {
+    let url;
+    let srvName = targetService.trim();
+    if (srvName.includes('.')) {
+      const parts = srvName.split('.');
+      url = `${haBase}/services/${parts[0]}/${parts[1]}`;
+    } else {
+      url = `${haBase}/services/notify/${srvName}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supervisorToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`[Notification ERROR] Target: ${targetService} - Status: ${response.status} - ${errText}`);
+      return { success: false, error: errText, status: response.status };
+    }
+
+    console.log(`[Notification SENT] Target: ${targetService} (${channelName})`);
+    return { success: true };
+  } catch (err) {
+    console.error(`[Notification EXCEPTION] Target: ${targetService}:`, err);
+    return { success: false, error: err.message };
+  }
+}
+
+async function checkAndSendDailyReminders() {
+  const notifSettings = appData?.settings?.notifications;
+  if (!notifSettings || !notifSettings.enabled || !notifSettings.daily_reminder_enabled) return;
+
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const currentHHMM = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const todayIso = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  if (currentHHMM !== notifSettings.reminder_time) return;
+  if (notifSettings.last_reminder_date === todayIso) return;
+
+  console.log(`[Notification Scheduler] Inizio invio promemoria giornaliero per ${todayIso} alle ${currentHHMM}...`);
+  notifSettings.last_reminder_date = todayIso;
+  saveData(appData);
+
+  const stats = calculateStats();
+  const memberServices = notifSettings.member_services || {};
+  const defaultService = notifSettings.default_service || "notify.notify";
+
+  // Scan for each registered member
+  for (const m of Object.values(appData.members || {})) {
+    const targetService = memberServices[m.id];
+    if (targetService === 'none' || targetService === 'disabled') continue;
+    const effectiveService = targetService || defaultService;
+
+    // 1. Filter routine tasks assigned to this member or all
+    const memberRoutines = stats.routine_tasks.filter(r => {
+      const isAssigned = (r.assigned_member === 'all' || r.assigned_member === m.name);
+      if (!isAssigned) return false;
+      const policy = r.notification_policy || 'scadenza';
+      if (policy === 'nulla') return false;
+      if (policy === 'scaduta') return r.status === 'overdue';
+      if (policy === 'scadenza') return r.status === 'overdue' || r.days_remaining === 0;
+      if (policy === 'preavviso') return r.status === 'overdue' || r.status === 'warning' || r.days_remaining <= (r.warning_days || 1);
+      return false;
+    });
+
+    const overdueRoutines = memberRoutines.filter(r => r.status === 'overdue');
+    const todayRoutines = memberRoutines.filter(r => r.days_remaining === 0);
+    const warningRoutines = memberRoutines.filter(r => r.status === 'warning' && r.days_remaining > 0);
+
+    // 2. Filter pending single tasks assigned to this member or all
+    const memberSingleTasks = stats.pending_single_tasks.filter(st => {
+      const assignedList = Array.isArray(st.assigned_to) ? st.assigned_to : [st.assigned_to];
+      const isAssigned = (assignedList.includes('all') || assignedList.includes('Tutti') || assignedList.includes('Tutta la Famiglia') || assignedList.includes(m.name));
+      if (!isAssigned) return false;
+      const policy = st.notification_policy || 'scadenza';
+      if (policy === 'nulla') return false;
+      if (policy === 'scaduta') return st.due_date && st.due_date < todayIso;
+      if (policy === 'scadenza') return st.due_date && st.due_date <= todayIso;
+      if (policy === 'preavviso') return !st.is_future || st.days_until <= 1;
+      return false;
+    });
+
+    const overdueTasks = memberSingleTasks.filter(st => st.due_date && st.due_date < todayIso);
+    const todayTasks = memberSingleTasks.filter(st => st.due_date === todayIso);
+    const warningTasks = memberSingleTasks.filter(st => st.due_date && st.due_date > todayIso && st.days_until <= 1);
+
+    // If overdue items exist, send high priority urgent alert
+    const totalOverdue = overdueRoutines.length + overdueTasks.length;
+    if (totalOverdue > 0) {
+      const urgentNames = [
+        ...overdueRoutines.map(r => `• ${r.name} (${r.overdue_days}gg fa, +${r.points}pt)`),
+        ...overdueTasks.map(t => `• ${t.title} (+${t.points}pt)`)
+      ].slice(0, 5);
+
+      await sendHomeAssistantNotification({
+        service: effectiveService,
+        title: `🚨 ChoreQuest: ${totalOverdue} Faccende Scadute!`,
+        message: `Ciao ${m.name}, hai ${totalOverdue} attività scadute da completare:\n${urgentNames.join('\n')}`,
+        channelType: 'urgent',
+        extraData: { tag: `chorequest_urgent_${m.id}` }
+      });
+    }
+
+    // If today/warning reminders exist, send default priority reminders
+    const totalReminders = todayRoutines.length + todayTasks.length + warningRoutines.length + warningTasks.length;
+    if (totalReminders > 0) {
+      const reminderNames = [
+        ...todayRoutines.map(r => `• ${r.name} (Oggi, +${r.points}pt)`),
+        ...todayTasks.map(t => `• ${t.title} (Oggi, +${t.points}pt)`),
+        ...warningRoutines.map(r => `• ${r.name} (tra ${r.days_remaining}gg)`),
+        ...warningTasks.map(t => `• ${t.title} (tra ${t.days_until}gg)`)
+      ].slice(0, 5);
+
+      await sendHomeAssistantNotification({
+        service: effectiveService,
+        title: `🔔 ChoreQuest: Promemoria di Oggi (${totalReminders})`,
+        message: `Ciao ${m.name}, ecco le tue attività in programma:\n${reminderNames.join('\n')}`,
+        channelType: 'reminders',
+        extraData: { tag: `chorequest_reminders_${m.id}` }
+      });
+    }
+  }
+}
+
+// Check every 30 seconds for scheduled daily reminders
+setInterval(() => {
+  checkAndSendDailyReminders().catch(e => console.error("Error in checkAndSendDailyReminders:", e));
+}, 30000);
+
+// API: Discover Home Assistant Notification Services & Return Current Settings
+app.get('/api/notifications/services', async (req, res) => {
+  const supervisorToken = process.env.SUPERVISOR_TOKEN;
+  let notifyServices = [];
+
+  if (supervisorToken) {
+    try {
+      const resp = await fetch("http://supervisor/core/api/services", {
+        headers: { 'Authorization': `Bearer ${supervisorToken}` }
+      });
+      if (resp.ok) {
+        const domains = await resp.json();
+        const notifyDomain = domains.find(d => d.domain === 'notify');
+        if (notifyDomain && notifyDomain.services) {
+          notifyServices = Object.keys(notifyDomain.services).map(srv => `notify.${srv}`);
+        }
+      }
+    } catch (e) {
+      console.error("Error discovering notify services:", e);
+    }
+  }
+
+  // Fallback if none found or during standalone development
+  if (notifyServices.length === 0) {
+    notifyServices = [
+      "notify.notify",
+      "notify.persistent_notification",
+      "notify.mobile_app_telefono_papa",
+      "notify.mobile_app_telefono_mamma"
+    ];
+  }
+
+  if (!notifyServices.includes("notify.notify")) notifyServices.unshift("notify.notify");
+  if (!notifyServices.includes("notify.persistent_notification")) notifyServices.push("notify.persistent_notification");
+
+  res.json({
+    services: notifyServices,
+    current_settings: appData?.settings?.notifications || {}
+  });
+});
+
+// API: Save Notification Settings
+app.post('/api/notifications/settings', (req, res) => {
+  const newSettings = req.body;
+  if (!appData.settings) appData.settings = {};
+  if (!appData.settings.notifications) appData.settings.notifications = {};
+
+  appData.settings.notifications = {
+    ...appData.settings.notifications,
+    ...newSettings,
+    channels: {
+      ...appData.settings.notifications.channels,
+      ...(newSettings.channels || {})
+    },
+    member_services: {
+      ...appData.settings.notifications.member_services,
+      ...(newSettings.member_services || {})
+    }
+  };
+
+  saveData(appData);
+  syncToHomeAssistant();
+  res.json({ status: "saved", notifications: appData.settings.notifications });
+});
+
+// API: Dispatch Test Notification
+app.post('/api/notifications/test', async (req, res) => {
+  const { service, channel_type, title, message } = req.body;
+  const result = await sendHomeAssistantNotification({
+    service: service || appData?.settings?.notifications?.default_service || "notify.notify",
+    title: title || "ChoreQuest: Test Notifiche",
+    message: message || "Questo è un messaggio di test da ChoreQuest! Canale configurato correttamente. 🏆",
+    channelType: channel_type || "urgent"
+  });
+  res.json(result);
+});
+
 // API: Stats & Data
 app.get('/api/stats', (req, res) => {
   const statsData = calculateStats();
@@ -991,9 +1303,19 @@ app.post('/api/logs/delete', (req, res) => {
   res.json({ status: "deleted" });
 });
 
-// API: Single Task Create (with priority & category)
+// API: Single Task Create (with priority, category & notification policy)
 app.post('/api/single_tasks', (req, res) => {
-  const { title, assigned_to = ["all"], points = 0, due_date, category = "Varie", priority = "medium", created_by = "Famiglia" } = req.body;
+  const { 
+    title, 
+    assigned_to = ["all"], 
+    points = 0, 
+    due_date, 
+    category = "Varie", 
+    priority = "medium", 
+    created_by = "Famiglia", 
+    notification_policy = "scadenza" 
+  } = req.body;
+
   if (!title || !title.trim()) return res.status(400).json({ error: "Title required" });
 
   const assignedList = Array.isArray(assigned_to) ? assigned_to : [assigned_to];
@@ -1007,6 +1329,7 @@ app.post('/api/single_tasks', (req, res) => {
     category: category || "Varie",
     priority: priority || "medium",
     created_by: created_by || "Famiglia",
+    notification_policy: notification_policy || "scadenza",
     status: 'pending',
     notes: [],
     created_at: nowIso
@@ -1017,6 +1340,34 @@ app.post('/api/single_tasks', (req, res) => {
 
   saveData(appData);
   syncToHomeAssistant();
+
+  // Instant notification on new task assignment
+  const notifCfg = appData.settings?.notifications;
+  if (notifCfg && notifCfg.enabled && notifCfg.notify_on_task_assigned && notification_policy !== 'nulla') {
+    const isSharedAll = assignedList.includes('all') || assignedList.includes('Tutti') || assignedList.includes('Tutta la Famiglia');
+    if (isSharedAll) {
+      sendHomeAssistantNotification({
+        service: notifCfg.default_service || "notify.notify",
+        title: `📋 Nuovo Task Famiglia: ${newTask.title}`,
+        message: `Assegnato a tutta la famiglia da ${newTask.created_by}. Scadenza: ${newTask.due_date}. Punti in palio: +${newTask.points}pt!`,
+        channelType: 'general'
+      }).catch(e => console.error("Error sending task notification:", e));
+    } else {
+      assignedList.forEach(mName => {
+        const mObj = Object.values(appData.members || {}).find(m => m.name.toLowerCase() === mName.toLowerCase());
+        const srv = (mObj && notifCfg.member_services?.[mObj.id]) ? notifCfg.member_services[mObj.id] : notifCfg.default_service;
+        if (srv && srv !== 'none' && srv !== 'disabled') {
+          sendHomeAssistantNotification({
+            service: srv,
+            title: `📋 Nuovo Task Assegnato: ${newTask.title}`,
+            message: `Ciao ${mName}, ti è stato assegnato un nuovo task da ${newTask.created_by}. Scadenza: ${newTask.due_date}. Punti: +${newTask.points}pt!`,
+            channelType: 'general'
+          }).catch(e => console.error("Error sending task notification:", e));
+        }
+      });
+    }
+  }
+
   res.status(201).json(newTask);
 });
 
@@ -1325,7 +1676,7 @@ app.post('/api/spontaneous_tasks/delete', (req, res) => {
   res.json({ status: "deleted" });
 });
 
-// API: Save Routine Task (with Days or Months frequency units)
+// API: Save Routine Task (with Days or Months frequency units & notification policy)
 app.post('/api/routine_tasks', (req, res) => {
   const { 
     id, 
@@ -1341,7 +1692,8 @@ app.post('/api/routine_tasks', (req, res) => {
     category = "Routine", 
     priority = "medium", 
     is_personal = false, 
-    assigned_member = "all" 
+    assigned_member = "all",
+    notification_policy = "scadenza"
   } = req.body;
 
   if (!name || !name.trim()) return res.status(400).json({ error: "Name required" });
@@ -1369,7 +1721,8 @@ app.post('/api/routine_tasks', (req, res) => {
     category: category || "Routine",
     priority: priority || "medium",
     is_personal: !!is_personal,
-    assigned_member: assigned_member || "all"
+    assigned_member: assigned_member || "all",
+    notification_policy: notification_policy || existingItem.notification_policy || "scadenza"
   };
 
   if (idx >= 0) appData.routine_tasks[idx] = item;
@@ -1404,7 +1757,7 @@ app.post('/api/settings', (req, res) => {
 
 // API: Check for Updates via GitHub Raw Config
 app.get('/api/system/check_update', async (req, res) => {
-  const currentVersion = "2.6.6";
+  const currentVersion = "2.7.0";
   try {
     const githubRes = await fetch("https://raw.githubusercontent.com/filidam89/chore-quest-addon/main/config.yaml");
     if (githubRes.ok) {

@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.6.6</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.7.0</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -202,6 +202,7 @@
         <button onclick="setAdminTab('routines')" id="adm-tab-routines" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-calendar-sync-outline text-sm"></i> 🔄 Routine & Promemoria</button>
         <button onclick="setAdminTab('members')" id="adm-tab-members" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-account-group-outline text-sm"></i> 👥 Membri Famiglia</button>
         <button onclick="setAdminTab('settings')" id="adm-tab-settings" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-tune-variant text-sm"></i> ⚙️ Sistema & Punteggio</button>
+        <button onclick="setAdminTab('notifications')" id="adm-tab-notifications" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-bell-ring-outline text-sm text-amber-500"></i> 🔔 Notifiche Home Assistant</button>
         <button onclick="setAdminTab('backup')" id="adm-tab-backup" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-database-outline text-sm"></i> 💾 Backup & Ripristino</button>
         <button onclick="setAdminTab('updates')" id="adm-tab-updates" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-cloud-sync-outline text-sm"></i> 🔄 Aggiornamenti</button>
       </div>
@@ -263,6 +264,148 @@
             <option value="rolling">⏳ Mobile / Ultime Ore (Ultime 24h, 7gg, 30gg, 365gg)</option>
           </select>
         </div>
+      </div>
+    </div>
+
+    <!-- TAB NOTIFICHE HOME ASSISTANT -->
+    <div id="adm-sec-notifications" class="hidden bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 flex-wrap gap-3">
+        <div>
+          <h3 class="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="mdi mdi-bell-ring-outline text-amber-500 text-xl"></i> Notifiche Native Home Assistant
+          </h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Gestisci promemoria quotidiani, canali per suonerie personalizzate e associa ciascun membro al proprio smartphone</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800 px-3.5 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <input id="notif-master-enable" type="checkbox" onchange="saveNotificationSettingsQuick()" class="w-4 h-4 text-indigo-600 rounded">
+            <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200">Abilita Notifiche</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <!-- CARD 1: PROMEMORIA GIORNALIERO & SERVIZIO DEFAULT -->
+        <div class="bg-slate-50 dark:bg-slate-800/70 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+          <div class="font-extrabold text-xs uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <i class="mdi mdi-clock-outline text-base text-indigo-600"></i> <span>Promemoria Giornaliero & Servizio Predefinito</span>
+          </div>
+          
+          <div class="flex items-center justify-between gap-3">
+            <label for="notif-daily-reminder-enable" class="text-xs font-bold text-slate-700 dark:text-slate-300">Invio automatico promemoria giornaliero:</label>
+            <input id="notif-daily-reminder-enable" type="checkbox" class="w-4 h-4 text-indigo-600 rounded">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">⏰ Orario Invio</label>
+              <input id="notif-reminder-time" type="time" value="08:30" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">📢 Servizio Predefinito</label>
+              <select id="notif-default-service" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300 truncate">
+                <option value="notify.notify">notify.notify (Tutti i dispositivi)</option>
+              </select>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">All'orario impostato, ChoreQuest invia il riepilogo delle faccende in scadenza e scadute a ciascun membro o alla famiglia.</p>
+        </div>
+
+        <!-- CARD 2: EVENTI IMMEDIATI -->
+        <div class="bg-slate-50 dark:bg-slate-800/70 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+          <div class="font-extrabold text-xs uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <i class="mdi mdi-flash text-base text-amber-500"></i> <span>Eventi Istantanei & Classifica</span>
+          </div>
+
+          <div class="space-y-3">
+            <label class="flex items-center justify-between gap-3 p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer">
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-300">📋 Notifica istantanea all'assegnazione di un nuovo task rapido</span>
+              <input id="notif-task-assigned-toggle" type="checkbox" checked class="w-4 h-4 text-indigo-600 rounded">
+            </label>
+            <label class="flex items-center justify-between gap-3 p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer">
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-300">🏆 Notifica proclamazione vincitore classifica settimanale</span>
+              <input id="notif-winner-toggle" type="checkbox" checked class="w-4 h-4 text-indigo-600 rounded">
+            </label>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Avvisa immediatamente i membri quando ricevono un compito o quando viene vinta la competizione di famiglia.</p>
+        </div>
+      </div>
+
+      <!-- CARD 3: MAPPATURA MEMBRI -> SMARTPHONE -->
+      <div class="bg-slate-50 dark:bg-slate-800/70 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="font-extrabold text-xs uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <i class="mdi mdi-cellphone-link text-base text-sky-500"></i> <span>Mappatura Membri ➔ Dispositivi Personali (Home Assistant Mobile App)</span>
+          </div>
+          <button type="button" onclick="refreshNotifyServicesList()" class="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1">
+            <i class="mdi mdi-refresh"></i> <span>Ricarica Servizi HA</span>
+          </button>
+        </div>
+
+        <div id="notif-members-mapping-list" class="space-y-3">
+          <!-- Populated dynamically with member rows and select dropdowns -->
+        </div>
+      </div>
+
+      <!-- CARD 4: CANALI & SUONERIE DIFFERENZIATE -->
+      <div class="bg-slate-50 dark:bg-slate-800/70 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+        <div class="font-extrabold text-xs uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+          <i class="mdi mdi-volume-high text-base text-indigo-600"></i> <span>Canali Notifica Android & Priorità iOS (Suonerie Differenziate)</span>
+        </div>
+        <p class="text-xs text-slate-600 dark:text-slate-300">
+          I canali permettono di assegnare una <b>suoneria o allarme diverso</b> sul telefono per le faccende scadute e zittire o rendere discrete quelle in scadenza/promemoria:
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="bg-white dark:bg-slate-900 p-3 rounded-xl border border-rose-200 dark:border-rose-900/50 space-y-1">
+            <label class="block text-[11px] font-extrabold text-rose-600 uppercase">🚨 Canale Attività Scadute (Alta Priorità)</label>
+            <input id="notif-chan-urgent" type="text" value="ChoreQuest_Urgent" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">
+            <span class="text-[10px] text-slate-400">Canale per allarmi e suoni persistenti</span>
+          </div>
+          <div class="bg-white dark:bg-slate-900 p-3 rounded-xl border border-amber-200 dark:border-amber-900/50 space-y-1">
+            <label class="block text-[11px] font-extrabold text-amber-600 uppercase">🔔 Canale Promemoria (Priorità Standard)</label>
+            <input id="notif-chan-reminders" type="text" value="ChoreQuest_Reminders" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">
+            <span class="text-[10px] text-slate-400">Canale per promemoria e preavvisi</span>
+          </div>
+          <div class="bg-white dark:bg-slate-900 p-3 rounded-xl border border-indigo-200 dark:border-indigo-900/50 space-y-1">
+            <label class="block text-[11px] font-extrabold text-indigo-600 uppercase">📋 Canale Generale / Assegnazioni</label>
+            <input id="notif-chan-general" type="text" value="ChoreQuest_General" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">
+            <span class="text-[10px] text-slate-400">Canale per nuovi compiti e vincitori</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 5: TEST NOTIFICA IN TEMPO REALE -->
+      <div class="bg-indigo-50/70 dark:bg-indigo-950/40 p-5 rounded-2xl border border-indigo-100 dark:border-indigo-900/50 space-y-4">
+        <div class="font-extrabold text-xs uppercase text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
+          <i class="mdi mdi-test-tube text-base text-indigo-600"></i> <span>Invia Notifica di Test Immediata</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+          <div class="sm:col-span-5">
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Dispositivo / Servizio Target:</label>
+            <select id="notif-test-service" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></select>
+          </div>
+          <div class="sm:col-span-4">
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Canale & Priorità:</label>
+            <select id="notif-test-channel" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
+              <option value="urgent">🚨 Urgente / Scadute (High)</option>
+              <option value="reminders">🔔 Promemoria Ordinario (Default)</option>
+              <option value="general">📋 Generale / Assegnazione</option>
+            </select>
+          </div>
+          <div class="sm:col-span-3 flex items-end">
+            <button type="button" onclick="sendTestNotification()" id="btn-send-test-notif" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5">
+              <i class="mdi mdi-send"></i> <span>Invia Test</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="saveNotificationSettings()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center gap-2">
+          <i class="mdi mdi-content-save-check"></i> <span>Salva Tutte le Impostazioni Notifiche</span>
+        </button>
       </div>
     </div>
 
@@ -632,6 +775,15 @@
           <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1.5">📁 Categoria</label><select id="quick-task-category" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold"></select></div>
           <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1.5">⭐ Priorità</label><select id="quick-task-priority" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold"><option value="medium">Media (Default)</option><option value="high">⭐ Alta</option><option value="urgent">🔥 Urgente</option><option value="low">🟢 Bassa</option></select></div>
         </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1.5">🔔 Criterio Notifiche Home Assistant</label>
+          <select id="quick-task-notif-policy" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold">
+            <option value="scadenza">🔔 Giorno di scadenza e se scaduta (Default)</option>
+            <option value="preavviso">⏰ Preavviso (1 gg prima), scadenza e se scaduta</option>
+            <option value="scaduta">🚨 Solo se scaduta / urgente</option>
+            <option value="nulla">🔕 Nessuna notifica (Disattivata)</option>
+          </select>
+        </div>
         <div class="pt-3 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
           <button type="button" onclick="closeQuickTaskModal()" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 font-bold text-xs rounded-xl">Annulla</button>
           <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">Continua e Assegna ➔</button>
@@ -835,7 +987,18 @@
           <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Assegnato a</label><select id="rout-edit-member" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"><option value="all">👥 Famiglia</option></select></div>
         </div>
 
-        <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Priorità</label><select id="rout-edit-priority" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"><option value="medium">Media (Default)</option><option value="high">⭐ Alta</option><option value="urgent">🔥 Urgente</option><option value="low">🟢 Bassa</option></select></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Priorità</label><select id="rout-edit-priority" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"><option value="medium">Media (Default)</option><option value="high">⭐ Alta</option><option value="urgent">🔥 Urgente</option><option value="low">🟢 Bassa</option></select></div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">🔔 Criterio Notifiche</label>
+            <select id="rout-edit-notif-policy" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
+              <option value="scadenza">🔔 Giorno scadenza e scaduta (Default)</option>
+              <option value="preavviso">⏰ Preavviso, scadenza e scaduta</option>
+              <option value="scaduta">🚨 Solo se scaduta / urgente</option>
+              <option value="nulla">🔕 Nessuna notifica</option>
+            </select>
+          </div>
+        </div>
         <div class="pt-1"><div class="flex items-center gap-2"><input id="rout-edit-personal" type="checkbox" onchange="toggleRoutPersonal(this.checked)" class="w-4 h-4 text-indigo-600 rounded"><label for="rout-edit-personal" class="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer">Promemoria Personale (0 pt, escluso da classifiche)</label></div></div>
         <div class="flex justify-end gap-2 pt-2"><button type="button" onclick="closeRoutineModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 font-bold text-xs rounded-xl">Annulla</button><button type="submit" class="px-5 py-2 bg-indigo-600 text-white font-extrabold text-xs rounded-xl shadow">Salva Routine</button></div>
       </form>
@@ -1277,7 +1440,7 @@
 
     function setAdminTab(tabName) {
       activeAdminTab = tabName;
-      ['categories', 'spontaneous', 'routines', 'members', 'settings', 'backup', 'updates'].forEach(t => {
+      ['categories', 'spontaneous', 'routines', 'members', 'settings', 'notifications', 'backup', 'updates'].forEach(t => {
         const btn = document.getElementById(`adm-tab-${t}`);
         const sec = document.getElementById(`adm-sec-${t}`);
         if (btn) {
@@ -1287,6 +1450,7 @@
         }
         if (sec) sec.classList.toggle('hidden', t !== tabName);
       });
+      if (tabName === 'notifications') loadNotificationSettings();
       if (tabName === 'updates') checkForUpdatesLive();
     }
 
@@ -2196,10 +2360,11 @@
       const pts = parseInt(document.getElementById('quick-task-points').value) || 0;
       const category = document.getElementById('quick-task-category').value || 'Varie';
       const priority = document.getElementById('quick-task-priority').value || 'medium';
+      const notification_policy = document.getElementById('quick-task-notif-policy')?.value || 'scadenza';
       if (!title) return;
 
       closeQuickTaskModal();
-      pendingQuickTaskPayload = { title, date, points: pts, category, priority };
+      pendingQuickTaskPayload = { title, date, points: pts, category, priority, notification_policy };
 
       document.getElementById('modal-assign-task-title').textContent = `Assegna: "${title}"`;
       const singleBox = document.getElementById('modal-assign-single-buttons');
@@ -2244,7 +2409,7 @@
 
     async function confirmTaskAssignment(assignedList) {
       if (!pendingQuickTaskPayload) return;
-      const { title, date, points, category, priority } = pendingQuickTaskPayload;
+      const { title, date, points, category, priority, notification_policy } = pendingQuickTaskPayload;
       closeAssignModal();
 
       try {
@@ -2258,6 +2423,7 @@
             due_date: date, 
             category: category || "Varie", 
             priority: priority || "medium", 
+            notification_policy: notification_policy || "scadenza",
             created_by: currentActiveUser || "Famiglia" 
           })
         });
@@ -2957,6 +3123,7 @@
       document.getElementById('rout-edit-category').value = item?.category || (appData?.categories[0]?.name || 'Pulizia & Casa');
       document.getElementById('rout-edit-priority').value = item?.priority || 'medium';
       document.getElementById('rout-edit-member').value = item?.assigned_member || 'all';
+      document.getElementById('rout-edit-notif-policy').value = item?.notification_policy || 'scadenza';
       document.getElementById('rout-edit-icon').value = item?.icon || 'mdi:calendar-sync';
       document.getElementById('rout-icon-preview').innerHTML = renderIconHtml(item?.icon || 'mdi:calendar-sync');
       document.getElementById('rout-edit-personal').checked = !!item?.is_personal;
@@ -2980,12 +3147,13 @@
       const category = document.getElementById('rout-edit-category').value;
       const priority = document.getElementById('rout-edit-priority').value || 'medium';
       const assigned_member = document.getElementById('rout-edit-member').value;
+      const notification_policy = document.getElementById('rout-edit-notif-policy').value || 'scadenza';
       const icon = document.getElementById('rout-edit-icon').value.trim() || 'mdi:calendar-sync';
 
       await fetch(`${apiBase}/routine_tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, name, points, frequency_number, frequency_unit, warning_days, start_date, schedule_type, category, priority, icon, is_personal, assigned_member })
+        body: JSON.stringify({ id, name, points, frequency_number, frequency_unit, warning_days, start_date, schedule_type, category, priority, icon, is_personal, assigned_member, notification_policy })
       });
       closeRoutineModal(); showToast("Routine salvata!"); await loadStats();
     }
@@ -3003,6 +3171,221 @@
       document.getElementById('custom-task-input').value = '';
       toggleCustomTaskBox();
       promptPerformerSelection(txt, pts, 'custom', false, 'Generale');
+    }
+
+    // ==================== HOME ASSISTANT NOTIFICATIONS MANAGEMENT ====================
+    let cachedNotifyServices = [];
+
+    async function loadNotificationSettings() {
+      try {
+        const res = await fetch(`${apiBase}/notifications/services`);
+        const data = await res.json();
+        cachedNotifyServices = data.services || [];
+        renderNotificationSettings(data.current_settings || appData?.settings?.notifications || {});
+      } catch (e) {
+        console.error("Errore caricamento servizi notifiche:", e);
+        renderNotificationSettings(appData?.settings?.notifications || {});
+      }
+    }
+
+    async function refreshNotifyServicesList() {
+      showToast("Aggiornamento servizi Home Assistant...", "🔄");
+      await loadNotificationSettings();
+      showToast("Lista servizi aggiornata!", "✅");
+    }
+
+    function renderNotificationSettings(cfg = {}) {
+      const notif = cfg || appData?.settings?.notifications || {};
+
+      if (document.getElementById('notif-master-enable')) {
+        document.getElementById('notif-master-enable').checked = notif.enabled !== false;
+      }
+      if (document.getElementById('notif-daily-reminder-enable')) {
+        document.getElementById('notif-daily-reminder-enable').checked = notif.daily_reminder_enabled !== false;
+      }
+      if (document.getElementById('notif-reminder-time')) {
+        document.getElementById('notif-reminder-time').value = notif.reminder_time || "08:30";
+      }
+      if (document.getElementById('notif-task-assigned-toggle')) {
+        document.getElementById('notif-task-assigned-toggle').checked = notif.notify_on_task_assigned !== false;
+      }
+      if (document.getElementById('notif-winner-toggle')) {
+        document.getElementById('notif-winner-toggle').checked = notif.notify_on_winner !== false;
+      }
+
+      // Channels
+      const channels = notif.channels || {};
+      if (document.getElementById('notif-chan-urgent')) {
+        document.getElementById('notif-chan-urgent').value = channels.urgent || "ChoreQuest_Urgent";
+      }
+      if (document.getElementById('notif-chan-reminders')) {
+        document.getElementById('notif-chan-reminders').value = channels.reminders || "ChoreQuest_Reminders";
+      }
+      if (document.getElementById('notif-chan-general')) {
+        document.getElementById('notif-chan-general').value = channels.general || "ChoreQuest_General";
+      }
+
+      // Populate Default Service select & Test Service select
+      const defServiceSelect = document.getElementById('notif-default-service');
+      const testServiceSelect = document.getElementById('notif-test-service');
+      
+      const buildServiceOptionsHtml = (selectedVal) => {
+        let opts = '';
+        cachedNotifyServices.forEach(srv => {
+          const isSel = (srv === selectedVal);
+          opts += `<option value="${srv}" ${isSel ? 'selected' : ''}>${srv}</option>`;
+        });
+        return opts;
+      };
+
+      if (defServiceSelect) {
+        defServiceSelect.innerHTML = buildServiceOptionsHtml(notif.default_service || "notify.notify");
+      }
+      if (testServiceSelect) {
+        testServiceSelect.innerHTML = buildServiceOptionsHtml(notif.default_service || "notify.notify");
+      }
+
+      // Populate Member Notification Mappings
+      const memberMapContainer = document.getElementById('notif-members-mapping-list');
+      if (memberMapContainer) {
+        memberMapContainer.innerHTML = '';
+        const memberServices = notif.member_services || {};
+        const members = Object.values(appData?.members || {});
+
+        if (members.length === 0) {
+          memberMapContainer.innerHTML = '<div class="text-xs text-slate-400 py-2">Nessun membro della famiglia configurato.</div>';
+        } else {
+          members.forEach(m => {
+            const currentSelectedService = memberServices[m.id] || "";
+            
+            let memberOpts = `<option value="">📢 Usa canale predefinito di famiglia (${notif.default_service || 'notify.notify'})</option>`;
+            memberOpts += `<option value="none" ${currentSelectedService === 'none' ? 'selected' : ''}>🔕 Nessuna notifica per questo membro</option>`;
+            
+            cachedNotifyServices.forEach(srv => {
+              const isSel = (srv === currentSelectedService);
+              memberOpts += `<option value="${srv}" ${isSel ? 'selected' : ''}>📱 ${srv}</option>`;
+            });
+
+            memberMapContainer.innerHTML += `
+              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs">
+                <div class="flex items-center gap-2.5 font-extrabold text-sm text-slate-900 dark:text-white">
+                  <span class="text-2xl">${m.icon || '👤'}</span>
+                  <div>
+                    <div>${m.name}</div>
+                    <div class="text-[10px] text-slate-400 font-semibold">Destinatario notifiche personali</div>
+                  </div>
+                </div>
+                <div class="w-full sm:w-80">
+                  <select data-member-id="${m.id}" class="member-notif-device-select w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200">
+                    ${memberOpts}
+                  </select>
+                </div>
+              </div>
+            `;
+          });
+        }
+      }
+    }
+
+    async function saveNotificationSettings() {
+      const enabled = document.getElementById('notif-master-enable')?.checked ?? true;
+      const daily_reminder_enabled = document.getElementById('notif-daily-reminder-enable')?.checked ?? true;
+      const reminder_time = document.getElementById('notif-reminder-time')?.value || "08:30";
+      const default_service = document.getElementById('notif-default-service')?.value || "notify.notify";
+      const notify_on_task_assigned = document.getElementById('notif-task-assigned-toggle')?.checked ?? true;
+      const notify_on_winner = document.getElementById('notif-winner-toggle')?.checked ?? true;
+
+      const channels = {
+        urgent: document.getElementById('notif-chan-urgent')?.value.trim() || "ChoreQuest_Urgent",
+        reminders: document.getElementById('notif-chan-reminders')?.value.trim() || "ChoreQuest_Reminders",
+        general: document.getElementById('notif-chan-general')?.value.trim() || "ChoreQuest_General"
+      };
+
+      const member_services = {};
+      document.querySelectorAll('.member-notif-device-select').forEach(sel => {
+        const mId = sel.getAttribute('data-member-id');
+        const val = sel.value;
+        if (mId) member_services[mId] = val;
+      });
+
+      const payload = {
+        enabled,
+        daily_reminder_enabled,
+        reminder_time,
+        default_service,
+        notify_on_task_assigned,
+        notify_on_winner,
+        channels,
+        member_services
+      };
+
+      try {
+        const res = await fetch(`${apiBase}/notifications/settings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (appData?.settings) appData.settings.notifications = data.notifications;
+          showToast("Impostazioni notifiche salvate con successo!", "🔔");
+        } else {
+          showToast("Errore durante il salvataggio", "❌");
+        }
+      } catch (e) {
+        showToast("Errore di connessione", "❌");
+      }
+    }
+
+    async function saveNotificationSettingsQuick() {
+      const enabled = document.getElementById('notif-master-enable')?.checked ?? true;
+      try {
+        await fetch(`${apiBase}/notifications/settings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled })
+        });
+        if (appData?.settings?.notifications) appData.settings.notifications.enabled = enabled;
+        showToast(enabled ? "Notifiche Home Assistant abilitate!" : "Notifiche Home Assistant disabilitate", enabled ? "🔔" : "🔕");
+      } catch (e) {}
+    }
+
+    async function sendTestNotification() {
+      const btn = document.getElementById('btn-send-test-notif');
+      const service = document.getElementById('notif-test-service')?.value || "notify.notify";
+      const channel_type = document.getElementById('notif-test-channel')?.value || "urgent";
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> <span>Invio...</span>';
+      }
+
+      try {
+        const res = await fetch(`${apiBase}/notifications/test`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            service,
+            channel_type,
+            title: "ChoreQuest: Test Notifiche",
+            message: `Notifica di test inviata con successo al canale "${channel_type}"! 🏆`
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Notifica inviata a ${service}!`, "🚀");
+        } else {
+          showToast(`Errore: ${data.error || data.reason || 'Impossibile inviare'}`, "❌");
+        }
+      } catch (e) {
+        showToast("Errore di connessione", "❌");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="mdi mdi-send"></i> <span>Invia Test</span>';
+        }
+      }
     }
 
     function render() {
