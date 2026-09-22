@@ -4,6 +4,19 @@ Tutte le novità, miglioramenti e correzioni introdotte nelle versioni di ChoreQ
 
 ---
 
+## [2.8.1] - 2026-09-22
+
+### ✨ Novità & Rilevamento Esteso Dispositivi
+- **Scansione Multi-Livello Dispositivi Mobile & Entità**: Rilevamento unificato e universale per qualsiasi istanza di Home Assistant:
+  - Scansione diretta entità `notify.*` da `/states`.
+  - Riconoscimento automatico di tutti gli smartphone e tablet collegati tramite l'app Companion da `device_tracker.*` e sensori batteria `sensor.*_battery_level` (con mappatura automatica a `notify.mobile_app_<nome_dispositivo>` e recupero del `friendly_name` ufficiale).
+  - Scansione servizi registrati sotto il dominio `notify` da `/services`.
+- **Aggiunta Servizi ed Entità Personalizzate con 1 Click**: Nuovo pulsante *"Aggiungi Servizio Manuale"* che permette all'utente di inserire qualsiasi ID entità o servizio di notifica (`notify.telegram`, `notify.alexa_media_*`, gruppi personalizzati, ecc.), rendendoli immediatamente disponibili nei selettori di tutta la famiglia.
+- **Supporto Invio Diretto & Fallback Modern Entity Platform**: Gestione automatica dell'invio sia tramite endpoint di servizio `/services/notify/<servizio>` che con l'azione universale `notify.send_message` con target entity_id, garantendo compatibilità totale con le ultime versioni di Home Assistant 2024/2025/2026.
+- **Badge di Stato Connessione Live**: Indicatore dinamico in tempo reale nella sezione Notifiche che mostra lo stato di connessione alle API Home Assistant e il numero esatto di dispositivi ed entità rilevati.
+
+---
+
 ## [2.8.0] - 2026-09-22
 
 ### ✨ Novità

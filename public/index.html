@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.7.0</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.8.1</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -268,15 +268,18 @@
     </div>
 
     <!-- TAB NOTIFICHE HOME ASSISTANT -->
-    <div id="adm-sec-notifications" class="hidden bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 flex-wrap gap-3">
+    <div id="adm-sec-notifications" class="hidden bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-wrap gap-3">
         <div>
           <h3 class="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
-            <i class="mdi mdi-bell-ring-outline text-amber-500 text-xl"></i> Notifiche Native Home Assistant
+            <i class="mdi mdi-bell-ring-outline text-indigo-600 text-xl"></i> Motore Notifiche Native Home Assistant
           </h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Gestisci promemoria mattutini, riepiloghi serali con punti, canali con suonerie personalizzate e preferenze per singolo membro</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Invia notifiche direttamente ai telefoni e ai canali Home Assistant senza creare automazioni esterne</p>
+          <div id="notif-ha-status-badge" class="mt-1 text-[11px] font-bold text-slate-400 flex items-center gap-1.5">
+            <span class="inline-block w-2 h-2 rounded-full bg-slate-400"></span> <span>Caricamento stato connessione HA...</span>
+          </div>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
           <label class="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800 px-3.5 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
             <input id="notif-master-enable" type="checkbox" onchange="saveNotificationSettingsQuick()" class="w-4 h-4 text-indigo-600 rounded">
             <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200">Abilita Notifiche Master</span>
@@ -365,9 +368,14 @@
             </div>
             <p class="text-[11px] text-slate-500 dark:text-slate-400">Ogni membro sceglie in autonomia il proprio smartphone e quali tipi di avvisi ricevere</p>
           </div>
-          <button type="button" onclick="refreshNotifyServicesList()" class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:bg-slate-100 transition flex items-center gap-1">
-            <i class="mdi mdi-refresh"></i> <span>Ricarica Dispositivi HA</span>
-          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="promptAddCustomNotifyService()" class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800/80 rounded-xl text-xs text-indigo-700 dark:text-indigo-300 font-extrabold hover:bg-indigo-50 dark:hover:bg-indigo-950/60 transition flex items-center gap-1 shadow-2xs">
+              <i class="mdi mdi-plus-circle-outline text-indigo-600"></i> <span>Aggiungi Servizio Manuale</span>
+            </button>
+            <button type="button" onclick="refreshNotifyServicesList()" class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1 shadow-2xs">
+              <i class="mdi mdi-refresh"></i> <span>Ricarica Dispositivi HA</span>
+            </button>
+          </div>
         </div>
 
         <div id="notif-members-mapping-list" class="space-y-3.5">
@@ -3214,6 +3222,16 @@
         const res = await fetch(`${apiBase}/notifications/services`);
         const data = await res.json();
         cachedNotifyServices = data.services || [];
+
+        const statusEl = document.getElementById('notif-ha-status-badge');
+        if (statusEl) {
+          if (data.connected_to_ha) {
+            statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span class="text-emerald-600 dark:text-emerald-400 font-extrabold">Connesso a Home Assistant: ${data.discovered_count || cachedNotifyServices.length} dispositivi ed entità rilevati</span>`;
+          } else {
+            statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-amber-500"></span> <span class="text-amber-600 dark:text-amber-400 font-bold">Modalità Standalone (Dispositivi standard: ${cachedNotifyServices.length})</span>`;
+          }
+        }
+
         renderNotificationSettings(data.current_settings || appData?.settings?.notifications || {});
       } catch (e) {
         console.error("Errore caricamento servizi notifiche:", e);
@@ -3222,9 +3240,30 @@
     }
 
     async function refreshNotifyServicesList() {
-      showToast("Scansione dispositivi Home Assistant...", "🔄");
+      showToast("Scansione dispositivi Home Assistant in corso...", "🔄");
       await loadNotificationSettings();
-      showToast("Lista dispositivi reali aggiornata!", "✅");
+      showToast("Lista dispositivi e servizi aggiornata!", "✅");
+    }
+
+    async function promptAddCustomNotifyService() {
+      const sId = prompt("Inserisci il nome del servizio o entità Home Assistant:\n(Es. notify.mobile_app_mio_telefono, notify.telegram, notify.alexa_media_salotto, notify.tutti_i_genitori)");
+      if (!sId || !sId.trim()) return;
+      const sName = prompt("Inserisci un nome descrittivo per questo dispositivo / canale:", sId.trim());
+      try {
+        const res = await fetch(`${apiBase}/notifications/custom_service`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ service_id: sId.trim(), name: (sName && sName.trim()) ? sName.trim() : sId.trim() })
+        });
+        if (res.ok) {
+          showToast(`Servizio "${sId}" aggiunto con successo!`, "📱");
+          await loadNotificationSettings();
+        } else {
+          showToast("Errore durante l'aggiunta", "❌");
+        }
+      } catch (e) {
+        showToast("Errore di connessione", "❌");
+      }
     }
 
     function renderNotificationSettings(cfg = {}) {

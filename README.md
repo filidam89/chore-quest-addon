@@ -1,17 +1,20 @@
-# 🏆 ChoreQuest (v2.8.0)
+# 🏆 ChoreQuest (v2.8.1)
 
 > **Add-on Ufficiale Home Assistant per la Gamification e Gestione delle Faccende di Casa e Famiglia**
 
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)
-![Version](https://img.shields.io/badge/Version-2.8.0-emerald.svg)
+![Version](https://img.shields.io/badge/Version-2.8.1-emerald.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
-## ✨ Novità & Funzionalità Chiave v2.8.0
+## ✨ Novità & Funzionalità Chiave v2.8.1
 
-- 🔔 **Scansione Reale Servizi & Dispositivi Notifica Home Assistant:**
-  - Nessun dispositivo fittizio: ChoreQuest rileva automaticamente tutte le reali entità `notify.*` e i dispositivi mobile registrati su Home Assistant con i loro nomi amichevoli ufficiali (`friendly_name`).
+- 🔔 **Scansione Multi-Livello Dispositivi & Entità Notifica Home Assistant:**
+  - Compatibilità universale per qualsiasi installazione Home Assistant: rileva entità `notify.*`, smartphone Companion App tramite `device_tracker.*` e sensori batteria, e servizi del dominio `notify`.
+  - **Aggiunta Servizi ed Entità Personalizzate con 1 Click**: Possibilità di aggiungere qualsiasi canale o entità di notifica (`notify.telegram`, `notify.alexa`, ecc.) direttamente dall'interfaccia.
+  - **Supporto Invio Diretto & Fallback `notify.send_message`**: Massima compatibilità con le API recenti e classiche di Home Assistant.
+  - **Badge Stato Connessione Live**: Feedback visivo immediato sullo stato di comunicazione con le API Home Assistant e il numero di dispositivi rilevati.
 - 👥 **Preferenze di Notifica Granulari per Singolo Membro:**
   - Ogni utente sceglie liberamente il proprio dispositivo di notifica personale e può attivare/disattivare in modo indipendente:
     - 🌅 **Promemoria Mattina**: Riepilogo attività e routine in scadenza oggi.
@@ -52,4 +55,4 @@
 
 1. Vai in **Impostazioni** ➔ **Add-on** ➔ **Store degli Add-on**.
 2. Clicca sui tre pallini in alto a destra (**⋮**) ➔ **Controlla aggiornamenti** (o ricarica con `F5`).
-3. Clicca su **Aggiorna (Update)** alla versione **v2.8.0** e avvia l'Add-on!
+3. Clicca su **Aggiorna (Update)** alla versione **v2.8.1** e avvia l'Add-on!

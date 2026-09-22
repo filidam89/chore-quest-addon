@@ -798,6 +798,8 @@ async function sendHomeAssistantNotification({ service, title, message, channelT
       },
       tag: extraData.tag || `chorequest_${channelType}`,
       group: "ChoreQuest",
+      url: "/chorequest",
+      clickAction: "/chorequest",
       ...extraData
     }
   };
@@ -808,11 +810,16 @@ async function sendHomeAssistantNotification({ service, title, message, channelT
   }
 
   try {
-    let url;
     let srvName = targetService.trim();
+    let url;
+    let callPayload = { ...payload };
+
     if (srvName === 'notify.persistent_notification') {
       url = `${haBase}/services/persistent_notification/create`;
-      payload.notification_id = extraData.tag || `chorequest_${Date.now()}`;
+      callPayload.notification_id = extraData.tag || `chorequest_${Date.now()}`;
+    } else if (srvName.startsWith('notify.')) {
+      const subSrv = srvName.replace(/^notify\./, '');
+      url = `${haBase}/services/notify/${subSrv}`;
     } else if (srvName.includes('.')) {
       const parts = srvName.split('.');
       url = `${haBase}/services/${parts[0]}/${parts[1]}`;
@@ -820,14 +827,36 @@ async function sendHomeAssistantNotification({ service, title, message, channelT
       url = `${haBase}/services/notify/${srvName}`;
     }
 
-    const response = await fetch(url, {
+    let response = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${supervisorToken}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(callPayload)
     });
+
+    // Fallback: Se la chiamata diretta a /services/notify/<srv> fallisce con 400/404, prova con notify.send_message (modern HA entity platform)
+    if (!response.ok && (response.status === 400 || response.status === 404) && srvName.startsWith('notify.')) {
+      console.log(`[Notification Retry] Tentativo con notify.send_message per entità ${srvName}...`);
+      const fallbackUrl = `${haBase}/services/notify/send_message`;
+      const fallbackPayload = {
+        target: {
+          entity_id: srvName
+        },
+        title: payload.title,
+        message: payload.message,
+        data: payload.data
+      };
+      response = await fetch(fallbackUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supervisorToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(fallbackPayload)
+      });
+    }
 
     if (!response.ok) {
       const errText = await response.text();
@@ -1028,37 +1057,110 @@ setInterval(() => {
   checkAndSendEveningRecap().catch(e => console.error("Error in checkAndSendEveningRecap:", e));
 }, 30000);
 
-// API: Rilevamento Reale dei Servizi ed Entità Notifica Home Assistant
+// API: Rilevamento Completo e Robusto dei Servizi ed Entità Notifica Home Assistant
 app.get('/api/notifications/services', async (req, res) => {
   const supervisorToken = process.env.SUPERVISOR_TOKEN;
   const haBase = "http://supervisor/core/api";
   const discoveredMap = new Map();
+  let connectedToHa = false;
 
-  // Servizi base sempre disponibili
+  // 1. Servizi base sempre garantiti
   discoveredMap.set("notify.notify", {
     id: "notify.notify",
-    name: "📢 Broadcast Famiglia (notify.notify - Tutti i telefoni)"
+    name: "📢 Broadcast Famiglia (notify.notify - Tutti i telefoni)",
+    icon: "📢",
+    type: "broadcast"
   });
   discoveredMap.set("notify.persistent_notification", {
     id: "notify.persistent_notification",
-    name: "💬 Notifica Persistente (Interfaccia Home Assistant)"
+    name: "💬 Notifica Persistente (Interfaccia Home Assistant)",
+    icon: "💬",
+    type: "system"
+  });
+
+  // 2. Includi servizi personalizzati salvati dall'utente nel DB
+  const customServices = appData?.settings?.notifications?.custom_services || [];
+  if (Array.isArray(customServices)) {
+    customServices.forEach(cs => {
+      if (cs && cs.id) {
+        discoveredMap.set(cs.id, {
+          id: cs.id,
+          name: cs.name || `⚙️ ${cs.id}`,
+          icon: "📱",
+          type: "custom"
+        });
+      }
+    });
+  }
+
+  // 3. Includi eventuali servizi già assegnati ai membri
+  const memberServices = appData?.settings?.notifications?.member_services || {};
+  Object.values(memberServices).forEach(srv => {
+    if (srv && srv !== 'none' && srv !== 'disabled' && !discoveredMap.has(srv)) {
+      discoveredMap.set(srv, {
+        id: srv,
+        name: `📱 ${srv}`,
+        icon: "📱",
+        type: "configured"
+      });
+    }
   });
 
   if (supervisorToken) {
-    // 1. Scansiona le entità reali notify.* dagli stati di Home Assistant (hanno il friendly_name ufficiale dell'utente)
+    // 4. Scansione Entità Reali da /states (notify.*, device_tracker.*, sensor.*_battery_level, person.*)
     try {
       const statesRes = await fetch(`${haBase}/states`, {
         headers: { 'Authorization': `Bearer ${supervisorToken}` }
       });
       if (statesRes.ok) {
+        connectedToHa = true;
         const states = await statesRes.json();
+
+        // 4a. Entità notify.*
         states.forEach(s => {
           if (s.entity_id && s.entity_id.startsWith('notify.')) {
             const friendly = s.attributes?.friendly_name || s.entity_id.replace('notify.', '');
             discoveredMap.set(s.entity_id, {
               id: s.entity_id,
-              name: `📱 ${friendly} (${s.entity_id})`
+              name: `📱 ${friendly} (${s.entity_id})`,
+              icon: "📱",
+              type: "entity"
             });
+          }
+        });
+
+        // 4b. Dispositivi Mobile da device_tracker.* (Home Assistant Companion App)
+        states.forEach(s => {
+          if (s.entity_id && s.entity_id.startsWith('device_tracker.')) {
+            const slug = s.entity_id.replace('device_tracker.', '');
+            const targetNotifyService = `notify.mobile_app_${slug}`;
+            const friendly = s.attributes?.friendly_name || slug.replace(/_/g, ' ');
+            if (!discoveredMap.has(targetNotifyService)) {
+              discoveredMap.set(targetNotifyService, {
+                id: targetNotifyService,
+                name: `📱 ${friendly} (${targetNotifyService})`,
+                icon: "📱",
+                type: "mobile_device"
+              });
+            }
+          }
+        });
+
+        // 4c. Dispositivi Mobile da sensor.*_battery_level
+        states.forEach(s => {
+          if (s.entity_id && s.entity_id.startsWith('sensor.') && s.entity_id.endsWith('_battery_level')) {
+            const devSlug = s.entity_id.replace('sensor.', '').replace('_battery_level', '');
+            const targetNotifyService = `notify.mobile_app_${devSlug}`;
+            let friendly = s.attributes?.friendly_name || devSlug;
+            friendly = friendly.replace(/Livello batteria/i, '').replace(/Battery Level/i, '').trim() || devSlug;
+            if (!discoveredMap.has(targetNotifyService)) {
+              discoveredMap.set(targetNotifyService, {
+                id: targetNotifyService,
+                name: `📱 ${friendly} (${targetNotifyService})`,
+                icon: "📱",
+                type: "mobile_device"
+              });
+            }
           }
         });
       }
@@ -1066,23 +1168,26 @@ app.get('/api/notifications/services', async (req, res) => {
       console.error("Error fetching notification states:", e);
     }
 
-    // 2. Scansiona i servizi registrati sotto il dominio notify
+    // 5. Scansione Servizi Registrati sotto il dominio notify da /services
     try {
       const resp = await fetch(`${haBase}/services`, {
         headers: { 'Authorization': `Bearer ${supervisorToken}` }
       });
       if (resp.ok) {
+        connectedToHa = true;
         const domains = await resp.json();
         const notifyDomain = domains.find(d => d.domain === 'notify');
         if (notifyDomain && notifyDomain.services) {
-          Object.keys(notifyDomain.services).forEach(srv => {
-            const fullId = `notify.${srv}`;
+          Object.entries(notifyDomain.services).forEach(([srvKey, srvInfo]) => {
+            const fullId = `notify.${srvKey}`;
+            const srvTitle = srvInfo?.name || srvKey.replace(/^mobile_app_/, '').replace(/_/g, ' ');
+            const cleanTitle = srvTitle.charAt(0).toUpperCase() + srvTitle.slice(1);
             if (!discoveredMap.has(fullId)) {
-              let cleanName = srv.replace(/^mobile_app_/, '📱 App Mobile: ').replace(/_/g, ' ');
-              cleanName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
               discoveredMap.set(fullId, {
                 id: fullId,
-                name: `${cleanName} (${fullId})`
+                name: `📱 ${cleanTitle} (${fullId})`,
+                icon: "📱",
+                type: "service"
               });
             }
           });
@@ -1096,9 +1201,38 @@ app.get('/api/notifications/services', async (req, res) => {
   const servicesList = Array.from(discoveredMap.values());
 
   res.json({
+    connected_to_ha: connectedToHa,
+    discovered_count: servicesList.length,
     services: servicesList,
     current_settings: appData?.settings?.notifications || {}
   });
+});
+
+// API: Aggiungi Servizio / Entità Notifica Personalizzata
+app.post('/api/notifications/custom_service', (req, res) => {
+  const { service_id, name } = req.body;
+  if (!service_id || !service_id.trim()) return res.status(400).json({ error: "Service ID required" });
+
+  let sId = service_id.trim();
+  if (!sId.includes('.')) sId = `notify.${sId}`;
+
+  if (!appData.settings) appData.settings = {};
+  if (!appData.settings.notifications) appData.settings.notifications = {};
+  if (!Array.isArray(appData.settings.notifications.custom_services)) {
+    appData.settings.notifications.custom_services = [];
+  }
+
+  const existingIdx = appData.settings.notifications.custom_services.findIndex(s => s.id === sId);
+  const sName = (name && name.trim()) ? name.trim() : `📱 ${sId}`;
+
+  if (existingIdx >= 0) {
+    appData.settings.notifications.custom_services[existingIdx].name = sName;
+  } else {
+    appData.settings.notifications.custom_services.push({ id: sId, name: sName });
+  }
+
+  saveData(appData);
+  res.json({ status: "ok", custom_services: appData.settings.notifications.custom_services });
 });
 
 // API: Salvataggio Impostazioni Notifiche
