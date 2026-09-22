@@ -4,6 +4,27 @@ Tutte le novità, miglioramenti e correzioni introdotte nelle versioni di ChoreQ
 
 ---
 
+## [2.8.0] - 2026-09-22
+
+### ✨ Novità
+- **Scansione Reale Servizi & Dispositivi Notifica Home Assistant**: Rilevamento automatico di tutte le entità `notify.*` e dei dispositivi mobile reali (`mobile_app_*`) tramite le API Supervisor (`/states` e `/services`), con visualizzazione dei nomi amichevoli reali (`friendly_name`). Eliminati tutti i dispositivi fittizi/placeholder di test.
+- **Preferenze Granulari per Membro della Famiglia**: Ogni utente può associare il proprio dispositivo personale e personalizzare in modo indipendente i 4 interruttori di notifica:
+  - 🌅 *Promemoria Mattina* (avviso quotidiano sulle attività della giornata).
+  - 🌙 *Riepilogo Serale* (bilancio dei punti guadagnati, classifica e task da completare).
+  - 🚨 *Avvisi Urgenze & Scadenze* (faccende scadute o ad alta priorità).
+  - 📋 *Nuovi Task Assegnati* (notifica istantanea all'assegnazione di un nuovo compito).
+- **Riepilogo Serale Automatico (Evening Recap)**: Motore di riepilogo serale a orario programmabile (default `20:30`) che calcola per ogni membro:
+  - Punti guadagnati oggi e compiti completati durante la giornata.
+  - Posizione e medaglia nella classifica settimanale (🥇, 🥈, 🥉).
+  - Conteggio faccende in sospeso o scadute da terminare prima di andare a dormire.
+- **Riprogettazione Menu Navigazione Admin (No Scroll)**: Sostituita la barra a scorrimento orizzontale con una griglia CSS responsive pulita ed elegante (`grid-cols-2 sm:grid-cols-4 lg:grid-cols-8`) che rende accessibili tutti gli 8 pannelli di amministrazione con 1 solo click senza dover scorrere.
+
+### 🛠️ Miglioramenti & Correzioni
+- **Pannello Test Notifiche Completo**: Aggiunta la possibilità di simulare ed inviare notifiche di prova per Riepilogo Serale, Promemoria Mattina, Allarme Urgente e Notifica Generica verso qualsiasi dispositivo selezionato.
+- **Struttura Dati Notifiche Flessibile**: Salvataggio e migrazione automatica delle impostazioni di notifica e dei flag individuali `members_config` all'interno del database JSON.
+
+---
+
 ## [2.7.0] - 2026-09-22
 
 ### ✨ Novità & Notifiche Native Home Assistant

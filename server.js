@@ -66,10 +66,11 @@ function loadData() {
 
   const defaultNotificationsSettings = {
     enabled: true,
-    daily_reminder_enabled: true,
-    reminder_time: "08:30",
     default_service: "notify.notify",
-    member_services: {},
+    morning_reminder_enabled: true,
+    morning_reminder_time: "08:30",
+    evening_recap_enabled: true,
+    evening_recap_time: "20:30",
     notify_on_task_assigned: true,
     notify_on_winner: true,
     channels: {
@@ -77,7 +78,10 @@ function loadData() {
       reminders: "ChoreQuest_Reminders",
       general: "ChoreQuest_General"
     },
-    last_reminder_date: null
+    member_services: {}, // legacy fallback
+    members_config: {}, // { [mId]: { enabled: true, service: "", morning_reminder: true, evening_recap: true, urgent_alerts: true, task_assigned: true } }
+    last_morning_date: null,
+    last_evening_date: null
   };
 
   if (fs.existsSync(DB_FILE)) {
@@ -106,10 +110,13 @@ function loadData() {
         data.settings.notifications = { ...defaultNotificationsSettings };
       } else {
         if (data.settings.notifications.enabled === undefined) data.settings.notifications.enabled = true;
-        if (data.settings.notifications.daily_reminder_enabled === undefined) data.settings.notifications.daily_reminder_enabled = true;
-        if (!data.settings.notifications.reminder_time) data.settings.notifications.reminder_time = "08:30";
+        if (data.settings.notifications.morning_reminder_enabled === undefined) data.settings.notifications.morning_reminder_enabled = (data.settings.notifications.daily_reminder_enabled !== false);
+        if (!data.settings.notifications.morning_reminder_time) data.settings.notifications.morning_reminder_time = data.settings.notifications.reminder_time || "08:30";
+        if (data.settings.notifications.evening_recap_enabled === undefined) data.settings.notifications.evening_recap_enabled = true;
+        if (!data.settings.notifications.evening_recap_time) data.settings.notifications.evening_recap_time = "20:30";
         if (!data.settings.notifications.default_service) data.settings.notifications.default_service = "notify.notify";
         if (!data.settings.notifications.member_services) data.settings.notifications.member_services = {};
+        if (!data.settings.notifications.members_config) data.settings.notifications.members_config = {};
         if (data.settings.notifications.notify_on_task_assigned === undefined) data.settings.notifications.notify_on_task_assigned = true;
         if (data.settings.notifications.notify_on_winner === undefined) data.settings.notifications.notify_on_winner = true;
         if (!data.settings.notifications.channels) {
@@ -803,7 +810,10 @@ async function sendHomeAssistantNotification({ service, title, message, channelT
   try {
     let url;
     let srvName = targetService.trim();
-    if (srvName.includes('.')) {
+    if (srvName === 'notify.persistent_notification') {
+      url = `${haBase}/services/persistent_notification/create`;
+      payload.notification_id = extraData.tag || `chorequest_${Date.now()}`;
+    } else if (srvName.includes('.')) {
       const parts = srvName.split('.');
       url = `${haBase}/services/${parts[0]}/${parts[1]}`;
     } else {
@@ -833,33 +843,38 @@ async function sendHomeAssistantNotification({ service, title, message, channelT
   }
 }
 
+// 🌅 Promemoria Mattutino Programmato (Faccende di oggi & in scadenza)
 async function checkAndSendDailyReminders() {
   const notifSettings = appData?.settings?.notifications;
-  if (!notifSettings || !notifSettings.enabled || !notifSettings.daily_reminder_enabled) return;
+  if (!notifSettings || notifSettings.enabled === false || notifSettings.morning_reminder_enabled === false) return;
 
   const now = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   const currentHHMM = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
   const todayIso = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
-  if (currentHHMM !== notifSettings.reminder_time) return;
-  if (notifSettings.last_reminder_date === todayIso) return;
+  const targetTime = notifSettings.morning_reminder_time || notifSettings.reminder_time || "08:30";
+  if (currentHHMM !== targetTime) return;
+  if (notifSettings.last_morning_date === todayIso) return;
 
-  console.log(`[Notification Scheduler] Inizio invio promemoria giornaliero per ${todayIso} alle ${currentHHMM}...`);
-  notifSettings.last_reminder_date = todayIso;
+  console.log(`[Notification Scheduler] Inizio invio promemoria mattutino per ${todayIso} alle ${currentHHMM}...`);
+  notifSettings.last_morning_date = todayIso;
   saveData(appData);
 
   const stats = calculateStats();
-  const memberServices = notifSettings.member_services || {};
   const defaultService = notifSettings.default_service || "notify.notify";
+  const membersConfig = notifSettings.members_config || {};
+  const memberServices = notifSettings.member_services || {};
 
-  // Scan for each registered member
   for (const m of Object.values(appData.members || {})) {
-    const targetService = memberServices[m.id];
-    if (targetService === 'none' || targetService === 'disabled') continue;
-    const effectiveService = targetService || defaultService;
+    const mCfg = membersConfig[m.id] || {};
+    if (mCfg.enabled === false) continue; // utente ha disattivato notifiche
+    if (mCfg.morning_reminder === false) continue; // utente ha disattivato promemoria mattutino
 
-    // 1. Filter routine tasks assigned to this member or all
+    const targetService = mCfg.service || memberServices[m.id] || defaultService;
+    if (!targetService || targetService === 'none' || targetService === 'disabled') continue;
+
+    // 1. Routine assegnate a questo membro o alla famiglia
     const memberRoutines = stats.routine_tasks.filter(r => {
       const isAssigned = (r.assigned_member === 'all' || r.assigned_member === m.name);
       if (!isAssigned) return false;
@@ -875,7 +890,7 @@ async function checkAndSendDailyReminders() {
     const todayRoutines = memberRoutines.filter(r => r.days_remaining === 0);
     const warningRoutines = memberRoutines.filter(r => r.status === 'warning' && r.days_remaining > 0);
 
-    // 2. Filter pending single tasks assigned to this member or all
+    // 2. Task singoli in sospeso assegnati a questo membro o famiglia
     const memberSingleTasks = stats.pending_single_tasks.filter(st => {
       const assignedList = Array.isArray(st.assigned_to) ? st.assigned_to : [st.assigned_to];
       const isAssigned = (assignedList.includes('all') || assignedList.includes('Tutti') || assignedList.includes('Tutta la Famiglia') || assignedList.includes(m.name));
@@ -892,24 +907,24 @@ async function checkAndSendDailyReminders() {
     const todayTasks = memberSingleTasks.filter(st => st.due_date === todayIso);
     const warningTasks = memberSingleTasks.filter(st => st.due_date && st.due_date > todayIso && st.days_until <= 1);
 
-    // If overdue items exist, send high priority urgent alert
+    // Invia avviso urgente per compiti scaduti se abilitato
     const totalOverdue = overdueRoutines.length + overdueTasks.length;
-    if (totalOverdue > 0) {
+    if (totalOverdue > 0 && mCfg.urgent_alerts !== false) {
       const urgentNames = [
         ...overdueRoutines.map(r => `• ${r.name} (${r.overdue_days}gg fa, +${r.points}pt)`),
         ...overdueTasks.map(t => `• ${t.title} (+${t.points}pt)`)
       ].slice(0, 5);
 
       await sendHomeAssistantNotification({
-        service: effectiveService,
+        service: targetService,
         title: `🚨 ChoreQuest: ${totalOverdue} Faccende Scadute!`,
-        message: `Ciao ${m.name}, hai ${totalOverdue} attività scadute da completare:\n${urgentNames.join('\n')}`,
+        message: `Ciao ${m.name}, hai ${totalOverdue} attività scadute in attesa:\n${urgentNames.join('\n')}`,
         channelType: 'urgent',
         extraData: { tag: `chorequest_urgent_${m.id}` }
       });
     }
 
-    // If today/warning reminders exist, send default priority reminders
+    // Invia promemoria del giorno (oggi & preavviso)
     const totalReminders = todayRoutines.length + todayTasks.length + warningRoutines.length + warningTasks.length;
     if (totalReminders > 0) {
       const reminderNames = [
@@ -920,36 +935,157 @@ async function checkAndSendDailyReminders() {
       ].slice(0, 5);
 
       await sendHomeAssistantNotification({
-        service: effectiveService,
-        title: `🔔 ChoreQuest: Promemoria di Oggi (${totalReminders})`,
-        message: `Ciao ${m.name}, ecco le tue attività in programma:\n${reminderNames.join('\n')}`,
+        service: targetService,
+        title: `🌅 ChoreQuest: Buongiorno ${m.name}! (${totalReminders} attività)`,
+        message: `Ecco le tue faccende in programma per oggi:\n${reminderNames.join('\n')}`,
         channelType: 'reminders',
-        extraData: { tag: `chorequest_reminders_${m.id}` }
+        extraData: { tag: `chorequest_morning_${m.id}` }
       });
     }
   }
 }
 
-// Check every 30 seconds for scheduled daily reminders
+// 🌙 Riepilogo Serale Programmato (Punti fatti oggi, classifica e stato faccende)
+async function checkAndSendEveningRecap() {
+  const notifSettings = appData?.settings?.notifications;
+  if (!notifSettings || notifSettings.enabled === false || notifSettings.evening_recap_enabled === false) return;
+
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const currentHHMM = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const todayIso = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  const targetTime = notifSettings.evening_recap_time || "20:30";
+  if (currentHHMM !== targetTime) return;
+  if (notifSettings.last_evening_date === todayIso) return;
+
+  console.log(`[Notification Scheduler] Inizio invio riepilogo serale per ${todayIso} alle ${currentHHMM}...`);
+  notifSettings.last_evening_date = todayIso;
+  saveData(appData);
+
+  const stats = calculateStats();
+  const defaultService = notifSettings.default_service || "notify.notify";
+  const membersConfig = notifSettings.members_config || {};
+  const memberServices = notifSettings.member_services || {};
+
+  // Calcola punti fatti oggi per ciascun membro dai logs
+  const todayLogs = (appData.logs || []).filter(l => l.created_at && l.created_at.startsWith(todayIso));
+
+  for (const m of Object.values(appData.members || {})) {
+    const mCfg = membersConfig[m.id] || {};
+    if (mCfg.enabled === false) continue;
+    if (mCfg.evening_recap === false) continue;
+
+    const targetService = mCfg.service || memberServices[m.id] || defaultService;
+    if (!targetService || targetService === 'none' || targetService === 'disabled') continue;
+
+    const mTodayLogs = todayLogs.filter(l => l.member_name === m.name && !l.is_personal && l.points > 0);
+    const todayPts = mTodayLogs.reduce((acc, l) => acc + (parseInt(l.points) || 0), 0);
+    const todayTasksCount = mTodayLogs.length;
+
+    // Posizione e punti settimanali
+    const memberStat = stats.members[m.id] || {};
+    const weeklyPts = memberStat.weekly_points || 0;
+    const rankIndex = stats.leaderboard.findIndex(item => item.id === m.id);
+    const rank = rankIndex >= 0 ? rankIndex + 1 : 1;
+    const rankMedal = (rank === 1) ? '🥇 1° posto' : (rank === 2) ? '🥈 2° posto' : (rank === 3) ? '🥉 3° posto' : `#${rank}`;
+
+    // Attività rimaste in sospeso per questo membro
+    const memberPendingTasks = stats.pending_single_tasks.filter(st => {
+      const assigned = Array.isArray(st.assigned_to) ? st.assigned_to : [st.assigned_to];
+      return assigned.includes('all') || assigned.includes(m.name);
+    });
+    const overdueRoutines = stats.routine_tasks.filter(r => (r.assigned_member === 'all' || r.assigned_member === m.name) && r.status === 'overdue');
+    const totalRemaining = memberPendingTasks.length + overdueRoutines.length;
+
+    let pointsMsg = "";
+    if (todayTasksCount > 0) {
+      pointsMsg = `✨ Oggi hai completato ${todayTasksCount} ${todayTasksCount === 1 ? 'attività' : 'attività'} guadagnando +${todayPts} pt!`;
+    } else {
+      pointsMsg = `💤 Nessuna attività registrata oggi.`;
+    }
+
+    let standingMsg = `🏆 Settimana: ${weeklyPts} pt (${rankMedal} in classifica)`;
+    let houseMsg = (totalRemaining === 0) 
+      ? `🎉 Tutto in ordine, nessuna faccenda in sospeso!` 
+      : `⚠️ ${totalRemaining} ${totalRemaining === 1 ? 'attività rimasta' : 'attività rimaste'} in sospeso per domani.`;
+
+    const recapMessage = `Ciao ${m.name}!\n${pointsMsg}\n${standingMsg}\n${houseMsg}`;
+
+    await sendHomeAssistantNotification({
+      service: targetService,
+      title: `🌙 ChoreQuest: Riepilogo Serale`,
+      message: recapMessage,
+      channelType: 'reminders',
+      extraData: { tag: `chorequest_evening_${m.id}` }
+    });
+  }
+}
+
+// Scheduler: controllo ogni 30 secondi
 setInterval(() => {
   checkAndSendDailyReminders().catch(e => console.error("Error in checkAndSendDailyReminders:", e));
+  checkAndSendEveningRecap().catch(e => console.error("Error in checkAndSendEveningRecap:", e));
 }, 30000);
 
-// API: Discover Home Assistant Notification Services & Return Current Settings
+// API: Rilevamento Reale dei Servizi ed Entità Notifica Home Assistant
 app.get('/api/notifications/services', async (req, res) => {
   const supervisorToken = process.env.SUPERVISOR_TOKEN;
-  let notifyServices = [];
+  const haBase = "http://supervisor/core/api";
+  const discoveredMap = new Map();
+
+  // Servizi base sempre disponibili
+  discoveredMap.set("notify.notify", {
+    id: "notify.notify",
+    name: "📢 Broadcast Famiglia (notify.notify - Tutti i telefoni)"
+  });
+  discoveredMap.set("notify.persistent_notification", {
+    id: "notify.persistent_notification",
+    name: "💬 Notifica Persistente (Interfaccia Home Assistant)"
+  });
 
   if (supervisorToken) {
+    // 1. Scansiona le entità reali notify.* dagli stati di Home Assistant (hanno il friendly_name ufficiale dell'utente)
     try {
-      const resp = await fetch("http://supervisor/core/api/services", {
+      const statesRes = await fetch(`${haBase}/states`, {
+        headers: { 'Authorization': `Bearer ${supervisorToken}` }
+      });
+      if (statesRes.ok) {
+        const states = await statesRes.json();
+        states.forEach(s => {
+          if (s.entity_id && s.entity_id.startsWith('notify.')) {
+            const friendly = s.attributes?.friendly_name || s.entity_id.replace('notify.', '');
+            discoveredMap.set(s.entity_id, {
+              id: s.entity_id,
+              name: `📱 ${friendly} (${s.entity_id})`
+            });
+          }
+        });
+      }
+    } catch (e) {
+      console.error("Error fetching notification states:", e);
+    }
+
+    // 2. Scansiona i servizi registrati sotto il dominio notify
+    try {
+      const resp = await fetch(`${haBase}/services`, {
         headers: { 'Authorization': `Bearer ${supervisorToken}` }
       });
       if (resp.ok) {
         const domains = await resp.json();
         const notifyDomain = domains.find(d => d.domain === 'notify');
         if (notifyDomain && notifyDomain.services) {
-          notifyServices = Object.keys(notifyDomain.services).map(srv => `notify.${srv}`);
+          Object.keys(notifyDomain.services).forEach(srv => {
+            const fullId = `notify.${srv}`;
+            if (!discoveredMap.has(fullId)) {
+              let cleanName = srv.replace(/^mobile_app_/, '📱 App Mobile: ').replace(/_/g, ' ');
+              cleanName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+              discoveredMap.set(fullId, {
+                id: fullId,
+                name: `${cleanName} (${fullId})`
+              });
+            }
+          });
         }
       }
     } catch (e) {
@@ -957,26 +1093,15 @@ app.get('/api/notifications/services', async (req, res) => {
     }
   }
 
-  // Fallback if none found or during standalone development
-  if (notifyServices.length === 0) {
-    notifyServices = [
-      "notify.notify",
-      "notify.persistent_notification",
-      "notify.mobile_app_telefono_papa",
-      "notify.mobile_app_telefono_mamma"
-    ];
-  }
-
-  if (!notifyServices.includes("notify.notify")) notifyServices.unshift("notify.notify");
-  if (!notifyServices.includes("notify.persistent_notification")) notifyServices.push("notify.persistent_notification");
+  const servicesList = Array.from(discoveredMap.values());
 
   res.json({
-    services: notifyServices,
+    services: servicesList,
     current_settings: appData?.settings?.notifications || {}
   });
 });
 
-// API: Save Notification Settings
+// API: Salvataggio Impostazioni Notifiche
 app.post('/api/notifications/settings', (req, res) => {
   const newSettings = req.body;
   if (!appData.settings) appData.settings = {};
@@ -989,6 +1114,10 @@ app.post('/api/notifications/settings', (req, res) => {
       ...appData.settings.notifications.channels,
       ...(newSettings.channels || {})
     },
+    members_config: {
+      ...appData.settings.notifications.members_config,
+      ...(newSettings.members_config || {})
+    },
     member_services: {
       ...appData.settings.notifications.member_services,
       ...(newSettings.member_services || {})
@@ -1000,14 +1129,39 @@ app.post('/api/notifications/settings', (req, res) => {
   res.json({ status: "saved", notifications: appData.settings.notifications });
 });
 
-// API: Dispatch Test Notification
+// API: Invio Notifica di Test Immediata (Supporta tipi: urgent, reminders, evening_recap, generic)
 app.post('/api/notifications/test', async (req, res) => {
-  const { service, channel_type, title, message } = req.body;
+  const { service, channel_type, test_type, member_name, title, message } = req.body;
+  const targetService = service || appData?.settings?.notifications?.default_service || "notify.notify";
+
+  let finalTitle = title;
+  let finalMessage = message;
+  let finalChannel = channel_type || "urgent";
+
+  if (test_type === 'evening_recap') {
+    finalTitle = finalTitle || `🌙 ChoreQuest: Riepilogo Serale (Test)`;
+    const mName = member_name || Object.values(appData.members || {})[0]?.name || "Filippo";
+    finalMessage = finalMessage || `Ciao ${mName}!\n✨ Oggi hai completato 4 attività guadagnando +45 pt!\n🏆 Settimana: 120 pt (🥇 1° posto in classifica)\n🎉 Tutto in ordine, nessuna faccenda in sospeso!`;
+    finalChannel = "reminders";
+  } else if (test_type === 'morning_reminder') {
+    finalTitle = finalTitle || `🌅 ChoreQuest: Buongiorno (Test)`;
+    const mName = member_name || Object.values(appData.members || {})[0]?.name || "Filippo";
+    finalMessage = finalMessage || `Ciao ${mName}, ecco le tue attività in programma per oggi:\n• Lavatrice (Oggi, +5pt)\n• Cambio lenzuola (Oggi, +25pt)`;
+    finalChannel = "reminders";
+  } else if (test_type === 'urgent') {
+    finalTitle = finalTitle || `🚨 ChoreQuest: 2 Faccende Scadute! (Test)`;
+    finalMessage = finalMessage || `Attenzione: ci sono 2 attività scadute da completare:\n• Pulizia profonda bagno (scaduta da 1gg, +35pt)\n• Aspirapolvere (scaduta da 2gg, +30pt)`;
+    finalChannel = "urgent";
+  } else {
+    finalTitle = finalTitle || "ChoreQuest: Test Notifiche";
+    finalMessage = finalMessage || "Questo è un messaggio di test da ChoreQuest! Canale configurato correttamente. 🏆";
+  }
+
   const result = await sendHomeAssistantNotification({
-    service: service || appData?.settings?.notifications?.default_service || "notify.notify",
-    title: title || "ChoreQuest: Test Notifiche",
-    message: message || "Questo è un messaggio di test da ChoreQuest! Canale configurato correttamente. 🏆",
-    channelType: channel_type || "urgent"
+    service: targetService,
+    title: finalTitle,
+    message: finalMessage,
+    channelType: finalChannel
   });
   res.json(result);
 });
@@ -1355,7 +1509,9 @@ app.post('/api/single_tasks', (req, res) => {
     } else {
       assignedList.forEach(mName => {
         const mObj = Object.values(appData.members || {}).find(m => m.name.toLowerCase() === mName.toLowerCase());
-        const srv = (mObj && notifCfg.member_services?.[mObj.id]) ? notifCfg.member_services[mObj.id] : notifCfg.default_service;
+        const mCfg = (mObj && notifCfg.members_config?.[mObj.id]) ? notifCfg.members_config[mObj.id] : null;
+        if (mCfg && (mCfg.enabled === false || mCfg.task_assigned === false)) return;
+        const srv = mCfg?.service || (mObj && notifCfg.member_services?.[mObj.id]) || notifCfg.default_service;
         if (srv && srv !== 'none' && srv !== 'disabled') {
           sendHomeAssistantNotification({
             service: srv,

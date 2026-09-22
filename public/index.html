@@ -196,15 +196,15 @@
           <p class="text-xs text-slate-500 dark:text-slate-400">Gestisci categorie, faccende, routine con frequenza in giorni o mesi, membri, e impostazioni</p>
         </div>
       </div>
-      <div class="flex items-center gap-2 overflow-x-auto custom-scrollbar pb-1 pt-1 border-t border-slate-100 dark:border-slate-800">
-        <button onclick="setAdminTab('categories')" id="adm-tab-categories" class="px-4 py-2 rounded-2xl font-extrabold text-xs transition bg-indigo-600 text-white shadow shrink-0 flex items-center gap-1.5"><i class="mdi mdi-folder-outline text-sm"></i> 📁 Categorie & Ordine</button>
-        <button onclick="setAdminTab('spontaneous')" id="adm-tab-spontaneous" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-washing-machine text-sm"></i> ⚡ Attività Spontanee</button>
-        <button onclick="setAdminTab('routines')" id="adm-tab-routines" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-calendar-sync-outline text-sm"></i> 🔄 Routine & Promemoria</button>
-        <button onclick="setAdminTab('members')" id="adm-tab-members" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-account-group-outline text-sm"></i> 👥 Membri Famiglia</button>
-        <button onclick="setAdminTab('settings')" id="adm-tab-settings" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-tune-variant text-sm"></i> ⚙️ Sistema & Punteggio</button>
-        <button onclick="setAdminTab('notifications')" id="adm-tab-notifications" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-bell-ring-outline text-sm text-amber-500"></i> 🔔 Notifiche Home Assistant</button>
-        <button onclick="setAdminTab('backup')" id="adm-tab-backup" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-database-outline text-sm"></i> 💾 Backup & Ripristino</button>
-        <button onclick="setAdminTab('updates')" id="adm-tab-updates" class="px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5"><i class="mdi mdi-cloud-sync-outline text-sm"></i> 🔄 Aggiornamenti</button>
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <button onclick="setAdminTab('categories')" id="adm-tab-categories" class="px-3 py-2.5 rounded-2xl font-extrabold text-xs transition bg-indigo-600 text-white shadow flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-folder-outline text-sm"></i> <span>📁 Categorie</span></button>
+        <button onclick="setAdminTab('spontaneous')" id="adm-tab-spontaneous" class="px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-washing-machine text-sm"></i> <span>⚡ Spontanee</span></button>
+        <button onclick="setAdminTab('routines')" id="adm-tab-routines" class="px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-calendar-sync-outline text-sm"></i> <span>🔄 Routine</span></button>
+        <button onclick="setAdminTab('members')" id="adm-tab-members" class="px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-account-group-outline text-sm"></i> <span>👥 Membri</span></button>
+        <button onclick="setAdminTab('notifications')" id="adm-tab-notifications" class="px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-bell-ring-outline text-sm text-amber-500"></i> <span>🔔 Notifiche</span></button>
+        <button onclick="setAdminTab('settings')" id="adm-tab-settings" class="px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-tune-variant text-sm"></i> <span>⚙️ Regole</span></button>
+        <button onclick="setAdminTab('backup')" id="adm-tab-backup" class="px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-database-outline text-sm"></i> <span>💾 Backup</span></button>
+        <button onclick="setAdminTab('updates')" id="adm-tab-updates" class="px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-cloud-sync-outline text-sm"></i> <span>🔄 Aggiornamenti</span></button>
       </div>
     </div>
 
@@ -274,76 +274,104 @@
           <h3 class="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
             <i class="mdi mdi-bell-ring-outline text-amber-500 text-xl"></i> Notifiche Native Home Assistant
           </h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Gestisci promemoria quotidiani, canali per suonerie personalizzate e associa ciascun membro al proprio smartphone</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Gestisci promemoria mattutini, riepiloghi serali con punti, canali con suonerie personalizzate e preferenze per singolo membro</p>
         </div>
         <div class="flex items-center gap-3">
           <label class="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800 px-3.5 py-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
             <input id="notif-master-enable" type="checkbox" onchange="saveNotificationSettingsQuick()" class="w-4 h-4 text-indigo-600 rounded">
-            <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200">Abilita Notifiche</span>
+            <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200">Abilita Notifiche Master</span>
           </label>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <!-- CARD 1: PROMEMORIA GIORNALIERO & SERVIZIO DEFAULT -->
+        <!-- CARD 1: ORARI PROGRAMMATI (MATTINA & SERA) -->
         <div class="bg-slate-50 dark:bg-slate-800/70 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
           <div class="font-extrabold text-xs uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <i class="mdi mdi-clock-outline text-base text-indigo-600"></i> <span>Promemoria Giornaliero & Servizio Predefinito</span>
+            <i class="mdi mdi-clock-outline text-base text-indigo-600"></i> <span>Orari Promemoria Programmati & Servizio Default</span>
           </div>
           
-          <div class="flex items-center justify-between gap-3">
-            <label for="notif-daily-reminder-enable" class="text-xs font-bold text-slate-700 dark:text-slate-300">Invio automatico promemoria giornaliero:</label>
-            <input id="notif-daily-reminder-enable" type="checkbox" class="w-4 h-4 text-indigo-600 rounded">
+          <div class="space-y-3">
+            <div class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <label for="notif-morning-enable" class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer">
+                  <span>🌅 Promemoria Mattutino (Faccende di oggi & in scadenza)</span>
+                </label>
+                <input id="notif-morning-enable" type="checkbox" checked class="w-4 h-4 text-indigo-600 rounded">
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] text-slate-400 font-bold uppercase">Orario Mattina:</span>
+                <input id="notif-morning-time" type="time" value="08:30" class="px-2.5 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">
+              </div>
+            </div>
+
+            <div class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <label for="notif-evening-enable" class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer">
+                  <span>🌙 Riepilogo Serale (Punti fatti oggi, classifica e compiti)</span>
+                </label>
+                <input id="notif-evening-enable" type="checkbox" checked class="w-4 h-4 text-indigo-600 rounded">
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] text-slate-400 font-bold uppercase">Orario Sera:</span>
+                <input id="notif-evening-time" type="time" value="20:30" class="px-2.5 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">
+              </div>
+            </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 pt-1">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">⏰ Orario Invio</label>
-              <input id="notif-reminder-time" type="time" value="08:30" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">📢 Servizio Predefinito</label>
-              <select id="notif-default-service" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300 truncate">
-                <option value="notify.notify">notify.notify (Tutti i dispositivi)</option>
-              </select>
-            </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">📢 Servizio Predefinito di Famiglia</label>
+            <select id="notif-default-service" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300 truncate">
+              <option value="notify.notify">notify.notify (Tutti i dispositivi)</option>
+            </select>
           </div>
-          <p class="text-[11px] text-slate-500 dark:text-slate-400">All'orario impostato, ChoreQuest invia il riepilogo delle faccende in scadenza e scadute a ciascun membro o alla famiglia.</p>
         </div>
 
         <!-- CARD 2: EVENTI IMMEDIATI -->
-        <div class="bg-slate-50 dark:bg-slate-800/70 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
-          <div class="font-extrabold text-xs uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <i class="mdi mdi-flash text-base text-amber-500"></i> <span>Eventi Istantanei & Classifica</span>
+        <div class="bg-slate-50 dark:bg-slate-800/70 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4 flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="font-extrabold text-xs uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+              <i class="mdi mdi-flash text-base text-amber-500"></i> <span>Eventi Istantanei & Classifica</span>
+            </div>
+
+            <div class="space-y-3">
+              <label class="flex items-center justify-between gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer">
+                <div>
+                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">📋 Notifica istantanea nuovo task assegnato</div>
+                  <div class="text-[10px] text-slate-400">Avvisa subito il membro quando gli viene assegnata una faccenda</div>
+                </div>
+                <input id="notif-task-assigned-toggle" type="checkbox" checked class="w-4 h-4 text-indigo-600 rounded">
+              </label>
+              <label class="flex items-center justify-between gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer">
+                <div>
+                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">🏆 Notifica vincitore classifica settimanale</div>
+                  <div class="text-[10px] text-slate-400">Celebra il primo classificato al termine della settimana</div>
+                </div>
+                <input id="notif-winner-toggle" type="checkbox" checked class="w-4 h-4 text-indigo-600 rounded">
+              </label>
+            </div>
           </div>
 
-          <div class="space-y-3">
-            <label class="flex items-center justify-between gap-3 p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer">
-              <span class="text-xs font-bold text-slate-700 dark:text-slate-300">📋 Notifica istantanea all'assegnazione di un nuovo task rapido</span>
-              <input id="notif-task-assigned-toggle" type="checkbox" checked class="w-4 h-4 text-indigo-600 rounded">
-            </label>
-            <label class="flex items-center justify-between gap-3 p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer">
-              <span class="text-xs font-bold text-slate-700 dark:text-slate-300">🏆 Notifica proclamazione vincitore classifica settimanale</span>
-              <input id="notif-winner-toggle" type="checkbox" checked class="w-4 h-4 text-indigo-600 rounded">
-            </label>
-          </div>
-          <p class="text-[11px] text-slate-500 dark:text-slate-400">Avvisa immediatamente i membri quando ricevono un compito o quando viene vinta la competizione di famiglia.</p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Le notifiche immediate raggiungono direttamente il dispositivo associato a ciascun membro.</p>
         </div>
       </div>
 
-      <!-- CARD 3: MAPPATURA MEMBRI -> SMARTPHONE -->
+      <!-- CARD 3: PREFERENZE PERSONALI PER CIASCUN MEMBRO -->
       <div class="bg-slate-50 dark:bg-slate-800/70 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-2">
-          <div class="font-extrabold text-xs uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <i class="mdi mdi-cellphone-link text-base text-sky-500"></i> <span>Mappatura Membri ➔ Dispositivi Personali (Home Assistant Mobile App)</span>
+          <div>
+            <div class="font-extrabold text-xs uppercase text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <i class="mdi mdi-account-cog text-base text-indigo-600"></i> <span>Preferenze Personali Notifiche per Membro</span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Ogni membro sceglie in autonomia il proprio smartphone e quali tipi di avvisi ricevere</p>
           </div>
-          <button type="button" onclick="refreshNotifyServicesList()" class="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline flex items-center gap-1">
-            <i class="mdi mdi-refresh"></i> <span>Ricarica Servizi HA</span>
+          <button type="button" onclick="refreshNotifyServicesList()" class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:bg-slate-100 transition flex items-center gap-1">
+            <i class="mdi mdi-refresh"></i> <span>Ricarica Dispositivi HA</span>
           </button>
         </div>
 
-        <div id="notif-members-mapping-list" class="space-y-3">
-          <!-- Populated dynamically with member rows and select dropdowns -->
+        <div id="notif-members-mapping-list" class="space-y-3.5">
+          <!-- Populated dynamically with member rows, device selects, and individual toggles -->
         </div>
       </div>
 
@@ -365,7 +393,7 @@
           <div class="bg-white dark:bg-slate-900 p-3 rounded-xl border border-amber-200 dark:border-amber-900/50 space-y-1">
             <label class="block text-[11px] font-extrabold text-amber-600 uppercase">🔔 Canale Promemoria (Priorità Standard)</label>
             <input id="notif-chan-reminders" type="text" value="ChoreQuest_Reminders" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">
-            <span class="text-[10px] text-slate-400">Canale per promemoria e preavvisi</span>
+            <span class="text-[10px] text-slate-400">Canale per promemoria e riepilogo serale</span>
           </div>
           <div class="bg-white dark:bg-slate-900 p-3 rounded-xl border border-indigo-200 dark:border-indigo-900/50 space-y-1">
             <label class="block text-[11px] font-extrabold text-indigo-600 uppercase">📋 Canale Generale / Assegnazioni</label>
@@ -378,23 +406,28 @@
       <!-- CARD 5: TEST NOTIFICA IN TEMPO REALE -->
       <div class="bg-indigo-50/70 dark:bg-indigo-950/40 p-5 rounded-2xl border border-indigo-100 dark:border-indigo-900/50 space-y-4">
         <div class="font-extrabold text-xs uppercase text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
-          <i class="mdi mdi-test-tube text-base text-indigo-600"></i> <span>Invia Notifica di Test Immediata</span>
+          <i class="mdi mdi-test-tube text-base text-indigo-600"></i> <span>Pannello Test Notifiche in Tempo Reale</span>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-          <div class="sm:col-span-5">
+          <div class="sm:col-span-4">
             <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Dispositivo / Servizio Target:</label>
             <select id="notif-test-service" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></select>
           </div>
-          <div class="sm:col-span-4">
-            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Canale & Priorità:</label>
-            <select id="notif-test-channel" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
-              <option value="urgent">🚨 Urgente / Scadute (High)</option>
-              <option value="reminders">🔔 Promemoria Ordinario (Default)</option>
-              <option value="general">📋 Generale / Assegnazione</option>
+          <div class="sm:col-span-3">
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Membro di Riferimento:</label>
+            <select id="notif-test-member" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></select>
+          </div>
+          <div class="sm:col-span-3">
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Tipo di Test:</label>
+            <select id="notif-test-type" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
+              <option value="evening_recap">🌙 Riepilogo Serale (Punti + Classifica)</option>
+              <option value="morning_reminder">🌅 Promemoria Mattutino</option>
+              <option value="urgent">🚨 Avviso Urgente (Attività Scadute)</option>
+              <option value="generic">📋 Test Standard Semplice</option>
             </select>
           </div>
-          <div class="sm:col-span-3 flex items-end">
+          <div class="sm:col-span-2 flex items-end">
             <button type="button" onclick="sendTestNotification()" id="btn-send-test-notif" class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center justify-center gap-1.5">
               <i class="mdi mdi-send"></i> <span>Invia Test</span>
             </button>
@@ -1445,8 +1478,8 @@
         const sec = document.getElementById(`adm-sec-${t}`);
         if (btn) {
           btn.className = (t === tabName)
-            ? 'px-4 py-2 rounded-2xl font-extrabold text-xs transition bg-indigo-600 text-white shadow shrink-0 flex items-center gap-1.5'
-            : 'px-4 py-2 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 bg-slate-100 dark:bg-slate-800 shrink-0 flex items-center gap-1.5';
+            ? 'px-3 py-2.5 rounded-2xl font-extrabold text-xs transition bg-indigo-600 text-white shadow-md flex items-center justify-center gap-1.5 text-center'
+            : 'px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center gap-1.5 text-center';
         }
         if (sec) sec.classList.toggle('hidden', t !== tabName);
       });
@@ -3189,9 +3222,9 @@
     }
 
     async function refreshNotifyServicesList() {
-      showToast("Aggiornamento servizi Home Assistant...", "🔄");
+      showToast("Scansione dispositivi Home Assistant...", "🔄");
       await loadNotificationSettings();
-      showToast("Lista servizi aggiornata!", "✅");
+      showToast("Lista dispositivi reali aggiornata!", "✅");
     }
 
     function renderNotificationSettings(cfg = {}) {
@@ -3200,11 +3233,17 @@
       if (document.getElementById('notif-master-enable')) {
         document.getElementById('notif-master-enable').checked = notif.enabled !== false;
       }
-      if (document.getElementById('notif-daily-reminder-enable')) {
-        document.getElementById('notif-daily-reminder-enable').checked = notif.daily_reminder_enabled !== false;
+      if (document.getElementById('notif-morning-enable')) {
+        document.getElementById('notif-morning-enable').checked = notif.morning_reminder_enabled !== false;
       }
-      if (document.getElementById('notif-reminder-time')) {
-        document.getElementById('notif-reminder-time').value = notif.reminder_time || "08:30";
+      if (document.getElementById('notif-morning-time')) {
+        document.getElementById('notif-morning-time').value = notif.morning_reminder_time || notif.reminder_time || "08:30";
+      }
+      if (document.getElementById('notif-evening-enable')) {
+        document.getElementById('notif-evening-enable').checked = notif.evening_recap_enabled !== false;
+      }
+      if (document.getElementById('notif-evening-time')) {
+        document.getElementById('notif-evening-time').value = notif.evening_recap_time || "20:30";
       }
       if (document.getElementById('notif-task-assigned-toggle')) {
         document.getElementById('notif-task-assigned-toggle').checked = notif.notify_on_task_assigned !== false;
@@ -3213,7 +3252,7 @@
         document.getElementById('notif-winner-toggle').checked = notif.notify_on_winner !== false;
       }
 
-      // Channels
+      // Canali
       const channels = notif.channels || {};
       if (document.getElementById('notif-chan-urgent')) {
         document.getElementById('notif-chan-urgent').value = channels.urgent || "ChoreQuest_Urgent";
@@ -3225,18 +3264,21 @@
         document.getElementById('notif-chan-general').value = channels.general || "ChoreQuest_General";
       }
 
-      // Populate Default Service select & Test Service select
-      const defServiceSelect = document.getElementById('notif-default-service');
-      const testServiceSelect = document.getElementById('notif-test-service');
-      
+      // Build options helper for real services
       const buildServiceOptionsHtml = (selectedVal) => {
         let opts = '';
         cachedNotifyServices.forEach(srv => {
-          const isSel = (srv === selectedVal);
-          opts += `<option value="${srv}" ${isSel ? 'selected' : ''}>${srv}</option>`;
+          const sId = (typeof srv === 'object') ? srv.id : srv;
+          const sName = (typeof srv === 'object') ? srv.name : srv;
+          const isSel = (sId === selectedVal);
+          opts += `<option value="${sId}" ${isSel ? 'selected' : ''}>${sName}</option>`;
         });
         return opts;
       };
+
+      const defServiceSelect = document.getElementById('notif-default-service');
+      const testServiceSelect = document.getElementById('notif-test-service');
+      const testMemberSelect = document.getElementById('notif-test-member');
 
       if (defServiceSelect) {
         defServiceSelect.innerHTML = buildServiceOptionsHtml(notif.default_service || "notify.notify");
@@ -3244,11 +3286,19 @@
       if (testServiceSelect) {
         testServiceSelect.innerHTML = buildServiceOptionsHtml(notif.default_service || "notify.notify");
       }
+      if (testMemberSelect) {
+        testMemberSelect.innerHTML = '';
+        const members = Object.values(appData?.members || {});
+        members.forEach(m => {
+          testMemberSelect.innerHTML += `<option value="${m.name}">👤 ${m.name}</option>`;
+        });
+      }
 
-      // Populate Member Notification Mappings
+      // Populate Per-Member Notification Preferences
       const memberMapContainer = document.getElementById('notif-members-mapping-list');
       if (memberMapContainer) {
         memberMapContainer.innerHTML = '';
+        const membersConfig = notif.members_config || {};
         const memberServices = notif.member_services || {};
         const members = Object.values(appData?.members || {});
 
@@ -3256,29 +3306,61 @@
           memberMapContainer.innerHTML = '<div class="text-xs text-slate-400 py-2">Nessun membro della famiglia configurato.</div>';
         } else {
           members.forEach(m => {
-            const currentSelectedService = memberServices[m.id] || "";
-            
-            let memberOpts = `<option value="">📢 Usa canale predefinito di famiglia (${notif.default_service || 'notify.notify'})</option>`;
-            memberOpts += `<option value="none" ${currentSelectedService === 'none' ? 'selected' : ''}>🔕 Nessuna notifica per questo membro</option>`;
-            
+            const mCfg = membersConfig[m.id] || {};
+            const currentSelectedService = mCfg.service || memberServices[m.id] || "";
+            const isMemberEnabled = mCfg.enabled !== false;
+            const morningOn = mCfg.morning_reminder !== false;
+            const eveningOn = mCfg.evening_recap !== false;
+            const urgentOn = mCfg.urgent_alerts !== false;
+            const taskOn = mCfg.task_assigned !== false;
+
+            let memberOpts = `<option value="">📢 Usa servizio predefinito di famiglia</option>`;
+            memberOpts += `<option value="none" ${currentSelectedService === 'none' ? 'selected' : ''}>🔕 Nessun dispositivo / Notifiche disattivate</option>`;
+
             cachedNotifyServices.forEach(srv => {
-              const isSel = (srv === currentSelectedService);
-              memberOpts += `<option value="${srv}" ${isSel ? 'selected' : ''}>📱 ${srv}</option>`;
+              const sId = (typeof srv === 'object') ? srv.id : srv;
+              const sName = (typeof srv === 'object') ? srv.name : srv;
+              const isSel = (sId === currentSelectedService);
+              memberOpts += `<option value="${sId}" ${isSel ? 'selected' : ''}>${sName}</option>`;
             });
 
             memberMapContainer.innerHTML += `
-              <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs">
-                <div class="flex items-center gap-2.5 font-extrabold text-sm text-slate-900 dark:text-white">
-                  <span class="text-2xl">${m.icon || '👤'}</span>
-                  <div>
-                    <div>${m.name}</div>
-                    <div class="text-[10px] text-slate-400 font-semibold">Destinatario notifiche personali</div>
+              <div class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3 shadow-2xs">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div class="flex items-center gap-2.5 font-extrabold text-sm text-slate-900 dark:text-white">
+                    <span class="text-2xl">${m.icon || '👤'}</span>
+                    <div>
+                      <div>${m.name}</div>
+                      <div class="text-[10px] text-slate-400 font-semibold">Configurazione dispositivo & notifiche personali</div>
+                    </div>
+                  </div>
+                  <div class="w-full sm:w-80">
+                    <select data-member-id="${m.id}" class="member-notif-device-select w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                      ${memberOpts}
+                    </select>
                   </div>
                 </div>
-                <div class="w-full sm:w-80">
-                  <select data-member-id="${m.id}" class="member-notif-device-select w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200">
-                    ${memberOpts}
-                  </select>
+
+                <div class="space-y-1.5">
+                  <div class="text-[10px] font-extrabold uppercase text-slate-400">Quali notifiche inviare a questo membro:</div>
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer">
+                      <input type="checkbox" data-member-pref="${m.id}" data-type="morning_reminder" ${morningOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                      <span class="text-xs font-bold text-slate-700 dark:text-slate-300">🌅 Mattina</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer">
+                      <input type="checkbox" data-member-pref="${m.id}" data-type="evening_recap" ${eveningOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                      <span class="text-xs font-bold text-slate-700 dark:text-slate-300">🌙 Sera (Punti)</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer">
+                      <input type="checkbox" data-member-pref="${m.id}" data-type="urgent_alerts" ${urgentOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                      <span class="text-xs font-bold text-slate-700 dark:text-slate-300">🚨 Urgenze</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer">
+                      <input type="checkbox" data-member-pref="${m.id}" data-type="task_assigned" ${taskOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                      <span class="text-xs font-bold text-slate-700 dark:text-slate-300">📋 Nuovi Task</span>
+                    </label>
+                  </div>
                 </div>
               </div>
             `;
@@ -3289,8 +3371,10 @@
 
     async function saveNotificationSettings() {
       const enabled = document.getElementById('notif-master-enable')?.checked ?? true;
-      const daily_reminder_enabled = document.getElementById('notif-daily-reminder-enable')?.checked ?? true;
-      const reminder_time = document.getElementById('notif-reminder-time')?.value || "08:30";
+      const morning_reminder_enabled = document.getElementById('notif-morning-enable')?.checked ?? true;
+      const morning_reminder_time = document.getElementById('notif-morning-time')?.value || "08:30";
+      const evening_recap_enabled = document.getElementById('notif-evening-enable')?.checked ?? true;
+      const evening_recap_time = document.getElementById('notif-evening-time')?.value || "20:30";
       const default_service = document.getElementById('notif-default-service')?.value || "notify.notify";
       const notify_on_task_assigned = document.getElementById('notif-task-assigned-toggle')?.checked ?? true;
       const notify_on_winner = document.getElementById('notif-winner-toggle')?.checked ?? true;
@@ -3301,21 +3385,42 @@
         general: document.getElementById('notif-chan-general')?.value.trim() || "ChoreQuest_General"
       };
 
+      const members_config = {};
       const member_services = {};
+
       document.querySelectorAll('.member-notif-device-select').forEach(sel => {
         const mId = sel.getAttribute('data-member-id');
-        const val = sel.value;
-        if (mId) member_services[mId] = val;
+        const srvVal = sel.value;
+        if (!mId) return;
+
+        member_services[mId] = srvVal;
+
+        const morningChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="morning_reminder"]`)?.checked ?? true;
+        const eveningChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="evening_recap"]`)?.checked ?? true;
+        const urgentChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="urgent_alerts"]`)?.checked ?? true;
+        const taskChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="task_assigned"]`)?.checked ?? true;
+
+        members_config[mId] = {
+          enabled: srvVal !== 'none',
+          service: srvVal,
+          morning_reminder: morningChk,
+          evening_recap: eveningChk,
+          urgent_alerts: urgentChk,
+          task_assigned: taskChk
+        };
       });
 
       const payload = {
         enabled,
-        daily_reminder_enabled,
-        reminder_time,
+        morning_reminder_enabled,
+        morning_reminder_time,
+        evening_recap_enabled,
+        evening_recap_time,
         default_service,
         notify_on_task_assigned,
         notify_on_winner,
         channels,
+        members_config,
         member_services
       };
 
@@ -3353,7 +3458,8 @@
     async function sendTestNotification() {
       const btn = document.getElementById('btn-send-test-notif');
       const service = document.getElementById('notif-test-service')?.value || "notify.notify";
-      const channel_type = document.getElementById('notif-test-channel')?.value || "urgent";
+      const test_type = document.getElementById('notif-test-type')?.value || "evening_recap";
+      const member_name = document.getElementById('notif-test-member')?.value || "Filippo";
 
       if (btn) {
         btn.disabled = true;
@@ -3366,15 +3472,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             service,
-            channel_type,
-            title: "ChoreQuest: Test Notifiche",
-            message: `Notifica di test inviata con successo al canale "${channel_type}"! 🏆`
+            test_type,
+            member_name
           })
         });
 
         const data = await res.json();
         if (data.success) {
-          showToast(`Notifica inviata a ${service}!`, "🚀");
+          showToast(`Notifica di test (${test_type}) inviata a ${service}!`, "🚀");
         } else {
           showToast(`Errore: ${data.error || data.reason || 'Impossibile inviare'}`, "❌");
         }
