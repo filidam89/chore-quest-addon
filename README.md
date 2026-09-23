@@ -1,17 +1,24 @@
-# 🏆 ChoreQuest (v2.8.2)
+# 🏆 ChoreQuest (v2.8.3)
 
 > **Add-on Ufficiale Home Assistant per la Gamification e Gestione delle Faccende di Casa e Famiglia**
 
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)
-![Version](https://img.shields.io/badge/Version-2.8.2-emerald.svg)
+![Version](https://img.shields.io/badge/Version-2.8.3-emerald.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
-## ✨ Novità & Funzionalità Chiave v2.8.2
+## ✨ Novità & Funzionalità Chiave v2.8.3
 
-- 📱 **Supporto Multi-Dispositivo per Famiglia e per Membro:**
-  - **Più dispositivi per membro**: Ogni membro della famiglia può ora associare più smartphone, tablet o canali di notifica (es. smartphone personale + tablet + notifica persistente HA). Le notifiche personali (promemoria mattina, riepilogo sera, urgenze, nuovi compiti) vengono inviate in parallelo a tutti i dispositivi selezionati.
+- 🐛 **Polyfill Fetch Universale & Ripristino Chiamate Home Assistant**:
+  - Risolto l'errore `fetch is not defined` su ambienti Alpine / Node < 18 nel container S6.
+  - Implementato polyfill nativo autonomo con moduli `http`/`https`, gestione redirect HTTP (301, 302, 307, 308) e timeout, consentendo a `/states`, `/services`, sensori ChoreQuest e notifiche di funzionare istantaneamente.
+- 🐳 **Aggiornamento Immagine Base Dockerfile**: Aggiornata a `ghcr.io/home-assistant/amd64-base:3.20` con supporto runtime moderno.
+- 📱 **Supporto Multi-Dispositivo per Famiglia e per Membro (v2.8.2)**:
+  - **Più dispositivi per membro**: Ogni membro della famiglia può ora associare più smartphone, tablet o canali di notifica contemporaneamente.
+  - **Dispositivi multipli predefiniti di famiglia**: Spunta con contatore per i canali predefiniti.
+- 🛠️ **Iniezione Token Supervisor Garantita & Diagnostica Live**:
+  - Token rilevato via environment S6 e pulsante *"🩺 Diagnostica HA"* nel pannello Notifiche per verificare in tempo reale lo stato dei sensori e dei dispositivi.
   - **Dispositivi multipli predefiniti di famiglia**: Possibilità di selezionare più dispositivi come destinatari generali della famiglia (`default_services`).
 - 🛠️ **Risoluzione Definitiva Iniezione Token Supervisor (S6 Container Overlay):**
   - Integrazione di `/usr/bin/with-contenv sh` in `run.sh` e lettura diretta dai file ambiente S6 (`/run/s6/container_environment/SUPERVISOR_TOKEN`) garantendo la disponibilità al 100% del token Supervisor in qualsiasi installazione Home Assistant OS o Supervised.
@@ -50,4 +57,4 @@
 
 1. Vai in **Impostazioni** ➔ **Add-on** ➔ **Store degli Add-on**.
 2. Clicca sui tre pallini in alto a destra (**⋮**) ➔ **Controlla aggiornamenti** (o ricarica con `F5`).
-3. Clicca su **Aggiorna (Update)** alla versione **v2.8.2** e riavvia l'Add-on!
+3. Clicca su **Aggiorna (Update)** alla versione **v2.8.3** e riavvia l'Add-on!

@@ -2,6 +2,97 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
+const https = require('https');
+const { URL } = require('url');
+
+// Universal fetch polyfill for Node.js environments lacking global fetch (e.g. Node < 18 on Alpine 3.16)
+if (typeof fetch !== 'function' || typeof globalThis.fetch !== 'function') {
+  function makeFetchPolyfill() {
+    return function fetchPolyfill(input, init = {}, redirectCount = 0) {
+      return new Promise((resolve, reject) => {
+        if (redirectCount > 5) {
+          return reject(new Error('Too many redirects'));
+        }
+        try {
+          const urlStr = typeof input === 'string' ? input : (input && input.url ? input.url : input.toString());
+          const parsedUrl = new URL(urlStr);
+          const isHttps = parsedUrl.protocol === 'https:';
+          const client = isHttps ? https : http;
+
+          const headers = { ...(init.headers || {}) };
+          let body = init.body;
+          if (body && typeof body === 'object' && !(body instanceof Buffer)) {
+            body = JSON.stringify(body);
+          }
+          if (body && !headers['Content-Length'] && !headers['content-length']) {
+            headers['Content-Length'] = Buffer.byteLength(body, 'utf8');
+          }
+
+          const reqOptions = {
+            protocol: parsedUrl.protocol,
+            hostname: parsedUrl.hostname,
+            port: parsedUrl.port || (isHttps ? 443 : 80),
+            path: parsedUrl.pathname + parsedUrl.search,
+            method: (init.method || 'GET').toUpperCase(),
+            headers: headers,
+            timeout: init.timeout || 15000
+          };
+
+          const req = client.request(reqOptions, (res) => {
+            if ([301, 302, 307, 308].includes(res.statusCode) && res.headers.location) {
+              const redirectUrl = new URL(res.headers.location, parsedUrl).toString();
+              res.resume();
+              return resolve(fetchPolyfill(redirectUrl, init, redirectCount + 1));
+            }
+
+            const chunks = [];
+            res.on('data', chunk => chunks.push(chunk));
+            res.on('end', () => {
+              const buffer = Buffer.concat(chunks);
+              const textContent = buffer.toString('utf8');
+              const ok = res.statusCode >= 200 && res.statusCode < 300;
+
+              const responseObj = {
+                ok,
+                status: res.statusCode,
+                statusText: res.statusMessage,
+                headers: {
+                  get(hName) {
+                    return res.headers[hName.toLowerCase()];
+                  }
+                },
+                text: async () => textContent,
+                json: async () => {
+                  try {
+                    return JSON.parse(textContent);
+                  } catch (e) {
+                    throw new Error('JSON parse error: ' + e.message);
+                  }
+                }
+              };
+              resolve(responseObj);
+            });
+          });
+
+          req.on('timeout', () => {
+            req.destroy(new Error('Request timed out: ' + urlStr));
+          });
+
+          req.on('error', err => reject(err));
+          if (body) req.write(body);
+          req.end();
+        } catch (err) {
+          reject(err);
+        }
+      });
+    };
+  }
+
+  const poly = makeFetchPolyfill();
+  globalThis.fetch = poly;
+  global.fetch = poly;
+}
 
 const app = express();
 const PORT = process.env.PORT || 9006;
@@ -2289,7 +2380,11 @@ app.post('/api/settings', (req, res) => {
 
 // API: Check for Updates via GitHub Raw Config
 app.get('/api/system/check_update', async (req, res) => {
-  const currentVersion = "2.7.0";
+  let currentVersion = "2.8.3";
+  try {
+    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+    if (pkg.version) currentVersion = pkg.version;
+  } catch (e) {}
   try {
     const githubRes = await fetch("https://raw.githubusercontent.com/filidam89/chore-quest-addon/main/config.yaml");
     if (githubRes.ok) {

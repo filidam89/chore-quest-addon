@@ -4,6 +4,19 @@ Tutte le novità, miglioramenti e correzioni introdotte nelle versioni di ChoreQ
 
 ---
 
+## [2.8.3] - 2026-09-23
+
+### 🐛 Correzioni Bug
+- **Polyfill Fetch Universale (Node.js & Alpine Container)**: Risolto l'errore `fetch is not defined` che impediva al backend Node.js dell'add-on di comunicare con gli endpoint Home Assistant (`/states` e `/services`). Implementato un polyfill nativo autonomo basato sui moduli standard `http` e `https` di Node.js, che garantisce il funzionamento di `fetch` su qualsiasi versione di Node (Node 14, 16, 18, 20, 22) e qualsiasi base Alpine senza dipendenze npm esterne.
+- **Risoluzione Chiamate API Home Assistant**: Ora tutte le chiamate interne verso `/states`, `/services`, l'aggiornamento dei sensori virtuali di ChoreQuest, l'invio delle notifiche e l'endpoint `/api/debug/ha` completano con successo le richieste HTTP verso il Supervisor `http://supervisor/core/api`.
+- **Supporto Redirect HTTP/HTTPS & Timeout**: Il motore di richiesta gestisce automaticamente i reindirizzamenti (301, 302, 307, 308) e applica protezioni di timeout contro blocchi di rete.
+
+### ⚡ Miglioramenti
+- **Aggiornamento Immagine Base Dockerfile**: Aggiornata l'immagine base predefinita a `ghcr.io/home-assistant/amd64-base:3.20` per fornire runtime Alpine e Node.js moderni.
+- **Rilevamento Versione Dinamico**: L'endpoint `/api/system/check_update` legge ora in tempo reale la versione da `package.json` anziché usare una costante statica.
+
+---
+
 ## [2.8.2] - 2026-09-22
 
 ### ✨ Novità & Multi-Dispositivo per Famiglia e Membri
