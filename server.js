@@ -654,6 +654,32 @@ function getSupervisorToken() {
   return null;
 }
 
+let cachedAddonInfo = null;
+
+async function getAddonSelfInfo() {
+  if (cachedAddonInfo && cachedAddonInfo.slug) return cachedAddonInfo;
+  const token = getSupervisorToken();
+  if (!token) return null;
+  try {
+    const res = await fetch("http://supervisor/addons/self/info", {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'X-Supervisor-Token': token
+      }
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json && json.data) {
+        cachedAddonInfo = json.data;
+        return cachedAddonInfo;
+      }
+    }
+  } catch (e) {}
+  return cachedAddonInfo;
+}
+
+getAddonSelfInfo().catch(() => {});
+
 function getHomeAssistantBaseUrl() {
   if (appData?.settings?.notifications?.ha_url && appData.settings.notifications.ha_url.trim()) {
     let u = appData.settings.notifications.ha_url.trim().replace(/\/+$/, '');
@@ -700,31 +726,46 @@ function getFamilyNotificationServices() {
   return ["notify.notify"];
 }
 
+// Routing Notifiche Membro: isola le notifiche personali senza disturbare il resto della famiglia
 function getMemberNotificationServices(memberId) {
   const notifSettings = appData?.settings?.notifications || {};
   const mCfg = notifSettings.members_config?.[memberId] || {};
 
-  if (mCfg.use_family_defaults === true) {
+  const personalList = [];
+  if (Array.isArray(mCfg.services) && mCfg.services.length > 0) {
+    mCfg.services
+      .filter(s => s && s !== 'none' && s !== 'disabled')
+      .forEach(s => personalList.push(normalizeNotificationServiceId(s)));
+  } else if (mCfg.service && mCfg.service !== 'none' && mCfg.service !== 'disabled') {
+    personalList.push(normalizeNotificationServiceId(mCfg.service));
+  } else {
+    const legacySrv = notifSettings.member_services?.[memberId];
+    if (legacySrv && legacySrv !== 'none' && legacySrv !== 'disabled') {
+      personalList.push(normalizeNotificationServiceId(legacySrv));
+    }
+  }
+
+  const uniquePersonal = Array.from(new Set(personalList));
+
+  // 1. Se il membro ha dispositivi personali assegnati:
+  if (uniquePersonal.length > 0) {
+    // Inoltra anche ai dispositivi di famiglia SOLO se include_family_devices è esplicitamente abilitato
+    if (mCfg.include_family_devices === true) {
+      const famServices = getFamilyNotificationServices();
+      return Array.from(new Set([...uniquePersonal, ...famServices]));
+    }
+    // Altrimenti ritorna SOLO i suoi dispositivi personali privati
+    return uniquePersonal;
+  }
+
+  // 2. Se il membro NON ha dispositivi personali configurati:
+  // Usa i dispositivi di famiglia solo se ha richiesto esplicitamente l'inoltro (es. bambini senza smartphone o tablet comune)
+  if (mCfg.include_family_devices === true || mCfg.use_family_defaults === true) {
     return getFamilyNotificationServices();
   }
 
-  if (Array.isArray(mCfg.services) && mCfg.services.length > 0) {
-    const list = mCfg.services
-      .filter(s => s && s !== 'none' && s !== 'disabled')
-      .map(normalizeNotificationServiceId);
-    if (list.length > 0) return Array.from(new Set(list));
-  }
-
-  if (mCfg.service && mCfg.service !== 'none' && mCfg.service !== 'disabled') {
-    return [normalizeNotificationServiceId(mCfg.service)];
-  }
-
-  const legacySrv = notifSettings.member_services?.[memberId];
-  if (legacySrv && legacySrv !== 'none' && legacySrv !== 'disabled') {
-    return [normalizeNotificationServiceId(legacySrv)];
-  }
-
-  return getFamilyNotificationServices();
+  // 3. Se non ha dispositivi personali e non ha chiesto l'inoltro, non inviare (evita di disturbare tutta la famiglia)
+  return [];
 }
 
 // Comprehensive Home Assistant Sensors Synchronization via Supervisor API
@@ -975,7 +1016,7 @@ async function sendSingleHomeAssistantNotification({ service, title, message, ch
   };
 
   let channelName = channels.general || "ChoreQuest_General";
-  let importance = "default";
+  let importance = "high";
   let priority = "high";
   let interruptionLevel = "active";
 
@@ -986,14 +1027,29 @@ async function sendSingleHomeAssistantNotification({ service, title, message, ch
     interruptionLevel = "time-sensitive";
   } else if (channelType === 'reminders') {
     channelName = channels.reminders || "ChoreQuest_Reminders";
-    importance = "default";
-    priority = "default";
+    importance = "high";
+    priority = "high";
+    interruptionLevel = "active";
+  } else {
+    channelName = channels.general || "ChoreQuest_General";
+    importance = "high";
+    priority = "high";
     interruptionLevel = "active";
   }
 
+  // Risoluzione dinamica URL di destinazione al click della notifica (evita 404)
+  let clickTarget = (notifSettings.click_url && notifSettings.click_url.trim()) ? notifSettings.click_url.trim() : "auto";
+  if (clickTarget === 'auto' || !clickTarget) {
+    if (cachedAddonInfo && cachedAddonInfo.slug) {
+      clickTarget = `/${cachedAddonInfo.slug}`;
+    } else {
+      clickTarget = "/lovelace";
+    }
+  }
+
   if (!supervisorToken) {
-    console.log(`[Notification MOCK] Target: ${targetService} | Title: "${title}" | Message: "${message}" | Channel: ${channelName}`);
-    return { success: true, mocked: true, target: targetService };
+    console.log(`[Notification MOCK] Target: ${targetService} | Title: "${title}" | Message: "${message}" | Channel: ${channelName} | Click: ${clickTarget}`);
+    return { success: true, mocked: true, target: targetService, click_target: clickTarget };
   }
 
   try {
@@ -1016,7 +1072,7 @@ async function sendSingleHomeAssistantNotification({ service, title, message, ch
       });
       if (response.ok) {
         console.log(`[Notification SENT] Persistent Notification creata con successo`);
-        return { success: true, target: srvName };
+        return { success: true, target: srvName, click_target: clickTarget };
       }
       const errText = await response.text();
       console.error(`[Notification ERROR] Persistent Notification fallita (${response.status}): ${errText}`);
@@ -1030,14 +1086,14 @@ async function sendSingleHomeAssistantNotification({ service, title, message, ch
         channel: channelName,
         importance: importance,
         priority: priority,
-        ttl: 0,
+        ttl: 86400, // 24 ore: evita lo scarto istantaneo di FCM su dispositivi in Doze o standby
         push: {
           "interruption-level": interruptionLevel
         },
-        tag: extraData.tag || `chorequest_${channelType}`,
+        tag: extraData.tag || `chorequest_${channelType}_${Date.now()}`,
         group: "ChoreQuest",
-        url: "/chorequest",
-        clickAction: "/chorequest",
+        url: clickTarget,
+        clickAction: clickTarget,
         ...extraData
       }
     };
@@ -1584,6 +1640,15 @@ app.get('/api/debug/ha', async (req, res) => {
     }
   }
 
+  const addonInfo = await getAddonSelfInfo();
+  debug.addon_slug = addonInfo?.slug || null;
+  debug.ingress_url = addonInfo?.ingress_url || null;
+  debug.ingress_panel = addonInfo?.ingress_panel ?? null;
+  const cfgClickUrl = appData?.settings?.notifications?.click_url;
+  debug.resolved_click_target = (cfgClickUrl && cfgClickUrl !== 'auto')
+    ? cfgClickUrl
+    : (addonInfo?.slug ? `/${addonInfo.slug}` : "/lovelace");
+
   res.json(debug);
 });
 
@@ -1625,6 +1690,7 @@ app.post('/api/notifications/settings', (req, res) => {
   appData.settings.notifications = {
     ...existing,
     ...newSettings,
+    click_url: (newSettings.click_url && newSettings.click_url.trim()) ? newSettings.click_url.trim() : (existing.click_url || "auto"),
     channels: {
       ...existing.channels,
       ...(newSettings.channels || {})
@@ -1647,7 +1713,7 @@ app.post('/api/notifications/settings', (req, res) => {
   res.json({ status: "saved", notifications: appData.settings.notifications });
 });
 
-// API: Invio Notifica di Test Immediata (Supporta: family, member, o singolo servizio)
+// API: Invio Notifica di Test Immediata (Supporta: family, member, o singolo servizio, e 12 eventi)
 app.post('/api/notifications/test', async (req, res) => {
   const { service, target_type, member_id, channel_type, test_type, member_name, title, message } = req.body;
 
@@ -1665,24 +1731,60 @@ app.post('/api/notifications/test', async (req, res) => {
   let finalTitle = title;
   let finalMessage = message;
   let finalChannel = channel_type || "urgent";
+  const mName = member_name || Object.values(appData.members || {})[0]?.name || "Filippo";
 
   if (test_type === 'evening_recap') {
-    finalTitle = finalTitle || `🌙 ChoreQuest: Riepilogo Serale (Test)`;
-    const mName = member_name || Object.values(appData.members || {})[0]?.name || "Filippo";
+    finalTitle = finalTitle || `🌙 ChoreQuest: Riepilogo Serale (${mName})`;
     finalMessage = finalMessage || `Ciao ${mName}!\n✨ Oggi hai completato 4 attività guadagnando +45 pt!\n🏆 Settimana: 120 pt (🥇 1° posto in classifica)\n🎉 Tutto in ordine, nessuna faccenda in sospeso!`;
     finalChannel = "reminders";
   } else if (test_type === 'morning_reminder') {
-    finalTitle = finalTitle || `🌅 ChoreQuest: Buongiorno (Test)`;
-    const mName = member_name || Object.values(appData.members || {})[0]?.name || "Filippo";
+    finalTitle = finalTitle || `🌅 ChoreQuest: Buongiorno ${mName}!`;
     finalMessage = finalMessage || `Ciao ${mName}, ecco le tue attività in programma per oggi:\n• Lavatrice (Oggi, +5pt)\n• Cambio lenzuola (Oggi, +25pt)`;
     finalChannel = "reminders";
-  } else if (test_type === 'urgent') {
-    finalTitle = finalTitle || `🚨 ChoreQuest: 2 Faccende Scadute! (Test)`;
-    finalMessage = finalMessage || `Attenzione: ci sono 2 attività scadute da completare:\n• Pulizia profonda bagno (scaduta da 1gg, +35pt)\n• Aspirapolvere (scaduta da 2gg, +30pt)`;
+  } else if (test_type === 'urgent_alerts' || test_type === 'urgent') {
+    finalTitle = finalTitle || `🚨 ChoreQuest: 2 Faccende Scadute!`;
+    finalMessage = finalMessage || `Attenzione ${mName}: ci sono 2 attività scadute in attesa:\n• Pulizia profonda bagno (scaduta da 1gg, +35pt)\n• Aspirapolvere (scaduta da 2gg, +30pt)`;
     finalChannel = "urgent";
+  } else if (test_type === 'task_due_soon') {
+    finalTitle = finalTitle || `⏰ ChoreQuest: Scadenza Imminente!`;
+    finalMessage = finalMessage || `Promemoria per ${mName}: "Aspirapolvere salotto" scade tra 2 ore (+15 pt)! Completala per mantenere il bonus puntualità. ⏳`;
+    finalChannel = "reminders";
+  } else if (test_type === 'task_assigned') {
+    finalTitle = finalTitle || `📋 ChoreQuest: Nuovo Compito Assegnato`;
+    finalMessage = finalMessage || `Ciao ${mName}! Ti è stato assegnato un nuovo compito:\n🧹 "Riordinare scrivania e libri"\nValore: +20 pt • Scadenza: Domani sera`;
+    finalChannel = "general";
+  } else if (test_type === 'family_task_created') {
+    finalTitle = finalTitle || `👥 ChoreQuest: Nuova Attività Famiglia!`;
+    finalMessage = finalMessage || `Nuova attività disponibile per tutti:\n🛒 "Spesa settimanale al supermercato" (+50 pt)!\nChi la completa per primo conquista i punti!`;
+    finalChannel = "general";
+  } else if (test_type === 'task_approved') {
+    finalTitle = finalTitle || `🌟 ChoreQuest: Task Approvato (+25 pt)!`;
+    finalMessage = finalMessage || `Bravissimo ${mName}! 🎉 Il compito "Svuotare lavastoviglie" è stato approvato da Filippo. Punti accreditati sul tuo profilo!`;
+    finalChannel = "general";
+  } else if (test_type === 'task_rejected') {
+    finalTitle = finalTitle || `❌ ChoreQuest: Task da Revisionare`;
+    finalMessage = finalMessage || `Attenzione ${mName}: il compito "Spolverare mensole" richiede un'ulteriore passata prima della convalida. 🧽`;
+    finalChannel = "urgent";
+  } else if (test_type === 'reward_claimed') {
+    finalTitle = finalTitle || `🎁 ChoreQuest: Premio Riscattato!`;
+    finalMessage = finalMessage || `Fantastico ${mName}! 🍿 Hai riscattato il premio "Serata Cinema & Popcorn" scalando 150 pt!`;
+    finalChannel = "general";
+  } else if (test_type === 'weekly_winner') {
+    finalTitle = finalTitle || `🏆 ChoreQuest: Campione della Settimana!`;
+    finalMessage = finalMessage || `Squillino le trombe! 🎺 La settimana si è conclusa e ${mName} vince la coppa d'oro con ben 245 pt! Congratulazioni a tutta la famiglia!`;
+    finalChannel = "general";
+  } else if (test_type === 'leaderboard_overtake') {
+    finalTitle = finalTitle || `🥇 ChoreQuest: Cambio in Classifica!`;
+    finalMessage = finalMessage || `Attenzione ${mName}! ⚡ Giulia ti ha appena superato al 1° posto per soli 5 punti! Completa un compito per riprendere la testa! 🚀`;
+    finalChannel = "general";
+  } else if (test_type === 'level_up') {
+    finalTitle = finalTitle || `🎖️ ChoreQuest: Level Up Sbloccato!`;
+    finalMessage = finalMessage || `Livello 5 Raggiunto! 🚀 ${mName} ha sbloccato il nuovo titolo "Maestro della Casa" e il badge d'oro!`;
+    finalChannel = "general";
   } else {
     finalTitle = finalTitle || "ChoreQuest: Test Notifiche";
-    finalMessage = finalMessage || "Questo è un messaggio di test da ChoreQuest! Canale configurato correttamente. 🏆";
+    finalMessage = finalMessage || "Questo è un messaggio di test da ChoreQuest! Canale configurato correttamente con priorità alta. 🏆";
+    finalChannel = channel_type || "urgent";
   }
 
   const result = await sendHomeAssistantNotification({

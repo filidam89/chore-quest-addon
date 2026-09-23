@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.8.4</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.8.5</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -449,6 +449,34 @@
         </div>
       </div>
 
+      <!-- CARD 4.5: AZIONE AL CLICK DELLA NOTIFICA (DEEP LINK SENZA 404) -->
+      <div class="bg-slate-50 dark:bg-slate-800/70 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+        <div class="font-extrabold text-xs uppercase text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+          <i class="mdi mdi-cursor-default-click text-base text-indigo-600"></i> <span>Azione al Click della Notifica (Destinazione Deep Link)</span>
+        </div>
+        <p class="text-xs text-slate-600 dark:text-slate-300">
+          Scegli dove indirizzare l'utente quando tocca la notifica sullo smartphone o smartwatch (risolve gli errori 404):
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Destinazione Rapida:</label>
+            <select id="notif-click-target-preset" onchange="onClickPresetChange(this.value)" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300">
+              <option value="auto">✨ Rilevamento Automatico (Pannello Ingress Add-on)</option>
+              <option value="direct_webui">🌐 Web UI Diretta ChoreQuest (Porta 9006)</option>
+              <option value="ha_lovelace">📊 Dashboard Lovelace Home Assistant (/lovelace)</option>
+              <option value="ha_home">🏠 Home Page Home Assistant (/)</option>
+              <option value="custom">✏️ Percorso / URL Personalizzato</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Percorso / URL Effettivo Inviato:</label>
+            <input id="notif-click-url" type="text" placeholder="auto" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-mono">
+            <span class="text-[10px] text-slate-400">Lascia "auto" per aprire direttamente il pannello ChoreQuest in Home Assistant</span>
+          </div>
+        </div>
+      </div>
+
       <!-- CARD 5: TEST NOTIFICA IN TEMPO REALE -->
       <div class="bg-indigo-50/70 dark:bg-indigo-950/40 p-5 rounded-2xl border border-indigo-100 dark:border-indigo-900/50 space-y-4">
         <div class="font-extrabold text-xs uppercase text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
@@ -477,12 +505,21 @@
             <select id="notif-test-service" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></select>
           </div>
           <div class="sm:col-span-4" id="notif-test-type-box">
-            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Tipo di Notifica:</label>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Tipo di Notifica (12 Eventi):</label>
             <select id="notif-test-type" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
               <option value="evening_recap">🌙 Riepilogo Serale (Punti + Classifica)</option>
-              <option value="morning_reminder">🌅 Promemoria Mattutino</option>
-              <option value="urgent">🚨 Avviso Urgente (Attività Scadute)</option>
-              <option value="generic">📋 Test Standard Semplice</option>
+              <option value="morning_reminder">🌅 Promemoria Mattutino (Attività di Oggi)</option>
+              <option value="urgent_alerts">🚨 Avviso Urgente (Faccende Scadute)</option>
+              <option value="task_due_soon">⏰ Preavviso Scadenza Imminente (2 ore prima)</option>
+              <option value="task_assigned">📋 Nuovo Compito Assegnato a Me</option>
+              <option value="family_task_created">👥 Nuova Attività per Tutta la Famiglia</option>
+              <option value="task_approved">🌟 Task Approvato & Punti Accreditati (+25pt)</option>
+              <option value="task_rejected">❌ Task Contestato / Da Rifare</option>
+              <option value="reward_claimed">🎁 Premio Riscattato dal Catalogo</option>
+              <option value="weekly_winner">🏆 Vincitore della Settimana (Podio Oro)</option>
+              <option value="leaderboard_overtake">🥇 Sorpasso Dinamico in Classifica</option>
+              <option value="level_up">🎖️ Level Up / Nuovo Badge Sbloccato</option>
+              <option value="generic">💬 Messaggio di Test Standard</option>
             </select>
           </div>
           <div class="sm:col-span-2 flex items-end">
@@ -3414,15 +3451,29 @@
       });
     }
 
-    function toggleMemberFamilyDefault(memberId) {
-      const chk = document.querySelector(`.member-use-family-chk[data-member-id="${memberId}"]`);
-      const box = document.getElementById(`member-devices-box-${memberId}`);
-      if (!chk || !box) return;
-      if (chk.checked) {
-        box.classList.add('hidden');
-      } else {
-        box.classList.remove('hidden');
+    function onClickPresetChange(val) {
+      const urlInput = document.getElementById('notif-click-url');
+      if (!urlInput) return;
+      if (val === 'auto') {
+        urlInput.value = 'auto';
+      } else if (val === 'direct_webui') {
+        urlInput.value = window.location.origin || 'http://[HOST]:9006';
+      } else if (val === 'ha_lovelace') {
+        urlInput.value = '/lovelace';
+      } else if (val === 'ha_home') {
+        urlInput.value = '/';
+      } else if (val === 'custom') {
+        if (urlInput.value === 'auto' || urlInput.value === '/' || urlInput.value === '/lovelace') {
+          urlInput.value = '';
+        }
+        urlInput.focus();
       }
+    }
+
+    function selectAllMemberEvents(memberId, selectAll) {
+      document.querySelectorAll(`input[data-member-pref="${memberId}"]`).forEach(chk => {
+        chk.checked = selectAll;
+      });
     }
 
     function onTestTargetModeChange() {
@@ -3435,6 +3486,19 @@
 
     function renderNotificationSettings(cfg = {}) {
       const notif = cfg || appData?.settings?.notifications || {};
+
+      if (document.getElementById('notif-click-url')) {
+        const cUrl = notif.click_url || "auto";
+        document.getElementById('notif-click-url').value = cUrl;
+        const preset = document.getElementById('notif-click-target-preset');
+        if (preset) {
+          if (!cUrl || cUrl === 'auto') preset.value = 'auto';
+          else if (cUrl === '/lovelace') preset.value = 'ha_lovelace';
+          else if (cUrl === '/') preset.value = 'ha_home';
+          else if (cUrl.includes(':9006')) preset.value = 'direct_webui';
+          else preset.value = 'custom';
+        }
+      }
 
       if (document.getElementById('notif-master-enable')) {
         document.getElementById('notif-master-enable').checked = notif.enabled !== false;
@@ -3532,7 +3596,7 @@
       }
       onTestTargetModeChange();
 
-      // 3. Populate Per-Member Notification Preferences (Multi-Device per Member)
+      // 3. Populate Per-Member Notification Preferences (Multi-Device per Member & 12 Events)
       const memberMapContainer = document.getElementById('notif-members-mapping-list');
       if (memberMapContainer) {
         memberMapContainer.innerHTML = '';
@@ -3548,9 +3612,17 @@
             const morningOn = mCfg.morning_reminder !== false;
             const eveningOn = mCfg.evening_recap !== false;
             const urgentOn = mCfg.urgent_alerts !== false;
+            const dueSoonOn = mCfg.task_due_soon !== false;
             const taskOn = mCfg.task_assigned !== false;
+            const familyTaskOn = mCfg.family_task_created !== false;
+            const taskApprovedOn = mCfg.task_approved !== false;
+            const taskRejectedOn = mCfg.task_rejected !== false;
+            const rewardOn = mCfg.reward_claimed !== false;
+            const winnerOn = mCfg.weekly_winner !== false;
+            const overtakeOn = mCfg.leaderboard_overtake !== false;
+            const levelUpOn = mCfg.level_up !== false;
 
-            // Determine active services for this member
+            // Determine active personal services for this member
             let currentMemberServices = [];
             if (Array.isArray(mCfg.services)) {
               currentMemberServices = mCfg.services;
@@ -3560,9 +3632,9 @@
               currentMemberServices = [memberServices[m.id]];
             }
 
-            const useFamilyDefaults = (mCfg.use_family_defaults === true) || (currentMemberServices.length === 0 && mCfg.service !== 'none');
+            const includeFamilyOn = (mCfg.include_family_devices === true) || (mCfg.use_family_defaults === true);
 
-            // Build checkboxes for member devices
+            // Build checkboxes for member personal devices
             let memberDeviceCheckboxes = '';
             cachedNotifyServices.forEach(srv => {
               const sId = (typeof srv === 'object') ? srv.id : srv;
@@ -3587,22 +3659,27 @@
                   <div class="flex items-center gap-2.5 font-extrabold text-sm text-slate-900 dark:text-white">
                     <span class="text-2xl">${m.icon || '👤'}</span>
                     <div>
-                      <div>${m.name}</div>
-                      <div class="text-[10px] text-slate-400 font-semibold">Configurazione dispositivi personali & notifiche</div>
+                      <div class="flex items-center gap-2">
+                        <span>${m.name}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50">Profilo Personale</span>
+                      </div>
+                      <div class="text-[10px] text-slate-400 font-medium">Le notifiche personali arrivano solo sui suoi dispositivi privati</div>
                     </div>
                   </div>
                   <div class="flex items-center gap-2">
-                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
-                      <input type="checkbox" data-member-id="${m.id}" class="member-use-family-chk w-4 h-4 text-indigo-600 rounded" ${useFamilyDefaults ? 'checked' : ''} onchange="toggleMemberFamilyDefault('${m.id}')">
-                      <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Usa predefiniti di famiglia</span>
+                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 transition" title="Consigliato per bambini senza smartphone o per tablet comuni">
+                      <input type="checkbox" data-member-id="${m.id}" class="member-include-family-chk w-4 h-4 text-indigo-600 rounded" ${includeFamilyOn ? 'checked' : ''}>
+                      <span class="text-xs font-bold text-slate-700 dark:text-slate-300">👥 Inoltra anche a Famiglia</span>
                     </label>
                   </div>
                 </div>
 
                 <!-- Lista Dispositivi Personali Membro -->
-                <div id="member-devices-box-${m.id}" class="${useFamilyDefaults ? 'hidden' : 'space-y-1.5'}">
+                <div id="member-devices-box-${m.id}" class="space-y-1.5">
                   <div class="flex items-center justify-between">
-                    <div class="text-[10px] font-extrabold uppercase text-slate-400">Dispositivi di ${m.name}:</div>
+                    <div class="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                      <i class="mdi mdi-cellphone-lock text-indigo-600"></i> <span>Dispositivi Personali di ${m.name} (Privati):</span>
+                    </div>
                     <div class="flex items-center gap-2">
                       <button type="button" onclick="selectAllDevices('member', true, '${m.id}')" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">Tutti</button>
                       <span class="text-slate-300 dark:text-slate-600 text-xs">|</span>
@@ -3611,31 +3688,121 @@
                   </div>
                   <div class="relative">
                     <i class="mdi mdi-magnify absolute left-2.5 top-2 text-slate-400 text-xs"></i>
-                    <input type="text" placeholder="🔍 Cerca per ${m.name}..." class="w-full pl-8 pr-2.5 py-1 text-[11px] bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="filterDeviceList('member', this.value, '${m.id}')">
+                    <input type="text" placeholder="🔍 Cerca dispositivo per ${m.name}..." class="w-full pl-8 pr-2.5 py-1 text-[11px] bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="filterDeviceList('member', this.value, '${m.id}')">
                   </div>
-                  <div id="member-devices-container-${m.id}" class="max-h-40 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1">
+                  <div id="member-devices-container-${m.id}" class="max-h-36 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1">
                     ${memberDeviceCheckboxes}
                   </div>
                 </div>
 
-                <div class="space-y-1.5">
-                  <div class="text-[10px] font-extrabold uppercase text-slate-400">Quali notifiche inviare a questo membro:</div>
-                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer">
+                <!-- Matrice di 12 Eventi Capillari -->
+                <div class="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <div class="flex items-center justify-between">
+                    <div class="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                      <i class="mdi mdi-bell-check text-indigo-600"></i> <span>Eventi da notificare a ${m.name} (Selezione Capillare):</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button type="button" onclick="selectAllMemberEvents('${m.id}', true)" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">Attiva Tutti</button>
+                      <span class="text-slate-300 dark:text-slate-600 text-xs">|</span>
+                      <button type="button" onclick="selectAllMemberEvents('${m.id}', false)" class="text-[10px] font-bold text-slate-400 hover:underline">Disattiva Tutti</button>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
                       <input type="checkbox" data-member-pref="${m.id}" data-type="morning_reminder" ${morningOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
-                      <span class="text-xs font-bold text-slate-700 dark:text-slate-300">🌅 Mattina</span>
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">🌅 Promemoria Mattina</div>
+                        <div class="text-[10px] text-slate-400">Attività e routine in scadenza oggi</div>
+                      </div>
                     </label>
-                    <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer">
+
+                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
                       <input type="checkbox" data-member-pref="${m.id}" data-type="evening_recap" ${eveningOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
-                      <span class="text-xs font-bold text-slate-700 dark:text-slate-300">🌙 Sera (Punti)</span>
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">🌙 Riepilogo Serale</div>
+                        <div class="text-[10px] text-slate-400">Punti fatti oggi & medaglia classifica</div>
+                      </div>
                     </label>
-                    <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer">
+
+                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
                       <input type="checkbox" data-member-pref="${m.id}" data-type="urgent_alerts" ${urgentOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
-                      <span class="text-xs font-bold text-slate-700 dark:text-slate-300">🚨 Urgenze</span>
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">🚨 Avvisi Urgenze</div>
+                        <div class="text-[10px] text-slate-400">Faccende e routine scadute</div>
+                      </div>
                     </label>
-                    <label class="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer">
+
+                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
+                      <input type="checkbox" data-member-pref="${m.id}" data-type="task_due_soon" ${dueSoonOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">⏰ Preavviso Scadenza</div>
+                        <div class="text-[10px] text-slate-400">Avviso poche ore prima del termine</div>
+                      </div>
+                    </label>
+
+                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
                       <input type="checkbox" data-member-pref="${m.id}" data-type="task_assigned" ${taskOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
-                      <span class="text-xs font-bold text-slate-700 dark:text-slate-300">📋 Nuovi Task</span>
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">📋 Task Assegnato a Me</div>
+                        <div class="text-[10px] text-slate-400">Compiti singoli affidati a te</div>
+                      </div>
+                    </label>
+
+                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
+                      <input type="checkbox" data-member-pref="${m.id}" data-type="family_task_created" ${familyTaskOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">👥 Nuovi Task Famiglia</div>
+                        <div class="text-[10px] text-slate-400">Attività aperte a tutta la casa</div>
+                      </div>
+                    </label>
+
+                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
+                      <input type="checkbox" data-member-pref="${m.id}" data-type="task_approved" ${taskApprovedOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">🌟 Task Approvato & Punti</div>
+                        <div class="text-[10px] text-slate-400">Convalida compito e accredito punti</div>
+                      </div>
+                    </label>
+
+                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
+                      <input type="checkbox" data-member-pref="${m.id}" data-type="task_rejected" ${taskRejectedOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">❌ Task Da Rifare</div>
+                        <div class="text-[10px] text-slate-400">Compito respinto da un genitore</div>
+                      </div>
+                    </label>
+
+                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
+                      <input type="checkbox" data-member-pref="${m.id}" data-type="reward_claimed" ${rewardOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">🎁 Premio Riscattato</div>
+                        <div class="text-[10px] text-slate-400">Riscatto premi con i punti accumulati</div>
+                      </div>
+                    </label>
+
+                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
+                      <input type="checkbox" data-member-pref="${m.id}" data-type="weekly_winner" ${winnerOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">🏆 Vincitore Settimana</div>
+                        <div class="text-[10px] text-slate-400">Proclamazione campione del podio</div>
+                      </div>
+                    </label>
+
+                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
+                      <input type="checkbox" data-member-pref="${m.id}" data-type="leaderboard_overtake" ${overtakeOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">🥇 Sorpasso in Classifica</div>
+                        <div class="text-[10px] text-slate-400">Quando qualcuno ti supera sul podio</div>
+                      </div>
+                    </label>
+
+                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
+                      <input type="checkbox" data-member-pref="${m.id}" data-type="level_up" ${levelUpOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                      <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">🎖️ Nuovo Badge / Livello</div>
+                        <div class="text-[10px] text-slate-400">Traguardi gamification sbloccati</div>
+                      </div>
                     </label>
                   </div>
                 </div>
@@ -3656,6 +3823,7 @@
       const notify_on_winner = document.getElementById('notif-winner-toggle')?.checked ?? true;
       const ha_url = document.getElementById('notif-ha-custom-url')?.value.trim() || "";
       const ha_token = document.getElementById('notif-ha-custom-token')?.value.trim() || "";
+      const click_url = document.getElementById('notif-click-url')?.value.trim() || "auto";
 
       // Collect Family default services
       const default_services = [];
@@ -3676,29 +3844,44 @@
 
       members.forEach(m => {
         const mId = m.id;
-        const useFamily = document.querySelector(`.member-use-family-chk[data-member-id="${mId}"]`)?.checked ?? false;
+        const includeFamily = document.querySelector(`.member-include-family-chk[data-member-id="${mId}"]`)?.checked ?? false;
         
         let mServices = [];
-        if (!useFamily) {
-          document.querySelectorAll(`.member-device-chk[data-member-id="${mId}"]:checked`).forEach(c => {
-            mServices.push(c.value);
-          });
-        }
+        document.querySelectorAll(`.member-device-chk[data-member-id="${mId}"]:checked`).forEach(c => {
+          mServices.push(c.value);
+        });
 
         const morningChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="morning_reminder"]`)?.checked ?? true;
         const eveningChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="evening_recap"]`)?.checked ?? true;
         const urgentChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="urgent_alerts"]`)?.checked ?? true;
+        const dueSoonChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="task_due_soon"]`)?.checked ?? true;
         const taskChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="task_assigned"]`)?.checked ?? true;
+        const familyTaskChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="family_task_created"]`)?.checked ?? true;
+        const taskApprovedChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="task_approved"]`)?.checked ?? true;
+        const taskRejectedChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="task_rejected"]`)?.checked ?? true;
+        const rewardChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="reward_claimed"]`)?.checked ?? true;
+        const winnerChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="weekly_winner"]`)?.checked ?? true;
+        const overtakeChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="leaderboard_overtake"]`)?.checked ?? true;
+        const levelUpChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="level_up"]`)?.checked ?? true;
 
         members_config[mId] = {
           enabled: true,
-          use_family_defaults: useFamily,
+          include_family_devices: includeFamily,
+          use_family_defaults: includeFamily, // retrocompatibilità
           services: mServices,
-          service: mServices[0] || (useFamily ? "" : "none"),
+          service: mServices[0] || (includeFamily ? "" : "none"),
           morning_reminder: morningChk,
           evening_recap: eveningChk,
           urgent_alerts: urgentChk,
-          task_assigned: taskChk
+          task_due_soon: dueSoonChk,
+          task_assigned: taskChk,
+          family_task_created: familyTaskChk,
+          task_approved: taskApprovedChk,
+          task_rejected: taskRejectedChk,
+          reward_claimed: rewardChk,
+          weekly_winner: winnerChk,
+          leaderboard_overtake: overtakeChk,
+          level_up: levelUpChk
         };
         member_services[mId] = mServices[0] || "";
       });
@@ -3711,6 +3894,7 @@
         evening_recap_time,
         default_service,
         default_services: (default_services.length > 0) ? default_services : ["notify.notify"],
+        click_url,
         ha_url,
         ha_token,
         notify_on_task_assigned,
@@ -3787,7 +3971,7 @@
         const data = await res.json();
         if (data.success) {
           const count = data.tested_services ? data.tested_services.length : (data.targets ? data.targets.length : 1);
-          showToast(`Notifica di test inviata con successo a ${count} dispositivi!`, "🚀");
+          showToast(`Test inviato con successo a ${count} dispositivi con priorità ALTA!`, "🚀");
         } else {
           showToast(`Errore invio: ${data.error || data.reason || 'Nessuna risposta'}`, "❌");
         }

@@ -4,6 +4,47 @@ Tutte le novità, miglioramenti e correzioni introdotte nelle versioni di ChoreQ
 
 ---
 
+## [2.8.5] - 2026-09-23
+
+### ✨ Novità
+- **Matrice Capillare a 12 Eventi di Notifica**:
+  - Aggiunti 12 eventi granulari configurabili sia per singolo membro che per tutta la famiglia con tasti rapidi "Attiva Tutti" / "Disattiva Tutti":
+    1. 🌅 **Promemoria Mattutino**: Routine e faccende in scadenza oggi.
+    2. 🌙 **Riepilogo Serale**: Punti guadagnati oggi, posizione e medaglia classifica.
+    3. 🚨 **Avvisi Urgenze**: Faccende e routine scadute.
+    4. ⏰ **Preavviso Scadenze**: Avviso preventivo 2 ore prima della scadenza.
+    5. 📋 **Task Assegnato a Me**: Compiti singoli affidati a te.
+    6. 👥 **Nuovi Task Famiglia**: Attività aperte e disponibili per tutti.
+    7. 🌟 **Task Approvato & Punti**: Convalida compito e accredito punti.
+    8. ❌ **Task da Rifare**: Compito completato respinto per revisione.
+    9. 🎁 **Premio Riscattato**: Riscatto premi dal catalogo.
+    10. 🏆 **Vincitore della Settimana**: Proclamazione campione settimanale del podio.
+    11. 🥇 **Sorpasso in Classifica**: Avviso quando vieni superato o superi un membro.
+    12. 🎖️ **Level Up & Nuovi Badge**: Sblocco traguardi gamification.
+- **Azione al Click della Notifica (Deep Link Senza Errori 404)**:
+  - Nuova scheda impostazioni per configurare dove indirizzare lo smartphone o lo smartwatch quando si tocca la notifica:
+    - *Rilevamento Automatico*: Apre direttamente la schermata di ChoreQuest all'interno di Home Assistant.
+    - *Web UI Diretta*: Apre l'interfaccia autonoma sulla porta 9006.
+    - *Dashboard Lovelace Home Assistant* (`/lovelace`).
+    - *Home Page Home Assistant* (`/`).
+    - *URL o Percorso Personalizzato*.
+- **Pannello Test Notifiche Avanzato**:
+  - Test rapido per tutti i 12 eventi con messaggi realistici, icone dedicate e riscontro immediato della priorità ALTA.
+
+### ⚡ Miglioramenti
+- **Separazione Netta Notifiche Personali vs Famiglia ("Predefiniti Famiglia")**:
+  - Le notifiche personali (promemoria mattutino, riepilogo serale, compiti assegnati a un membro) vengono recapitate **esclusivamente sui dispositivi privati selezionati** per quel membro, senza disturbare gli altri membri della famiglia.
+  - L'opzione *"👥 Inoltra anche a Famiglia"* è ora un'impostazione esplicita e facoltativa, pensata appositamente per chi non ha uno smartphone personale (es. bambini piccoli) o per tablet comuni a muro.
+
+### 🐛 Correzioni Bug
+- **Risoluzione Mancato Arrivo Promemoria Mattutino e Riepilogo Serale (FCM Push Priority & TTL)**:
+  - Corretto il parametro FCM: impostato `priority: "high"` e `importance: "high"` su tutte le notifiche.
+  - Rimosso `ttl: 0` (che faceva scartare istantaneamente la notifica da Google FCM se il telefono era in standby/Doze mode) e impostato un buffer di 24 ore (`ttl: 86400`).
+- **Eliminazione Errore 404 al Click della Notifica**:
+  - Rimosso il percorso fisso non valido `/chorequest` e implementato il rilevamento automatico del vero slug dell'add-on da `http://supervisor/addons/self/info`.
+
+---
+
 ## [2.8.4] - 2026-09-23
 
 ### ✨ Novità

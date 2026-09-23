@@ -1,14 +1,29 @@
-# 🏆 ChoreQuest (v2.8.4)
+# 🏆 ChoreQuest (v2.8.5)
 
 > **Add-on Ufficiale Home Assistant per la Gamification e Gestione delle Faccende di Casa e Famiglia**
 
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)
-![Version](https://img.shields.io/badge/Version-2.8.4-emerald.svg)
+![Version](https://img.shields.io/badge/Version-2.8.5-emerald.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
-## ✨ Novità & Funzionalità Chiave v2.8.4
+## ✨ Novità & Funzionalità Chiave v2.8.5
+
+- 🔔 **Matrice Capillare a 12 Eventi di Notifica:**
+  - Configurazione granulare per ciascun membro della famiglia e per tutta la casa:
+    - 🌅 *Promemoria Mattutino*, 🌙 *Riepilogo Serale*, 🚨 *Avvisi Urgenze*, ⏰ *Preavviso Scadenze Imminenti (2h)*.
+    - 📋 *Task Assegnati a Me*, 👥 *Nuovi Task Famiglia*, 🌟 *Task Approvati & Punti Ricevuti*, ❌ *Task da Rifare*.
+    - 🎁 *Premi Riscattati*, 🏆 *Vincitore Settimana*, 🥇 *Sorpasso in Classifica*, 🎖️ *Nuovi Badge & Level Up*.
+  - Tasti rapidi "Attiva Tutti" / "Disattiva Tutti" in ogni scheda membro.
+- 📱 **Routing Netto: Notifiche Personali Private vs Dispositivi di Famiglia:**
+  - I promemoria personali, i punti e i task assegnati arrivano **esclusivamente sui dispositivi privati selezionati** per quel membro, senza disturbare il resto della casa.
+  - Opzione esplicita *"Inoltra anche a Famiglia"* per chi non ha uno smartphone (es. bambini piccoli) o per tablet condivisi a muro.
+- 🚀 **Risoluzione Definitiva Mancato Arrivo Notifiche (FCM High Priority & 24h Buffer):**
+  - Impostata priorità FCM alta (`priority: "high"`, `importance: "high"`) ed eliminato lo scarto immediato (`ttl: 86400` invece di `0`). Notifiche sempre recapitate anche in modalità risparmio energetico e Doze mode.
+- 🔗 **Azione al Click della Notifica Senza Errori 404 (Deep Link Diretto):**
+  - Rilevamento automatico dello slug Ingress di Home Assistant (`http://supervisor/addons/self/info`) per aprire direttamente ChoreQuest senza 404.
+  - Nuova scheda impostazioni per scegliere la destinazione al tocco della notifica (Pannello Ingress, Web UI porta 9006, Lovelace, o URL personalizzato).
 
 - 🔍 **Ricerca e Filtro Istantaneo Dispositivi:**
   - **Famiglia**: Nuova barra di ricerca live e tasti "Tutti" / "Nessuno" per filtrare e associare i dispositivi predefiniti.
@@ -54,4 +69,4 @@
 
 1. Vai in **Impostazioni** ➔ **Add-on** ➔ **Store degli Add-on**.
 2. Clicca sui tre pallini in alto a destra (**⋮**) ➔ **Controlla aggiornamenti** (o ricarica con `F5`).
-3. Clicca su **Aggiorna (Update)** alla versione **v2.8.4** e riavvia l'Add-on!
+3. Clicca su **Aggiorna (Update)** alla versione **v2.8.5** e riavvia l'Add-on!
