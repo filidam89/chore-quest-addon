@@ -4,6 +4,26 @@ Tutte le novità, miglioramenti e correzioni introdotte nelle versioni di ChoreQ
 
 ---
 
+## [2.8.4] - 2026-09-23
+
+### ✨ Novità
+- **Ricerca e Filtro Rapido Dispositivi di Notifica**:
+  - **Famiglia**: Aggiunta barra di ricerca live per filtrare istantaneamente i dispositivi predefiniti digitando qualsiasi parola chiave (es. "pixel", "giulia", "tablet", "alexa").
+  - **Singoli Membri**: Aggiunta barra di ricerca dedicata in ogni scheda membro per individuare e associare subito i dispositivi personali anche in case con decine di dispositivi.
+  - **Pannello di Test**: Aggiunto campo di ricerca istantaneo sul selettore del dispositivo per i test manuali.
+  - **Tasti Rapidi "Tutti" / "Nessuno"**: Aggiunti pulsanti per selezionare o deselezionare con un click tutti i dispositivi (anche filtrati) per la famiglia e per ogni membro.
+
+### 🐛 Correzioni Bug
+- **Risoluzione Automatica e Priorità Servizi `notify.mobile_app_*`**:
+  - Risolto il mancato recapito delle notifiche quando veniva selezionata l'entità `notify.<dispositivo>` anziché il servizio `notify.mobile_app_<dispositivo>`. L'API ora mappa e indirizza automaticamente qualsiasi chiamata verso il servizio corretto registrato dall'app Home Assistant Companion.
+  - Deduplicazione intelligente della lista dispositivi: eliminati i duplicati non funzionanti e assegnati i friendly name ufficiali (es. *"Pixel 7"*, *"Samsung A40 Giulia"*, *"11T Pro"*, *"Galaxy Watch7"*) ai servizi `mobile_app_*`.
+- **Correzione Notifiche Persistenti (`notify.persistent_notification`)**:
+  - Ripulito il payload inviato a `persistent_notification/create` rimuovendo i parametri `data` incompatibili con lo schema di Home Assistant, eliminando l'errore 400 Bad Request.
+- **Retrocompatibilità e Auto-Aliasing**:
+  - Qualsiasi configurazione già salvata nel database contenente `notify.<dispositivo>` viene automaticamente normalizzata ed eseguita verso `notify.mobile_app_<dispositivo>`.
+
+---
+
 ## [2.8.3] - 2026-09-23
 
 ### 🐛 Correzioni Bug

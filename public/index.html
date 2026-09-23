@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.8.3</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.8.4</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -328,10 +328,22 @@
           <div class="space-y-2 pt-1 border-t border-slate-200/80 dark:border-slate-700/80">
             <div class="flex items-center justify-between">
               <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">📢 Dispositivi Predefiniti di Famiglia (Multipli)</label>
-              <span id="notif-family-services-counter" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">1 selezionato</span>
+              <div class="flex items-center gap-2">
+                <span id="notif-family-services-counter" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">1 selezionato</span>
+                <button type="button" onclick="selectAllDevices('family', true)" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">Tutti</button>
+                <span class="text-slate-300 dark:text-slate-600 text-xs">|</span>
+                <button type="button" onclick="selectAllDevices('family', false)" class="text-[10px] font-bold text-slate-400 hover:underline">Nessuno</button>
+              </div>
             </div>
             <p class="text-[11px] text-slate-500 dark:text-slate-400">Le faccende assegnate a tutta la famiglia o i promemoria generali verranno inviati a tutti i dispositivi selezionati:</p>
-            <div id="notif-family-services-list" class="max-h-44 overflow-y-auto p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl space-y-1">
+
+            <!-- Barra di ricerca rapida famiglia -->
+            <div class="relative">
+              <i class="mdi mdi-magnify absolute left-2.5 top-2 text-slate-400 text-xs"></i>
+              <input type="text" id="notif-search-family-input" placeholder="🔍 Cerca dispositivo o entità (es. pixel, giulia, alexa, tablet)..." class="w-full pl-8 pr-2.5 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="filterDeviceList('family', this.value)">
+            </div>
+
+            <div id="notif-family-services-list" class="max-h-48 overflow-y-auto p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl space-y-1">
               <!-- Populated dynamically with checkboxes -->
             </div>
           </div>
@@ -458,6 +470,10 @@
           </div>
           <div class="sm:col-span-3 hidden" id="notif-test-service-box">
             <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Dispositivo Target:</label>
+            <div class="relative mb-1.5">
+              <i class="mdi mdi-magnify absolute left-2.5 top-2 text-slate-400 text-xs"></i>
+              <input type="text" id="notif-test-search" placeholder="🔍 Filtra lista dispositivi..." class="w-full pl-8 pr-2.5 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="filterTestDropdown(this.value)">
+            </div>
             <select id="notif-test-service" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></select>
           </div>
           <div class="sm:col-span-4" id="notif-test-type-box">
@@ -3336,6 +3352,68 @@
       counterEl.textContent = `${checkedBoxes.length} ${checkedBoxes.length === 1 ? 'selezionato' : 'selezionati'}`;
     }
 
+    function filterDeviceList(type, query, memberId = null) {
+      const q = (query || '').toLowerCase().trim();
+      const container = (type === 'family')
+        ? document.getElementById('notif-family-services-list')
+        : document.getElementById(`member-devices-container-${memberId}`);
+      if (!container) return;
+      const labels = container.querySelectorAll('.device-checkbox-label');
+      let matchCount = 0;
+      labels.forEach(l => {
+        const text = (l.textContent || '').toLowerCase();
+        const val = (l.querySelector('input')?.value || '').toLowerCase();
+        const matches = !q || text.includes(q) || val.includes(q);
+        l.style.display = matches ? 'flex' : 'none';
+        if (matches) matchCount++;
+      });
+      let noMatchMsg = container.querySelector('.no-match-msg');
+      if (matchCount === 0 && q) {
+        if (!noMatchMsg) {
+          noMatchMsg = document.createElement('div');
+          noMatchMsg.className = 'no-match-msg text-xs text-slate-400 p-2 text-center italic';
+          noMatchMsg.textContent = 'Nessun dispositivo corrisponde alla ricerca.';
+          container.appendChild(noMatchMsg);
+        }
+      } else if (noMatchMsg) {
+        noMatchMsg.remove();
+      }
+    }
+
+    function selectAllDevices(type, selectAll, memberId = null) {
+      const container = (type === 'family')
+        ? document.getElementById('notif-family-services-list')
+        : document.getElementById(`member-devices-container-${memberId}`);
+      if (!container) return;
+      const checkboxes = container.querySelectorAll(type === 'family' ? '.family-service-chk' : '.member-device-chk');
+      checkboxes.forEach(c => {
+        const label = c.closest('.device-checkbox-label');
+        if (!label || label.style.display !== 'none') {
+          c.checked = !!selectAll;
+        }
+      });
+      if (type === 'family') {
+        updateFamilyServicesCounter();
+      }
+    }
+
+    function filterTestDropdown(query) {
+      const q = (query || '').toLowerCase().trim();
+      const select = document.getElementById('notif-test-service');
+      if (!select) return;
+      let firstMatched = false;
+      Array.from(select.options).forEach(opt => {
+        const text = (opt.textContent || '').toLowerCase();
+        const val = (opt.value || '').toLowerCase();
+        const match = !q || text.includes(q) || val.includes(q);
+        opt.style.display = match ? '' : 'none';
+        if (match && !firstMatched) {
+          select.value = opt.value;
+          firstMatched = true;
+        }
+      });
+    }
+
     function toggleMemberFamilyDefault(memberId) {
       const chk = document.querySelector(`.member-use-family-chk[data-member-id="${memberId}"]`);
       const box = document.getElementById(`member-devices-box-${memberId}`);
@@ -3418,7 +3496,7 @@
             const isChecked = defServicesList.includes(sId);
 
             familyServicesContainer.innerHTML += `
-              <label class="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
+              <label class="device-checkbox-label flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
                 <input type="checkbox" value="${sId}" onchange="updateFamilyServicesCounter()" ${isChecked ? 'checked' : ''} class="family-service-chk w-4 h-4 text-indigo-600 rounded">
                 <span class="text-base">${sIcon}</span>
                 <div class="flex-1 min-w-0">
@@ -3492,7 +3570,7 @@
               const sIcon = (typeof srv === 'object' && srv.icon) ? srv.icon : '📱';
               const isChecked = currentMemberServices.includes(sId);
               memberDeviceCheckboxes += `
-                <label class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700/60 cursor-pointer transition">
+                <label class="device-checkbox-label flex items-center gap-2 p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700/60 cursor-pointer transition">
                   <input type="checkbox" data-member-id="${m.id}" value="${sId}" ${isChecked ? 'checked' : ''} class="member-device-chk w-4 h-4 text-indigo-600 rounded">
                   <span class="text-sm">${sIcon}</span>
                   <div class="flex-1 min-w-0">
@@ -3523,8 +3601,19 @@
 
                 <!-- Lista Dispositivi Personali Membro -->
                 <div id="member-devices-box-${m.id}" class="${useFamilyDefaults ? 'hidden' : 'space-y-1.5'}">
-                  <div class="text-[10px] font-extrabold uppercase text-slate-400">Dispositivi personali di ${m.name} (seleziona uno o più smartphone/tablet):</div>
-                  <div class="max-h-40 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1">
+                  <div class="flex items-center justify-between">
+                    <div class="text-[10px] font-extrabold uppercase text-slate-400">Dispositivi di ${m.name}:</div>
+                    <div class="flex items-center gap-2">
+                      <button type="button" onclick="selectAllDevices('member', true, '${m.id}')" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">Tutti</button>
+                      <span class="text-slate-300 dark:text-slate-600 text-xs">|</span>
+                      <button type="button" onclick="selectAllDevices('member', false, '${m.id}')" class="text-[10px] font-bold text-slate-400 hover:underline">Nessuno</button>
+                    </div>
+                  </div>
+                  <div class="relative">
+                    <i class="mdi mdi-magnify absolute left-2.5 top-2 text-slate-400 text-xs"></i>
+                    <input type="text" placeholder="🔍 Cerca per ${m.name}..." class="w-full pl-8 pr-2.5 py-1 text-[11px] bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="filterDeviceList('member', this.value, '${m.id}')">
+                  </div>
+                  <div id="member-devices-container-${m.id}" class="max-h-40 overflow-y-auto p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-1">
                     ${memberDeviceCheckboxes}
                   </div>
                 </div>

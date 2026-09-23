@@ -672,14 +672,30 @@ function getHaHeaders(token = getSupervisorToken()) {
   return headers;
 }
 
+function normalizeNotificationServiceId(srv) {
+  if (!srv || typeof srv !== 'string') return srv;
+  const s = srv.trim();
+  if (s === 'none' || s === 'disabled') return s;
+  // Se l'utente o il DB contiene notify.<dispositivo> ma in HA il servizio reale è notify.mobile_app_<dispositivo>
+  if (s.startsWith('notify.') && !s.startsWith('notify.mobile_app_')) {
+    const sub = s.replace(/^notify\./, '');
+    if (sub !== 'notify' && sub !== 'persistent_notification' && !sub.startsWith('alexa_') && !sub.startsWith('telegram_')) {
+      return `notify.mobile_app_${sub}`;
+    }
+  }
+  return s;
+}
+
 function getFamilyNotificationServices() {
   const notifSettings = appData?.settings?.notifications || {};
   if (Array.isArray(notifSettings.default_services) && notifSettings.default_services.length > 0) {
-    const list = notifSettings.default_services.filter(s => s && s !== 'none' && s !== 'disabled');
-    if (list.length > 0) return list;
+    const list = notifSettings.default_services
+      .filter(s => s && s !== 'none' && s !== 'disabled')
+      .map(normalizeNotificationServiceId);
+    if (list.length > 0) return Array.from(new Set(list));
   }
   if (notifSettings.default_service && notifSettings.default_service !== 'none' && notifSettings.default_service !== 'disabled') {
-    return [notifSettings.default_service];
+    return [normalizeNotificationServiceId(notifSettings.default_service)];
   }
   return ["notify.notify"];
 }
@@ -693,17 +709,19 @@ function getMemberNotificationServices(memberId) {
   }
 
   if (Array.isArray(mCfg.services) && mCfg.services.length > 0) {
-    const list = mCfg.services.filter(s => s && s !== 'none' && s !== 'disabled');
-    if (list.length > 0) return list;
+    const list = mCfg.services
+      .filter(s => s && s !== 'none' && s !== 'disabled')
+      .map(normalizeNotificationServiceId);
+    if (list.length > 0) return Array.from(new Set(list));
   }
 
   if (mCfg.service && mCfg.service !== 'none' && mCfg.service !== 'disabled') {
-    return [mCfg.service];
+    return [normalizeNotificationServiceId(mCfg.service)];
   }
 
   const legacySrv = notifSettings.member_services?.[memberId];
   if (legacySrv && legacySrv !== 'none' && legacySrv !== 'disabled') {
-    return [legacySrv];
+    return [normalizeNotificationServiceId(legacySrv)];
   }
 
   return getFamilyNotificationServices();
@@ -942,10 +960,13 @@ async function sendSingleHomeAssistantNotification({ service, title, message, ch
   const haBase = getHomeAssistantBaseUrl();
   const notifSettings = appData?.settings?.notifications || {};
 
-  const targetService = (typeof service === 'string' && service.trim()) ? service.trim() : "notify.notify";
+  let targetService = (typeof service === 'string' && service.trim()) ? service.trim() : "notify.notify";
   if (!targetService || targetService === 'none' || targetService === 'disabled') {
     return { success: false, reason: "Servizio di notifica disattivato o non valido", target: targetService };
   }
+
+  // Risoluzione alias automatica: se l'ID è notify.<dispositivo> converti in notify.mobile_app_<dispositivo>
+  targetService = normalizeNotificationServiceId(targetService);
 
   const channels = notifSettings.channels || {
     urgent: "ChoreQuest_Urgent",
@@ -970,25 +991,6 @@ async function sendSingleHomeAssistantNotification({ service, title, message, ch
     interruptionLevel = "active";
   }
 
-  const payload = {
-    title: title || "ChoreQuest",
-    message: message || "",
-    data: {
-      channel: channelName,
-      importance: importance,
-      priority: priority,
-      ttl: 0,
-      push: {
-        "interruption-level": interruptionLevel
-      },
-      tag: extraData.tag || `chorequest_${channelType}`,
-      group: "ChoreQuest",
-      url: "/chorequest",
-      clickAction: "/chorequest",
-      ...extraData
-    }
-  };
-
   if (!supervisorToken) {
     console.log(`[Notification MOCK] Target: ${targetService} | Title: "${title}" | Message: "${message}" | Channel: ${channelName}`);
     return { success: true, mocked: true, target: targetService };
@@ -996,55 +998,119 @@ async function sendSingleHomeAssistantNotification({ service, title, message, ch
 
   try {
     let srvName = targetService.trim();
-    let url;
-    let callPayload = { ...payload };
 
-    if (srvName === 'notify.persistent_notification') {
-      url = `${haBase}/services/persistent_notification/create`;
-      callPayload.notification_id = extraData.tag || `chorequest_${Date.now()}`;
-    } else if (srvName.startsWith('notify.')) {
-      const subSrv = srvName.replace(/^notify\./, '');
-      url = `${haBase}/services/notify/${subSrv}`;
-    } else if (srvName.includes('.')) {
-      const parts = srvName.split('.');
-      url = `${haBase}/services/${parts[0]}/${parts[1]}`;
-    } else {
-      url = `${haBase}/services/notify/${srvName}`;
-    }
-
-    let response = await fetch(url, {
-      method: 'POST',
-      headers: getHaHeaders(supervisorToken),
-      body: JSON.stringify(callPayload)
-    });
-
-    // Fallback: Se la chiamata diretta a /services/notify/<srv> fallisce con 400/404, prova con notify.send_message (modern HA entity platform)
-    if (!response.ok && (response.status === 400 || response.status === 404) && srvName.startsWith('notify.')) {
-      console.log(`[Notification Retry] Tentativo con notify.send_message per entità ${srvName}...`);
-      const fallbackUrl = `${haBase}/services/notify/send_message`;
-      const fallbackPayload = {
-        target: {
-          entity_id: srvName
-        },
-        title: payload.title,
-        message: payload.message,
-        data: payload.data
+    // 1. Special Case: Persistent Notification (accetta solo message, title e notification_id)
+    if (srvName === 'notify.persistent_notification' || srvName === 'persistent_notification') {
+      const url = `${haBase}/services/persistent_notification/create`;
+      const callPayload = {
+        title: title || "ChoreQuest",
+        message: message || ""
       };
-      response = await fetch(fallbackUrl, {
+      if (extraData && extraData.tag) {
+        callPayload.notification_id = extraData.tag;
+      }
+      const response = await fetch(url, {
         method: 'POST',
         headers: getHaHeaders(supervisorToken),
-        body: JSON.stringify(fallbackPayload)
+        body: JSON.stringify(callPayload)
       });
-    }
-
-    if (!response.ok) {
+      if (response.ok) {
+        console.log(`[Notification SENT] Persistent Notification creata con successo`);
+        return { success: true, target: srvName };
+      }
       const errText = await response.text();
-      console.error(`[Notification ERROR] Target: ${targetService} - Status: ${response.status} - ${errText}`);
-      return { success: false, error: errText, status: response.status, target: targetService };
+      console.error(`[Notification ERROR] Persistent Notification fallita (${response.status}): ${errText}`);
+      return { success: false, error: errText, status: response.status, target: srvName };
     }
 
-    console.log(`[Notification SENT] Target: ${targetService} (${channelName})`);
-    return { success: true, target: targetService };
+    const payload = {
+      title: title || "ChoreQuest",
+      message: message || "",
+      data: {
+        channel: channelName,
+        importance: importance,
+        priority: priority,
+        ttl: 0,
+        push: {
+          "interruption-level": interruptionLevel
+        },
+        tag: extraData.tag || `chorequest_${channelType}`,
+        group: "ChoreQuest",
+        url: "/chorequest",
+        clickAction: "/chorequest",
+        ...extraData
+      }
+    };
+
+    // Costruisci lista di target da provare in ordine di priorità
+    const candidates = [srvName];
+    if (srvName.startsWith('notify.mobile_app_')) {
+      candidates.push(srvName.replace(/^notify\.mobile_app_/, 'notify.'));
+    } else if (srvName.startsWith('notify.')) {
+      const rawSub = srvName.replace(/^notify\./, '');
+      if (rawSub !== 'notify' && !rawSub.startsWith('alexa_') && !rawSub.startsWith('telegram_')) {
+        candidates.unshift(`notify.mobile_app_${rawSub}`);
+      }
+    }
+
+    const uniqueCandidates = Array.from(new Set(candidates));
+    let lastError = null;
+    let lastStatus = 500;
+
+    for (const cand of uniqueCandidates) {
+      let url;
+      if (cand.startsWith('notify.')) {
+        const sub = cand.replace(/^notify\./, '');
+        url = `${haBase}/services/notify/${sub}`;
+      } else if (cand.includes('.')) {
+        const parts = cand.split('.');
+        url = `${haBase}/services/${parts[0]}/${parts[1]}`;
+      } else {
+        url = `${haBase}/services/notify/${cand}`;
+      }
+
+      try {
+        let response = await fetch(url, {
+          method: 'POST',
+          headers: getHaHeaders(supervisorToken),
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          console.log(`[Notification SENT] Target: ${cand} (${channelName})`);
+          return { success: true, target: cand };
+        }
+
+        lastStatus = response.status;
+        lastError = await response.text();
+      } catch (e) {
+        lastError = e.message;
+      }
+    }
+
+    // Modern entity platform fallback: notify.send_message
+    if (srvName.startsWith('notify.')) {
+      try {
+        const fallbackUrl = `${haBase}/services/notify/send_message`;
+        const fallbackPayload = {
+          entity_id: srvName,
+          title: payload.title,
+          message: payload.message
+        };
+        const response = await fetch(fallbackUrl, {
+          method: 'POST',
+          headers: getHaHeaders(supervisorToken),
+          body: JSON.stringify(fallbackPayload)
+        });
+        if (response.ok) {
+          console.log(`[Notification SENT via notify.send_message] Target: ${srvName}`);
+          return { success: true, target: srvName };
+        }
+      } catch (e) {}
+    }
+
+    console.error(`[Notification ERROR] Target: ${targetService} - Status: ${lastStatus} - ${lastError}`);
+    return { success: false, error: lastError, status: lastStatus, target: targetService };
   } catch (err) {
     console.error(`[Notification EXCEPTION] Target: ${targetService}:`, err);
     return { success: false, error: err.message, target: targetService };
@@ -1346,7 +1412,9 @@ app.get('/api/notifications/services', async (req, res) => {
   });
 
   if (supervisorToken) {
-    // 4. Scansione Entità Reali da /states (notify.*, device_tracker.*, sensor.*_battery_level, person.*)
+    const friendlyNames = new Map();
+
+    // 4. Scansione Entità Reali da /states per recuperare i Friendly Name
     try {
       const statesRes = await fetch(`${haBase}/states`, {
         headers: getHaHeaders(supervisorToken)
@@ -1354,52 +1422,9 @@ app.get('/api/notifications/services', async (req, res) => {
       if (statesRes.ok) {
         connectedToHa = true;
         const states = await statesRes.json();
-
-        // 4a. Entità notify.*
         states.forEach(s => {
-          if (s.entity_id && s.entity_id.startsWith('notify.')) {
-            const friendly = s.attributes?.friendly_name || s.entity_id.replace('notify.', '');
-            discoveredMap.set(s.entity_id, {
-              id: s.entity_id,
-              name: `📱 ${friendly} (${s.entity_id})`,
-              icon: "📱",
-              type: "entity"
-            });
-          }
-        });
-
-        // 4b. Dispositivi Mobile da device_tracker.* (Home Assistant Companion App)
-        states.forEach(s => {
-          if (s.entity_id && s.entity_id.startsWith('device_tracker.')) {
-            const slug = s.entity_id.replace('device_tracker.', '');
-            const targetNotifyService = `notify.mobile_app_${slug}`;
-            const friendly = s.attributes?.friendly_name || slug.replace(/_/g, ' ');
-            if (!discoveredMap.has(targetNotifyService)) {
-              discoveredMap.set(targetNotifyService, {
-                id: targetNotifyService,
-                name: `📱 ${friendly} (${targetNotifyService})`,
-                icon: "📱",
-                type: "mobile_device"
-              });
-            }
-          }
-        });
-
-        // 4c. Dispositivi Mobile da sensor.*_battery_level
-        states.forEach(s => {
-          if (s.entity_id && s.entity_id.startsWith('sensor.') && s.entity_id.endsWith('_battery_level')) {
-            const devSlug = s.entity_id.replace('sensor.', '').replace('_battery_level', '');
-            const targetNotifyService = `notify.mobile_app_${devSlug}`;
-            let friendly = s.attributes?.friendly_name || devSlug;
-            friendly = friendly.replace(/Livello batteria/i, '').replace(/Battery Level/i, '').trim() || devSlug;
-            if (!discoveredMap.has(targetNotifyService)) {
-              discoveredMap.set(targetNotifyService, {
-                id: targetNotifyService,
-                name: `📱 ${friendly} (${targetNotifyService})`,
-                icon: "📱",
-                type: "mobile_device"
-              });
-            }
+          if (s.entity_id && s.attributes?.friendly_name) {
+            friendlyNames.set(s.entity_id, s.attributes.friendly_name);
           }
         });
       }
@@ -1407,7 +1432,7 @@ app.get('/api/notifications/services', async (req, res) => {
       console.error("Error fetching notification states:", e);
     }
 
-    // 5. Scansione Servizi Registrati sotto il dominio notify da /services
+    // 5. Scansione Servizi Registrati sotto il dominio notify da /services (i servizi REALI che inviano notifiche)
     try {
       const resp = await fetch(`${haBase}/services`, {
         headers: getHaHeaders(supervisorToken)
@@ -1418,14 +1443,52 @@ app.get('/api/notifications/services', async (req, res) => {
         const notifyDomain = domains.find(d => d.domain === 'notify');
         if (notifyDomain && notifyDomain.services) {
           Object.entries(notifyDomain.services).forEach(([srvKey, srvInfo]) => {
+            if (srvKey === 'send_message') return; // azione interna generica
+            if (srvKey === 'persistent_notification' || srvKey === 'notify') return; // già aggiunti
+
             const fullId = `notify.${srvKey}`;
-            const srvTitle = srvInfo?.name || srvKey.replace(/^mobile_app_/, '').replace(/_/g, ' ');
-            const cleanTitle = srvTitle.charAt(0).toUpperCase() + srvTitle.slice(1);
-            if (!discoveredMap.has(fullId)) {
+
+            if (srvKey.startsWith('mobile_app_')) {
+              const slug = srvKey.replace(/^mobile_app_/, '');
+              const friendly = friendlyNames.get(`notify.${slug}`) || 
+                               friendlyNames.get(`device_tracker.${slug}`) || 
+                               srvInfo?.name || 
+                               slug.replace(/_/g, ' ');
+              const cleanTitle = friendly.charAt(0).toUpperCase() + friendly.slice(1);
               discoveredMap.set(fullId, {
                 id: fullId,
                 name: `📱 ${cleanTitle} (${fullId})`,
                 icon: "📱",
+                category: "mobile",
+                type: "mobile_app"
+              });
+            } else if (srvKey.startsWith('alexa_media_')) {
+              const speakerName = srvKey.replace(/^alexa_media_/, '').replace(/_/g, ' ');
+              const cleanName = speakerName.charAt(0).toUpperCase() + speakerName.slice(1);
+              discoveredMap.set(fullId, {
+                id: fullId,
+                name: `🔊 ${cleanName} (Alexa)`,
+                icon: "🔊",
+                category: "alexa",
+                type: "speaker"
+              });
+            } else if (srvKey.startsWith('telegram_')) {
+              const tgFriendly = friendlyNames.get(fullId) || srvKey.replace(/_/g, ' ');
+              discoveredMap.set(fullId, {
+                id: fullId,
+                name: `✈️ ${tgFriendly} (Telegram)`,
+                icon: "✈️",
+                category: "telegram",
+                type: "telegram"
+              });
+            } else {
+              const srvTitle = srvInfo?.name || srvKey.replace(/_/g, ' ');
+              const cleanTitle = srvTitle.charAt(0).toUpperCase() + srvTitle.slice(1);
+              discoveredMap.set(fullId, {
+                id: fullId,
+                name: `🔔 ${cleanTitle} (${fullId})`,
+                icon: "🔔",
+                category: "other",
                 type: "service"
               });
             }
@@ -2380,7 +2443,7 @@ app.post('/api/settings', (req, res) => {
 
 // API: Check for Updates via GitHub Raw Config
 app.get('/api/system/check_update', async (req, res) => {
-  let currentVersion = "2.8.3";
+  let currentVersion = "2.8.4";
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
     if (pkg.version) currentVersion = pkg.version;
