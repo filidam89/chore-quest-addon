@@ -1,29 +1,31 @@
-# 🏆 ChoreQuest (v2.8.5)
+# 🏆 ChoreQuest (v2.8.6)
 
 > **Add-on Ufficiale Home Assistant per la Gamification e Gestione delle Faccende di Casa e Famiglia**
 
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)
-![Version](https://img.shields.io/badge/Version-2.8.5-emerald.svg)
+![Version](https://img.shields.io/badge/Version-2.8.6-emerald.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
-## ✨ Novità & Funzionalità Chiave v2.8.5
+## ✨ Novità & Funzionalità Chiave v2.8.6
 
-- 🔔 **Matrice Capillare a 12 Eventi di Notifica:**
-  - Configurazione granulare per ciascun membro della famiglia e per tutta la casa:
-    - 🌅 *Promemoria Mattutino*, 🌙 *Riepilogo Serale*, 🚨 *Avvisi Urgenze*, ⏰ *Preavviso Scadenze Imminenti (2h)*.
-    - 📋 *Task Assegnati a Me*, 👥 *Nuovi Task Famiglia*, 🌟 *Task Approvati & Punti Ricevuti*, ❌ *Task da Rifare*.
-    - 🎁 *Premi Riscattati*, 🏆 *Vincitore Settimana*, 🥇 *Sorpasso in Classifica*, 🎖️ *Nuovi Badge & Level Up*.
-  - Tasti rapidi "Attiva Tutti" / "Disattiva Tutti" in ogni scheda membro.
-- 📱 **Routing Netto: Notifiche Personali Private vs Dispositivi di Famiglia:**
-  - I promemoria personali, i punti e i task assegnati arrivano **esclusivamente sui dispositivi privati selezionati** per quel membro, senza disturbare il resto della casa.
-  - Opzione esplicita *"Inoltra anche a Famiglia"* per chi non ha uno smartphone (es. bambini piccoli) o per tablet condivisi a muro.
-- 🚀 **Risoluzione Definitiva Mancato Arrivo Notifiche (FCM High Priority & 24h Buffer):**
-  - Impostata priorità FCM alta (`priority: "high"`, `importance: "high"`) ed eliminato lo scarto immediato (`ttl: 86400` invece di `0`). Notifiche sempre recapitate anche in modalità risparmio energetico e Doze mode.
-- 🔗 **Azione al Click della Notifica Senza Errori 404 (Deep Link Diretto):**
-  - Rilevamento automatico dello slug Ingress di Home Assistant (`http://supervisor/addons/self/info`) per aprire direttamente ChoreQuest senza 404.
-  - Nuova scheda impostazioni per scegliere la destinazione al tocco della notifica (Pannello Ingress, Web UI porta 9006, Lovelace, o URL personalizzato).
+- ⏰ **Orari Promemoria e Riepiloghi Indipendenti per Singolo Utente:**
+  - Gli orari e i controlli di attivazione non sono più globali: ogni membro della famiglia configura liberamente i propri orari indipendenti nella propria scheda personale:
+    - 🌅 **Orario Mattina personalizzato** (es. `07:30` per gli adulti, `08:30` per i figli).
+    - 🌙 **Orario Sera personalizzato** (es. `20:30` o `21:30`).
+  - Toggle dedicato per profilo (*"🔔 Abilita Notifiche <Nome>"*) per escludere o includere un utente in 1 click.
+- 🌙 **Notifica di Riepilogo Serale Arricchita & Gamificata:**
+  - Elenco compiti scaduti con conteggio esatto dei giorni: `• <nome> (scaduta da X giorni, +Y pt)`.
+  - Attività completate oggi con dettaglio dei singoli punti conquistati.
+  - Podio settimanale con medaglia e indicazione del distacco o vantaggio rispetto agli altri membri.
+  - Anteprima delle faccende in programma per domani e complimenti personalizzati.
+- 🚫 **Stop Definitivo a Notifiche Non Impostate (Niente Broadcast Indesiderati):**
+  - Eliminato qualsiasi fallback automatico al broadcast `notify.notify`. Se nessun dispositivo è selezionato, il sistema non invia nulla.
+- 📢 **Sezione Dispositivi Famiglia Semplificata & Focalizzata:**
+  - Rimossi i campi ridondanti: la scheda famiglia gestisce ora esclusivamente la selezione e ricerca rapida dei dispositivi comuni per compiti aperti a tutta la casa.
+- 🛡️ **Risoluzione Blocco "Caricamento stato connessione HA..." & Timeout Robusti:**
+  - Aggiunti timeout rigidi (`AbortSignal.timeout`) su tutte le interazioni con l'API Supervisor e Home Assistant, con riscontro visivo immediato anche in caso di rete lenta o modalità Standalone.
 
 - 🔍 **Ricerca e Filtro Istantaneo Dispositivi:**
   - **Famiglia**: Nuova barra di ricerca live e tasti "Tutti" / "Nessuno" per filtrare e associare i dispositivi predefiniti.
@@ -69,4 +71,4 @@
 
 1. Vai in **Impostazioni** ➔ **Add-on** ➔ **Store degli Add-on**.
 2. Clicca sui tre pallini in alto a destra (**⋮**) ➔ **Controlla aggiornamenti** (o ricarica con `F5`).
-3. Clicca su **Aggiorna (Update)** alla versione **v2.8.5** e riavvia l'Add-on!
+3. Clicca su **Aggiorna (Update)** alla versione **v2.8.6** e riavvia l'Add-on!

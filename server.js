@@ -723,13 +723,17 @@ function getFamilyNotificationServices() {
   if (notifSettings.default_service && notifSettings.default_service !== 'none' && notifSettings.default_service !== 'disabled') {
     return [normalizeNotificationServiceId(notifSettings.default_service)];
   }
-  return ["notify.notify"];
+  // Se nessun servizio famiglia è configurato, non fare broadcast globale su tutti i telefoni
+  return [];
 }
 
 // Routing Notifiche Membro: isola le notifiche personali senza disturbare il resto della famiglia
 function getMemberNotificationServices(memberId) {
   const notifSettings = appData?.settings?.notifications || {};
   const mCfg = notifSettings.members_config?.[memberId] || {};
+
+  // Se l'utente ha disabilitato le notifiche personali per questo membro, non inviare
+  if (mCfg.enabled === false) return [];
 
   const personalList = [];
   if (Array.isArray(mCfg.services) && mCfg.services.length > 0) {
@@ -1207,34 +1211,35 @@ async function sendHomeAssistantNotification({ service, title, message, channelT
   };
 }
 
-// 🌅 Promemoria Mattutino Programmato (Faccende di oggi & in scadenza)
+// 🌅 Promemoria Mattutino Programmato (Faccende di oggi & in scadenza per singolo membro)
 async function checkAndSendDailyReminders() {
   const notifSettings = appData?.settings?.notifications;
-  if (!notifSettings || notifSettings.enabled === false || notifSettings.morning_reminder_enabled === false) return;
+  if (!notifSettings || notifSettings.enabled === false) return;
 
   const now = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   const currentHHMM = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
   const todayIso = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
-  const targetTime = notifSettings.morning_reminder_time || notifSettings.reminder_time || "08:30";
-  if (currentHHMM !== targetTime) return;
-  if (notifSettings.last_morning_date === todayIso) return;
-
-  console.log(`[Notification Scheduler] Inizio invio promemoria mattutino per ${todayIso} alle ${currentHHMM}...`);
-  notifSettings.last_morning_date = todayIso;
-  saveData(appData);
-
   const stats = calculateStats();
   const membersConfig = notifSettings.members_config || {};
+  let anyUpdated = false;
 
   for (const m of Object.values(appData.members || {})) {
     const mCfg = membersConfig[m.id] || {};
-    if (mCfg.enabled === false) continue; // utente ha disattivato notifiche
-    if (mCfg.morning_reminder === false) continue; // utente ha disattivato promemoria mattutino
+    if (mCfg.enabled === false) continue; // Notifiche disattivate per questo membro
+    if (mCfg.morning_reminder === false) continue; // Promemoria mattutino disattivato per questo membro
 
     const targetServices = getMemberNotificationServices(m.id);
-    if (!targetServices || targetServices.length === 0) continue;
+    if (!targetServices || targetServices.length === 0) continue; // Nessun dispositivo configurato
+
+    const memberTime = mCfg.morning_time || notifSettings.morning_reminder_time || "08:30";
+    if (currentHHMM !== memberTime) continue;
+    if (mCfg.last_morning_date === todayIso) continue;
+
+    console.log(`[Notification Scheduler] Inizio invio promemoria mattutino per ${m.name} (${todayIso} alle ${currentHHMM})...`);
+    mCfg.last_morning_date = todayIso;
+    anyUpdated = true;
 
     // 1. Routine assegnate a questo membro o alla famiglia
     const memberRoutines = stats.routine_tasks.filter(r => {
@@ -1272,15 +1277,22 @@ async function checkAndSendDailyReminders() {
     // Invia avviso urgente per compiti scaduti se abilitato
     const totalOverdue = overdueRoutines.length + overdueTasks.length;
     if (totalOverdue > 0 && mCfg.urgent_alerts !== false) {
-      const urgentNames = [
-        ...overdueRoutines.map(r => `• ${r.name} (${r.overdue_days}gg fa, +${r.points}pt)`),
-        ...overdueTasks.map(t => `• ${t.title} (+${t.points}pt)`)
-      ].slice(0, 5);
+      const urgentLines = [];
+      overdueRoutines.forEach(r => {
+        const days = r.overdue_days || 1;
+        const daysStr = days === 1 ? '1 giorno' : `${days} giorni`;
+        urgentLines.push(`• ${r.name} (scaduta da ${daysStr}, +${r.points}pt)`);
+      });
+      overdueTasks.forEach(t => {
+        const days = Math.max(1, Math.floor((new Date(todayIso) - new Date(t.due_date)) / 86400000));
+        const daysStr = days === 1 ? '1 giorno' : `${days} giorni`;
+        urgentLines.push(`• ${t.title} (scaduta da ${daysStr}, +${t.points}pt)`);
+      });
 
       await sendHomeAssistantNotification({
         service: targetServices,
         title: `🚨 ChoreQuest: ${totalOverdue} Faccende Scadute!`,
-        message: `Ciao ${m.name}, hai ${totalOverdue} attività scadute in attesa:\n${urgentNames.join('\n')}`,
+        message: `Ciao ${m.name}, hai ${totalOverdue} attività scadute in attesa:\n${urgentLines.slice(0, 5).join('\n')}`,
         channelType: 'urgent',
         extraData: { tag: `chorequest_urgent_${m.id}` }
       });
@@ -1289,7 +1301,7 @@ async function checkAndSendDailyReminders() {
     // Invia promemoria del giorno (oggi & preavviso)
     const totalReminders = todayRoutines.length + todayTasks.length + warningRoutines.length + warningTasks.length;
     if (totalReminders > 0) {
-      const reminderNames = [
+      const reminderLines = [
         ...todayRoutines.map(r => `• ${r.name} (Oggi, +${r.points}pt)`),
         ...todayTasks.map(t => `• ${t.title} (Oggi, +${t.points}pt)`),
         ...warningRoutines.map(r => `• ${r.name} (tra ${r.days_remaining}gg)`),
@@ -1299,46 +1311,55 @@ async function checkAndSendDailyReminders() {
       await sendHomeAssistantNotification({
         service: targetServices,
         title: `🌅 ChoreQuest: Buongiorno ${m.name}! (${totalReminders} attività)`,
-        message: `Ecco le tue faccende in programma per oggi:\n${reminderNames.join('\n')}`,
+        message: `Ecco le tue faccende in programma per oggi:\n${reminderLines.join('\n')}`,
         channelType: 'reminders',
         extraData: { tag: `chorequest_morning_${m.id}` }
       });
     }
   }
+
+  if (anyUpdated) {
+    saveData(appData);
+  }
 }
 
-// 🌙 Riepilogo Serale Programmato (Punti fatti oggi, classifica e stato faccende)
+// 🌙 Riepilogo Serale Programmato (Punti fatti oggi, classifica, scadute con giorni e stato per singolo membro)
 async function checkAndSendEveningRecap() {
   const notifSettings = appData?.settings?.notifications;
-  if (!notifSettings || notifSettings.enabled === false || notifSettings.evening_recap_enabled === false) return;
+  if (!notifSettings || notifSettings.enabled === false) return;
 
   const now = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   const currentHHMM = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
   const todayIso = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
-  const targetTime = notifSettings.evening_recap_time || "20:30";
-  if (currentHHMM !== targetTime) return;
-  if (notifSettings.last_evening_date === todayIso) return;
-
-  console.log(`[Notification Scheduler] Inizio invio riepilogo serale per ${todayIso} alle ${currentHHMM}...`);
-  notifSettings.last_evening_date = todayIso;
-  saveData(appData);
+  // Calcolo domani
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowIso = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth() + 1)}-${pad(tomorrow.getDate())}`;
 
   const stats = calculateStats();
   const membersConfig = notifSettings.members_config || {};
-
-  // Calcola punti fatti oggi per ciascun membro dai logs
   const todayLogs = (appData.logs || []).filter(l => l.created_at && l.created_at.startsWith(todayIso));
+  let anyUpdated = false;
 
   for (const m of Object.values(appData.members || {})) {
     const mCfg = membersConfig[m.id] || {};
-    if (mCfg.enabled === false) continue;
-    if (mCfg.evening_recap === false) continue;
+    if (mCfg.enabled === false) continue; // Notifiche disattivate per questo membro
+    if (mCfg.evening_recap === false) continue; // Riepilogo serale disattivato per questo membro
 
     const targetServices = getMemberNotificationServices(m.id);
-    if (!targetServices || targetServices.length === 0) continue;
+    if (!targetServices || targetServices.length === 0) continue; // Nessun dispositivo configurato
 
+    const memberTime = mCfg.evening_time || notifSettings.evening_recap_time || "20:30";
+    if (currentHHMM !== memberTime) continue;
+    if (mCfg.last_evening_date === todayIso) continue;
+
+    console.log(`[Notification Scheduler] Inizio invio riepilogo serale per ${m.name} (${todayIso} alle ${currentHHMM})...`);
+    mCfg.last_evening_date = todayIso;
+    anyUpdated = true;
+
+    // Attività completate oggi da questo membro
     const mTodayLogs = todayLogs.filter(l => l.member_name === m.name && !l.is_personal && l.points > 0);
     const todayPts = mTodayLogs.reduce((acc, l) => acc + (parseInt(l.points) || 0), 0);
     const todayTasksCount = mTodayLogs.length;
@@ -1350,27 +1371,80 @@ async function checkAndSendEveningRecap() {
     const rank = rankIndex >= 0 ? rankIndex + 1 : 1;
     const rankMedal = (rank === 1) ? '🥇 1° posto' : (rank === 2) ? '🥈 2° posto' : (rank === 3) ? '🥉 3° posto' : `#${rank}`;
 
+    let gapInfo = "";
+    if (rank === 1 && stats.leaderboard.length > 1) {
+      const second = stats.leaderboard[1];
+      const lead = weeklyPts - (second.weekly_points || 0);
+      if (lead > 0) gapInfo = ` (+${lead} pt di vantaggio su ${second.name})`;
+    } else if (rank > 1 && stats.leaderboard.length > 0) {
+      const first = stats.leaderboard[0];
+      const gap = (first.weekly_points || 0) - weeklyPts;
+      if (gap > 0) gapInfo = ` (a ${gap} pt dal 1° posto)`;
+    }
+
     // Attività rimaste in sospeso per questo membro
     const memberPendingTasks = stats.pending_single_tasks.filter(st => {
       const assigned = Array.isArray(st.assigned_to) ? st.assigned_to : [st.assigned_to];
       return assigned.includes('all') || assigned.includes(m.name);
     });
     const overdueRoutines = stats.routine_tasks.filter(r => (r.assigned_member === 'all' || r.assigned_member === m.name) && r.status === 'overdue');
-    const totalRemaining = memberPendingTasks.length + overdueRoutines.length;
+    const overdueSingle = memberPendingTasks.filter(st => st.due_date && st.due_date < todayIso);
+    const totalOverdue = overdueRoutines.length + overdueSingle.length;
 
-    let pointsMsg = "";
+    // Compiti per domani
+    const tomorrowRoutines = stats.routine_tasks.filter(r => (r.assigned_member === 'all' || r.assigned_member === m.name) && r.days_remaining === 1);
+    const tomorrowSingle = memberPendingTasks.filter(st => st.due_date === tomorrowIso);
+    const totalTomorrow = tomorrowRoutines.length + tomorrowSingle.length;
+
+    // Costruzione messaggio serale arricchito
+    const messageSections = [];
+
+    // 1. Bilancio di oggi
     if (todayTasksCount > 0) {
-      pointsMsg = `✨ Oggi hai completato ${todayTasksCount} ${todayTasksCount === 1 ? 'attività' : 'attività'} guadagnando +${todayPts} pt!`;
+      const completedSamples = mTodayLogs.slice(0, 3).map(l => `  • ${l.task_name} (+${l.points}pt)`).join('\n');
+      const moreCompleted = todayTasksCount > 3 ? `\n  ...e altre ${todayTasksCount - 3} attività` : '';
+      messageSections.push(`✨ Oggi: +${todayPts} pt (${todayTasksCount} ${todayTasksCount === 1 ? 'completata' : 'completate'})\n${completedSamples}${moreCompleted}`);
     } else {
-      pointsMsg = `💤 Nessuna attività registrata oggi.`;
+      messageSections.push(`💤 Oggi: Nessuna attività registrata`);
     }
 
-    let standingMsg = `🏆 Settimana: ${weeklyPts} pt (${rankMedal} in classifica)`;
-    let houseMsg = (totalRemaining === 0) 
-      ? `🎉 Tutto in ordine, nessuna faccenda in sospeso!` 
-      : `⚠️ ${totalRemaining} ${totalRemaining === 1 ? 'attività rimasta' : 'attività rimaste'} in sospeso per domani.`;
+    // 2. Classifica e distacco
+    messageSections.push(`🏆 Classifica: ${weeklyPts} pt (${rankMedal}${gapInfo})`);
 
-    const recapMessage = `Ciao ${m.name}!\n${pointsMsg}\n${standingMsg}\n${houseMsg}`;
+    // 3. Faccende scadute con giorni esatti
+    if (totalOverdue > 0) {
+      const overdueLines = [];
+      overdueRoutines.forEach(r => {
+        const days = r.overdue_days || 1;
+        const daysStr = days === 1 ? '1 giorno' : `${days} giorni`;
+        overdueLines.push(`  • ${r.name} (scaduta da ${daysStr}, +${r.points}pt)`);
+      });
+      overdueSingle.forEach(st => {
+        const days = Math.max(1, Math.floor((new Date(todayIso) - new Date(st.due_date)) / 86400000));
+        const daysStr = days === 1 ? '1 giorno' : `${days} giorni`;
+        overdueLines.push(`  • ${st.title} (scaduta da ${daysStr}, +${st.points}pt)`);
+      });
+      messageSections.push(`⚠️ Faccende scadute (${totalOverdue}):\n${overdueLines.slice(0, 4).join('\n')}`);
+    }
+
+    // 4. In programma per domani
+    if (totalTomorrow > 0) {
+      const tomorrowLines = [
+        ...tomorrowRoutines.map(r => `  • ${r.name} (+${r.points}pt)`),
+        ...tomorrowSingle.map(st => `  • ${st.title} (+${st.points}pt)`)
+      ].slice(0, 3);
+      messageSections.push(`📅 Domani (${totalTomorrow} in programma):\n${tomorrowLines.join('\n')}`);
+    }
+
+    if (totalOverdue === 0 && memberPendingTasks.length === 0) {
+      messageSections.push(`🎉 Casa al top e tutto in ordine! Grande lavoro!`);
+    } else if (totalOverdue === 0) {
+      messageSections.push(`👍 Nessuna scadenza arretrata. Buona serata!`);
+    } else {
+      messageSections.push(`💪 Domani è un ottimo giorno per recuperare i punti!`);
+    }
+
+    const recapMessage = `Ciao ${m.name}!\n\n${messageSections.join('\n\n')}`;
 
     await sendHomeAssistantNotification({
       service: targetServices,
@@ -1379,6 +1453,10 @@ async function checkAndSendEveningRecap() {
       channelType: 'reminders',
       extraData: { tag: `chorequest_evening_${m.id}` }
     });
+  }
+
+  if (anyUpdated) {
+    saveData(appData);
   }
 }
 
@@ -1473,7 +1551,8 @@ app.get('/api/notifications/services', async (req, res) => {
     // 4. Scansione Entità Reali da /states per recuperare i Friendly Name
     try {
       const statesRes = await fetch(`${haBase}/states`, {
-        headers: getHaHeaders(supervisorToken)
+        headers: getHaHeaders(supervisorToken),
+        signal: AbortSignal.timeout(3500)
       });
       if (statesRes.ok) {
         connectedToHa = true;
@@ -1491,7 +1570,8 @@ app.get('/api/notifications/services', async (req, res) => {
     // 5. Scansione Servizi Registrati sotto il dominio notify da /services (i servizi REALI che inviano notifiche)
     try {
       const resp = await fetch(`${haBase}/services`, {
-        headers: getHaHeaders(supervisorToken)
+        headers: getHaHeaders(supervisorToken),
+        signal: AbortSignal.timeout(3500)
       });
       if (resp.ok) {
         connectedToHa = true;
@@ -1602,7 +1682,7 @@ app.get('/api/debug/ha', async (req, res) => {
 
   if (token) {
     try {
-      const statesRes = await fetch(`${haBase}/states`, { headers: getHaHeaders(token) });
+      const statesRes = await fetch(`${haBase}/states`, { headers: getHaHeaders(token), signal: AbortSignal.timeout(3500) });
       debug.ha_states_ok = statesRes.ok;
       debug.states_status = statesRes.status;
       if (statesRes.ok) {
@@ -1623,7 +1703,7 @@ app.get('/api/debug/ha', async (req, res) => {
     }
 
     try {
-      const srvRes = await fetch(`${haBase}/services`, { headers: getHaHeaders(token) });
+      const srvRes = await fetch(`${haBase}/services`, { headers: getHaHeaders(token), signal: AbortSignal.timeout(3500) });
       debug.ha_services_ok = srvRes.ok;
       debug.services_status = srvRes.status;
       if (srvRes.ok) {
@@ -1703,9 +1783,9 @@ app.post('/api/notifications/settings', (req, res) => {
       ...existing.member_services,
       ...(newSettings.member_services || {})
     },
-    default_services: Array.isArray(newSettings.default_services) && newSettings.default_services.length > 0 
+    default_services: Array.isArray(newSettings.default_services) 
       ? newSettings.default_services 
-      : (existing.default_services || [newSettings.default_service || existing.default_service || "notify.notify"])
+      : (existing.default_services || [])
   };
 
   saveData(appData);
@@ -1735,11 +1815,11 @@ app.post('/api/notifications/test', async (req, res) => {
 
   if (test_type === 'evening_recap') {
     finalTitle = finalTitle || `🌙 ChoreQuest: Riepilogo Serale (${mName})`;
-    finalMessage = finalMessage || `Ciao ${mName}!\n✨ Oggi hai completato 4 attività guadagnando +45 pt!\n🏆 Settimana: 120 pt (🥇 1° posto in classifica)\n🎉 Tutto in ordine, nessuna faccenda in sospeso!`;
+    finalMessage = finalMessage || `Ciao ${mName}!\n\n✨ Oggi: +45 pt (3 completate)\n  • Bucato & Stendipanni (+20pt)\n  • Svuotare Lavastoviglie (+15pt)\n  • Spazzatura (+10pt)\n\n🏆 Classifica: 120 pt (🥇 1° posto, +25 pt di vantaggio)\n\n⚠️ Faccende scadute (2):\n  • Pulizia filtro cappa (scaduta da 3 giorni, +20pt)\n  • Pulizia forno (scaduta da 1 giorno, +35pt)\n\n📅 Domani (1 in programma):\n  • Cambio lenzuola (+25pt)\n\n💪 Domani è un ottimo giorno per recuperare i punti!`;
     finalChannel = "reminders";
   } else if (test_type === 'morning_reminder') {
     finalTitle = finalTitle || `🌅 ChoreQuest: Buongiorno ${mName}!`;
-    finalMessage = finalMessage || `Ciao ${mName}, ecco le tue attività in programma per oggi:\n• Lavatrice (Oggi, +5pt)\n• Cambio lenzuola (Oggi, +25pt)`;
+    finalMessage = finalMessage || `Ciao ${mName}, ecco le tue attività in programma per oggi:\n• Lavatrice (Oggi, +5pt)\n• Cambio lenzuola (Oggi, +25pt)\n• Pulizia filtro cappa (scaduta da 3 giorni, +20pt)`;
     finalChannel = "reminders";
   } else if (test_type === 'urgent_alerts' || test_type === 'urgent') {
     finalTitle = finalTitle || `🚨 ChoreQuest: 2 Faccende Scadute!`;

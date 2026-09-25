@@ -4,6 +4,36 @@ Tutte le novità, miglioramenti e correzioni introdotte nelle versioni di ChoreQ
 
 ---
 
+## [2.8.6] - 2026-09-25
+
+### ✨ Novità
+- **Orari Promemoria e Riepiloghi Indipendenti per Singolo Utente**:
+  - Spostati gli orari e i relativi toggle di attivazione dalla sezione globale Famiglia alla scheda personale di ogni singolo membro.
+  - Ciascun membro della famiglia può ora configurare in piena autonomia il proprio orario mattutino (es. 07:30 per un adulto, 08:30 per i ragazzi) e il proprio orario serale (es. 20:30 o 21:30), oppure disattivare il promemoria desiderato.
+  - Aggiunto un interruttore master dedicato per ciascun profilo (*"🔔 Abilita Notifiche <Nome>"*) per attivare o disattivare rapidamente tutti gli avvisi personali.
+- **Notifica di Riepilogo Serale Arricchita**:
+  - Dettaglio puntuale delle faccende scadute con indicazione esatta dei giorni di ritardo: `• <nome> (scaduta da X giorni, +Y pt)`.
+  - Elenco delle attività completate oggi con relativo punteggio accumulato.
+  - Posizione in classifica con medaglia e calcolo automatico del distacco/vantaggio rispetto ai concorrenti più vicini.
+  - Anticipazione delle faccende e delle routine in programma per domani.
+  - Messaggi di incoraggiamento e congratulazioni personalizzati.
+
+### ⚡ Miglioramenti
+- **Semplificazione e Riorganizzazione Sezione Famiglia**:
+  - La prima scheda delle impostazioni notifiche è stata ripensata e snellita: contiene ora unicamente la selezione e la ricerca rapida dei dispositivi condivisi del gruppo famiglia per i compiti comuni.
+  - Rimosso qualsiasi dato ridondante per una gestione chiara e intuitiva.
+- **Timeout Robusti e Prevenzione Blocchi API**:
+  - Aggiunto `AbortSignal.timeout` a tutte le chiamate fetch verso Home Assistant e l'API Supervisor, scongiurando blocchi indefiniti del backend o della UI.
+
+### 🐛 Correzioni Bug
+- **Risoluzione Notifiche Ricevute Anche Se Non Impostate**:
+  - Eliminato il fallback automatico che ripristinava `notify.notify` (il canale che effettua un broadcast globale a tutti i dispositivi registrati in Home Assistant).
+  - Se un utente o la famiglia non ha dispositivi selezionati o ha disattivato le notifiche, il sistema non invia alcuna notifica.
+- **Risoluzione Blocco *"Caricamento stato connessione HA..."***:
+  - Risolto il blocco infinito del badge di connessione introducendo timeout espliciti sul client e fallback immediato nel blocco `catch`, informando tempestivamente se l'istanza è in modalità Standalone o non raggiungibile.
+
+---
+
 ## [2.8.5] - 2026-09-23
 
 ### ✨ Novità

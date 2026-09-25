@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.8.5</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.8.6</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -291,61 +291,32 @@
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <!-- CARD 1: ORARI PROGRAMMATI (MATTINA & SERA) & DISPOSITIVI FAMIGLIA -->
+        <!-- CARD 1: DISPOSITIVI GRUPPO FAMIGLIA (COMPITI CONDIVISI) -->
         <div class="bg-slate-50 dark:bg-slate-800/70 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
-          <div class="font-extrabold text-xs uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-            <i class="mdi mdi-clock-outline text-base text-indigo-600"></i> <span>Orari Promemoria Programmati & Servizio Default</span>
-          </div>
-          
-          <div class="space-y-3">
-            <div class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
-              <div class="flex items-center justify-between gap-2">
-                <label for="notif-morning-enable" class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer">
-                  <span>🌅 Promemoria Mattutino (Faccende di oggi & in scadenza)</span>
-                </label>
-                <input id="notif-morning-enable" type="checkbox" checked class="w-4 h-4 text-indigo-600 rounded">
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-[11px] text-slate-400 font-bold uppercase">Orario Mattina:</span>
-                <input id="notif-morning-time" type="time" value="08:30" class="px-2.5 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">
-              </div>
+          <div class="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-700/80 pb-2 flex-wrap gap-2">
+            <div class="font-extrabold text-xs uppercase text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <i class="mdi mdi-account-group text-base text-indigo-600"></i> <span>Dispositivi Gruppo Famiglia (Compiti Condivisi)</span>
             </div>
-
-            <div class="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 space-y-2">
-              <div class="flex items-center justify-between gap-2">
-                <label for="notif-evening-enable" class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer">
-                  <span>🌙 Riepilogo Serale (Punti fatti oggi, classifica e compiti)</span>
-                </label>
-                <input id="notif-evening-enable" type="checkbox" checked class="w-4 h-4 text-indigo-600 rounded">
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-[11px] text-slate-400 font-bold uppercase">Orario Sera:</span>
-                <input id="notif-evening-time" type="time" value="20:30" class="px-2.5 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold">
-              </div>
+            <div class="flex items-center gap-2">
+              <span id="notif-family-services-counter" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">0 selezionati</span>
+              <button type="button" onclick="selectAllDevices('family', true)" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">Tutti</button>
+              <span class="text-slate-300 dark:text-slate-600 text-xs">|</span>
+              <button type="button" onclick="selectAllDevices('family', false)" class="text-[10px] font-bold text-slate-400 hover:underline">Nessuno</button>
             </div>
           </div>
 
-          <div class="space-y-2 pt-1 border-t border-slate-200/80 dark:border-slate-700/80">
-            <div class="flex items-center justify-between">
-              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase">📢 Dispositivi Predefiniti di Famiglia (Multipli)</label>
-              <div class="flex items-center gap-2">
-                <span id="notif-family-services-counter" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950 px-2 py-0.5 rounded-lg border border-indigo-200 dark:border-indigo-800">1 selezionato</span>
-                <button type="button" onclick="selectAllDevices('family', true)" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">Tutti</button>
-                <span class="text-slate-300 dark:text-slate-600 text-xs">|</span>
-                <button type="button" onclick="selectAllDevices('family', false)" class="text-[10px] font-bold text-slate-400 hover:underline">Nessuno</button>
-              </div>
-            </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400">Le faccende assegnate a tutta la famiglia o i promemoria generali verranno inviati a tutti i dispositivi selezionati:</p>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Seleziona i dispositivi (telefoni di casa, tablet o altoparlanti) a cui inviare le notifiche per i <b>compiti assegnati a tutta la famiglia</b> o avvisi generali. Se nessun dispositivo è selezionato, non verrà effettuato alcun invio broadcast.
+          </p>
 
-            <!-- Barra di ricerca rapida famiglia -->
-            <div class="relative">
-              <i class="mdi mdi-magnify absolute left-2.5 top-2 text-slate-400 text-xs"></i>
-              <input type="text" id="notif-search-family-input" placeholder="🔍 Cerca dispositivo o entità (es. pixel, giulia, alexa, tablet)..." class="w-full pl-8 pr-2.5 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="filterDeviceList('family', this.value)">
-            </div>
+          <!-- Barra di ricerca rapida famiglia -->
+          <div class="relative">
+            <i class="mdi mdi-magnify absolute left-2.5 top-2 text-slate-400 text-xs"></i>
+            <input type="text" id="notif-search-family-input" placeholder="🔍 Cerca dispositivo o entità (es. pixel, tablet, alexa)..." class="w-full pl-8 pr-2.5 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="filterDeviceList('family', this.value)">
+          </div>
 
-            <div id="notif-family-services-list" class="max-h-48 overflow-y-auto p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl space-y-1">
-              <!-- Populated dynamically with checkboxes -->
-            </div>
+          <div id="notif-family-services-list" class="max-h-56 overflow-y-auto p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl space-y-1">
+            <!-- Populated dynamically with checkboxes -->
           </div>
 
           <!-- Connessione Avanzata / Override (Opzionale) -->
@@ -3334,12 +3305,15 @@
     let cachedNotifyServices = [];
 
     async function loadNotificationSettings() {
+      const statusEl = document.getElementById('notif-ha-status-badge');
       try {
-        const res = await fetch(`${apiBase}/notifications/services`);
+        if (statusEl && !cachedNotifyServices.length) {
+          statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span> <span class="text-indigo-600 dark:text-indigo-400 font-bold">Verifica connessione Home Assistant...</span>`;
+        }
+        const res = await fetch(`${apiBase}/notifications/services`, { signal: AbortSignal.timeout(6000) });
         const data = await res.json();
         cachedNotifyServices = data.services || [];
 
-        const statusEl = document.getElementById('notif-ha-status-badge');
         if (statusEl) {
           if (data.connected_to_ha) {
             statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> <span class="text-emerald-600 dark:text-emerald-400 font-extrabold">Connesso a Home Assistant: ${data.discovered_count || cachedNotifyServices.length} dispositivi ed entità rilevati</span>`;
@@ -3351,6 +3325,9 @@
         renderNotificationSettings(data.current_settings || appData?.settings?.notifications || {});
       } catch (e) {
         console.error("Errore caricamento servizi notifiche:", e);
+        if (statusEl) {
+          statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-amber-500"></span> <span class="text-amber-600 dark:text-amber-400 font-bold">Modalità Standalone / Server HA non raggiungibile</span>`;
+        }
         renderNotificationSettings(appData?.settings?.notifications || {});
       }
     }
@@ -3503,18 +3480,6 @@
       if (document.getElementById('notif-master-enable')) {
         document.getElementById('notif-master-enable').checked = notif.enabled !== false;
       }
-      if (document.getElementById('notif-morning-enable')) {
-        document.getElementById('notif-morning-enable').checked = notif.morning_reminder_enabled !== false;
-      }
-      if (document.getElementById('notif-morning-time')) {
-        document.getElementById('notif-morning-time').value = notif.morning_reminder_time || notif.reminder_time || "08:30";
-      }
-      if (document.getElementById('notif-evening-enable')) {
-        document.getElementById('notif-evening-enable').checked = notif.evening_recap_enabled !== false;
-      }
-      if (document.getElementById('notif-evening-time')) {
-        document.getElementById('notif-evening-time').value = notif.evening_recap_time || "20:30";
-      }
       if (document.getElementById('notif-task-assigned-toggle')) {
         document.getElementById('notif-task-assigned-toggle').checked = notif.notify_on_task_assigned !== false;
       }
@@ -3546,12 +3511,12 @@
       const familyServicesContainer = document.getElementById('notif-family-services-list');
       if (familyServicesContainer) {
         familyServicesContainer.innerHTML = '';
-        const defServicesList = Array.isArray(notif.default_services) && notif.default_services.length > 0 
+        const defServicesList = Array.isArray(notif.default_services) 
           ? notif.default_services 
-          : [notif.default_service || "notify.notify"];
+          : (notif.default_service && notif.default_service !== 'none' ? [notif.default_service] : []);
 
         if (cachedNotifyServices.length === 0) {
-          familyServicesContainer.innerHTML = '<div class="text-xs text-slate-400 p-2">Nessun servizio disponibile.</div>';
+          familyServicesContainer.innerHTML = '<div class="text-xs text-slate-400 p-2">Nessun servizio rilevato da Home Assistant.</div>';
         } else {
           cachedNotifyServices.forEach(srv => {
             const sId = (typeof srv === 'object') ? srv.id : srv;
@@ -3596,7 +3561,7 @@
       }
       onTestTargetModeChange();
 
-      // 3. Populate Per-Member Notification Preferences (Multi-Device per Member & 12 Events)
+      // 3. Populate Per-Member Notification Preferences (Orari singoli, Dispositivi privati & 12 Eventi)
       const memberMapContainer = document.getElementById('notif-members-mapping-list');
       if (memberMapContainer) {
         memberMapContainer.innerHTML = '';
@@ -3609,18 +3574,6 @@
         } else {
           members.forEach(m => {
             const mCfg = membersConfig[m.id] || {};
-            const morningOn = mCfg.morning_reminder !== false;
-            const eveningOn = mCfg.evening_recap !== false;
-            const urgentOn = mCfg.urgent_alerts !== false;
-            const dueSoonOn = mCfg.task_due_soon !== false;
-            const taskOn = mCfg.task_assigned !== false;
-            const familyTaskOn = mCfg.family_task_created !== false;
-            const taskApprovedOn = mCfg.task_approved !== false;
-            const taskRejectedOn = mCfg.task_rejected !== false;
-            const rewardOn = mCfg.reward_claimed !== false;
-            const winnerOn = mCfg.weekly_winner !== false;
-            const overtakeOn = mCfg.leaderboard_overtake !== false;
-            const levelUpOn = mCfg.level_up !== false;
 
             // Determine active personal services for this member
             let currentMemberServices = [];
@@ -3633,6 +3586,25 @@
             }
 
             const includeFamilyOn = (mCfg.include_family_devices === true) || (mCfg.use_family_defaults === true);
+            const memberEnabled = (mCfg.enabled !== undefined) ? (mCfg.enabled === true) : (currentMemberServices.length > 0 || includeFamilyOn);
+
+            // Orari personalizzati per questo membro
+            const morningOn = mCfg.morning_reminder !== false;
+            const morningTime = mCfg.morning_time || notif.morning_reminder_time || "08:30";
+            const eveningOn = mCfg.evening_recap !== false;
+            const eveningTime = mCfg.evening_time || notif.evening_recap_time || "20:30";
+
+            // Eventi capillari
+            const urgentOn = mCfg.urgent_alerts !== false;
+            const dueSoonOn = mCfg.task_due_soon !== false;
+            const taskOn = mCfg.task_assigned !== false;
+            const familyTaskOn = mCfg.family_task_created !== false;
+            const taskApprovedOn = mCfg.task_approved !== false;
+            const taskRejectedOn = mCfg.task_rejected !== false;
+            const rewardOn = mCfg.reward_claimed !== false;
+            const winnerOn = mCfg.weekly_winner !== false;
+            const overtakeOn = mCfg.leaderboard_overtake !== false;
+            const levelUpOn = mCfg.level_up !== false;
 
             // Build checkboxes for member personal devices
             let memberDeviceCheckboxes = '';
@@ -3655,6 +3627,7 @@
 
             memberMapContainer.innerHTML += `
               <div class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3 shadow-2xs">
+                <!-- Intestazione Membro & Master Toggle -->
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <div class="flex items-center gap-2.5 font-extrabold text-sm text-slate-900 dark:text-white">
                     <span class="text-2xl">${m.icon || '👤'}</span>
@@ -3663,14 +3636,48 @@
                         <span>${m.name}</span>
                         <span class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50">Profilo Personale</span>
                       </div>
-                      <div class="text-[10px] text-slate-400 font-medium">Le notifiche personali arrivano solo sui suoi dispositivi privati</div>
+                      <div class="text-[10px] text-slate-400 font-medium">Orari e notifiche personalizzati per ${m.name}</div>
                     </div>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 transition" title="Consigliato per bambini senza smartphone o per tablet comuni">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 transition">
+                      <input type="checkbox" data-member-enable="${m.id}" class="member-enable-master-chk w-4 h-4 text-indigo-600 rounded" ${memberEnabled ? 'checked' : ''}>
+                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200">🔔 Abilita Notifiche ${m.name}</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 transition" title="Invia le notifiche personali anche sui dispositivi comuni della famiglia">
                       <input type="checkbox" data-member-id="${m.id}" class="member-include-family-chk w-4 h-4 text-indigo-600 rounded" ${includeFamilyOn ? 'checked' : ''}>
                       <span class="text-xs font-bold text-slate-700 dark:text-slate-300">👥 Inoltra anche a Famiglia</span>
                     </label>
+                  </div>
+                </div>
+
+                <!-- Orari Promemoria Singoli per questo Membro -->
+                <div class="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
+                  <div class="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <i class="mdi mdi-clock-check-outline text-indigo-600 text-sm"></i> <span>Orari Promemoria Personali di ${m.name}:</span>
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div class="p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+                      <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <input type="checkbox" data-member-pref="${m.id}" data-type="morning_reminder" ${morningOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                        <span>🌅 Promemoria Mattina</span>
+                      </label>
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Ore:</span>
+                        <input type="time" data-member-morning-time="${m.id}" value="${morningTime}" class="px-2 py-0.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold">
+                      </div>
+                    </div>
+
+                    <div class="p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+                      <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-800 dark:text-slate-200">
+                        <input type="checkbox" data-member-pref="${m.id}" data-type="evening_recap" ${eveningOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
+                        <span>🌙 Riepilogo Serale</span>
+                      </label>
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Ore:</span>
+                        <input type="time" data-member-evening-time="${m.id}" value="${eveningTime}" class="px-2 py-0.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold">
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -3695,11 +3702,11 @@
                   </div>
                 </div>
 
-                <!-- Matrice di 12 Eventi Capillari -->
+                <!-- Matrice di Eventi Capillari -->
                 <div class="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800">
                   <div class="flex items-center justify-between">
                     <div class="text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <i class="mdi mdi-bell-check text-indigo-600"></i> <span>Eventi da notificare a ${m.name} (Selezione Capillare):</span>
+                      <i class="mdi mdi-bell-check text-indigo-600"></i> <span>Altri Eventi Notificabili a ${m.name} (Selezione Capillare):</span>
                     </div>
                     <div class="flex items-center gap-2">
                       <button type="button" onclick="selectAllMemberEvents('${m.id}', true)" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline">Attiva Tutti</button>
@@ -3709,22 +3716,6 @@
                   </div>
 
                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
-                      <input type="checkbox" data-member-pref="${m.id}" data-type="morning_reminder" ${morningOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
-                      <div class="min-w-0">
-                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">🌅 Promemoria Mattina</div>
-                        <div class="text-[10px] text-slate-400">Attività e routine in scadenza oggi</div>
-                      </div>
-                    </label>
-
-                    <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
-                      <input type="checkbox" data-member-pref="${m.id}" data-type="evening_recap" ${eveningOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
-                      <div class="min-w-0">
-                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">🌙 Riepilogo Serale</div>
-                        <div class="text-[10px] text-slate-400">Punti fatti oggi & medaglia classifica</div>
-                      </div>
-                    </label>
-
                     <label class="flex items-center gap-2.5 p-2 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 cursor-pointer hover:border-indigo-300 transition">
                       <input type="checkbox" data-member-pref="${m.id}" data-type="urgent_alerts" ${urgentOn ? 'checked' : ''} class="w-4 h-4 text-indigo-600 rounded">
                       <div class="min-w-0">
@@ -3815,22 +3806,18 @@
 
     async function saveNotificationSettings() {
       const enabled = document.getElementById('notif-master-enable')?.checked ?? true;
-      const morning_reminder_enabled = document.getElementById('notif-morning-enable')?.checked ?? true;
-      const morning_reminder_time = document.getElementById('notif-morning-time')?.value || "08:30";
-      const evening_recap_enabled = document.getElementById('notif-evening-enable')?.checked ?? true;
-      const evening_recap_time = document.getElementById('notif-evening-time')?.value || "20:30";
       const notify_on_task_assigned = document.getElementById('notif-task-assigned-toggle')?.checked ?? true;
       const notify_on_winner = document.getElementById('notif-winner-toggle')?.checked ?? true;
       const ha_url = document.getElementById('notif-ha-custom-url')?.value.trim() || "";
       const ha_token = document.getElementById('notif-ha-custom-token')?.value.trim() || "";
       const click_url = document.getElementById('notif-click-url')?.value.trim() || "auto";
 
-      // Collect Family default services
+      // Collect Family default services (NO automatic fallback to notify.notify!)
       const default_services = [];
       document.querySelectorAll('.family-service-chk:checked').forEach(chk => {
         default_services.push(chk.value);
       });
-      const default_service = default_services[0] || "notify.notify";
+      const default_service = default_services[0] || "";
 
       const channels = {
         urgent: document.getElementById('notif-chan-urgent')?.value.trim() || "ChoreQuest_Urgent",
@@ -3844,7 +3831,10 @@
 
       members.forEach(m => {
         const mId = m.id;
+        const memberEnabled = document.querySelector(`input[data-member-enable="${mId}"]`)?.checked ?? true;
         const includeFamily = document.querySelector(`.member-include-family-chk[data-member-id="${mId}"]`)?.checked ?? false;
+        const morningTime = document.querySelector(`input[data-member-morning-time="${mId}"]`)?.value || "08:30";
+        const eveningTime = document.querySelector(`input[data-member-evening-time="${mId}"]`)?.value || "20:30";
         
         let mServices = [];
         document.querySelectorAll(`.member-device-chk[data-member-id="${mId}"]:checked`).forEach(c => {
@@ -3865,9 +3855,11 @@
         const levelUpChk = document.querySelector(`input[data-member-pref="${mId}"][data-type="level_up"]`)?.checked ?? true;
 
         members_config[mId] = {
-          enabled: true,
+          enabled: memberEnabled,
+          morning_time: morningTime,
+          evening_time: eveningTime,
           include_family_devices: includeFamily,
-          use_family_defaults: includeFamily, // retrocompatibilità
+          use_family_defaults: includeFamily,
           services: mServices,
           service: mServices[0] || (includeFamily ? "" : "none"),
           morning_reminder: morningChk,
@@ -3888,12 +3880,8 @@
 
       const payload = {
         enabled,
-        morning_reminder_enabled,
-        morning_reminder_time,
-        evening_recap_enabled,
-        evening_recap_time,
         default_service,
-        default_services: (default_services.length > 0) ? default_services : ["notify.notify"],
+        default_services,
         click_url,
         ha_url,
         ha_token,
