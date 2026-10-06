@@ -1,14 +1,27 @@
-# 🏆 ChoreQuest (v2.8.6)
+# 🏆 ChoreQuest (v2.8.7)
 
 > **Add-on Ufficiale Home Assistant per la Gamification e Gestione delle Faccende di Casa e Famiglia**
 
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)
-![Version](https://img.shields.io/badge/Version-2.8.6-emerald.svg)
+![Version](https://img.shields.io/badge/Version-2.8.7-emerald.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
-## ✨ Novità & Funzionalità Chiave v2.8.6
+## ✨ Novità & Funzionalità Chiave v2.8.7
+
+- 📜 **Storico Esecuzioni della Routine con Dettaglio Cronologico:**
+  - Cliccando su qualsiasi routine o attività in scadenza (es. *Barbiere*, *Cambio Lenzuola*), il modale mostra ora la cronologia completa dei completamenti passati con data e ora esatta, chi l'ha svolta (con avatar e badge utente), punti assegnati e note registrate.
+  - Aggiunto il pulsante rapido *"📜 Storico"* anche nella schermata di gestione amministrativa delle routine.
+  - Nuovo endpoint API dedicato `GET /api/routine_tasks/history?id=...&name=...`.
+- 📅 **Routine a Giorno Intero per Default (All-Day Standard):**
+  - Risolto il disallineamento orario: le routine standard vengono gestite a giorno di calendario (`YYYY-MM-DD`). Durante l'intera giornata odierna il badge mostra con chiarezza e coerenza **`🟡 Scade oggi`** (`days_remaining = 0`), senza scattare anzitempo in scaduto o mostrare inesattamente "Fra 1 gg".
+- ⏰ **Orario di Scadenza Opzionale per Routine:**
+  - Possibilità opzionale di definire un orario specifico (`HH:MM`) se l'attività va svolta tassativamente entro una certa ora, mostrando in tempo reale `🟡 Scade oggi (entro le HH:MM)`.
+
+---
+
+## 🚀 Novità Versione Precedente v2.8.6
 
 - ⏰ **Orari Promemoria e Riepiloghi Indipendenti per Singolo Utente:**
   - Gli orari e i controlli di attivazione non sono più globali: ogni membro della famiglia configura liberamente i propri orari indipendenti nella propria scheda personale:

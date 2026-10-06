@@ -4,6 +4,30 @@ Tutte le novità, miglioramenti e correzioni introdotte nelle versioni di ChoreQ
 
 ---
 
+## [2.8.7] - 2026-10-06
+
+### ✨ Novità
+- **Storico Esecuzioni della Routine con Dettaglio Completo**:
+  - Aggiunta la visualizzazione cronologica delle esecuzioni passate all'interno del modale di gestione e posticipo routine (`modal-routine-postpone`), raggiungibile cliccando su qualsiasi routine o attività in scadenza.
+  - Per ciascun completamento passato vengono indicati: data e ora formattata, chi l'ha svolta (con avatar/badge membro), punti assegnati e note registrate.
+  - Aggiunto il pulsante rapido *"📜 Storico"* anche nella tabella di gestione amministrativa delle routine.
+  - Nuovo endpoint API dedicato `GET /api/routine_tasks/history?id=...&name=...` per estrarre lo storico puntuale ordinato cronologicamente.
+- **Supporto ad Orario di Scadenza Opzionale per le Routine**:
+  - Introdotto il campo opzionale `⏰ Orario Scadenza (HH:MM)` nel form di creazione e modifica routine.
+  - Se specificato, l'attività scade a quell'ora prestabilita della giornata (es. `15:30`) e la UI indica con chiarezza `Scade oggi (entro le HH:MM)`.
+  - Se non specificato, la routine adotta la modalità standard a **giorno intero**, rimanendo valida per l'intera giornata fino alla mezzanotte.
+
+### ⚡ Miglioramenti
+- **Routine a Giorno Intero per Impostazione Predefinita (All-Day Standard)**:
+  - Eliminata l'influenza dell'orario di completamento precedente sul calcolo della nuova scadenza.
+  - Le date di scadenza vengono ora confrontate a livello di giorno di calendario (`YYYY-MM-DD`): per tutta la giornata odierna l'attività mostra in modo coerente e rassicurante il badge **`🟡 Scade oggi`** (`days_remaining = 0`), senza scattare prematuramente in stato scaduto.
+
+### 🐛 Correzioni Bug
+- **Risoluzione Bug Scadenza Anticipata "Fra 1 giorno" / Orario Residuo**:
+  - Risolto il bug matematico generato da `Math.ceil` sui millisecondi residui (`diffMs`), che per attività completate nel pomeriggio (come *"Barbiere"*) faceva apparire erroneamente la scritta *"Fra 1 gg"* prima dell'ora esatta di completamento e scattava subito dopo in scaduta saltando lo stato *"Oggi"*.
+
+---
+
 ## [2.8.6] - 2026-09-25
 
 ### ✨ Novità

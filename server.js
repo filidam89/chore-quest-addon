@@ -298,30 +298,40 @@ function saveData(data) {
 
 let appData = loadData();
 
-// Helper to calculate routine next due date considering days or months
+// Helper to calculate routine next due date considering calendar days or months, all-day or specific due_time
 function calculateRoutineDueDate(r, baseDate, now) {
   const freqUnit = r.frequency_unit || 'days';
   const freqNum = parseInt(r.frequency_number || r.frequency_days) || (freqUnit === 'months' ? 1 : 7);
+  const dueTime = (r.due_time && /^([01]\d|2[0-3]):[0-5]\d$/.test(r.due_time)) ? r.due_time : null;
+
+  let base;
+  if (baseDate) {
+    base = new Date(baseDate);
+  } else if (r.start_date) {
+    base = new Date(r.start_date + 'T00:00:00');
+  } else {
+    base = new Date(now);
+  }
+
+  // Costruisci data di calendario pulita (giorno intero per default)
+  const d = new Date(base.getFullYear(), base.getMonth(), base.getDate());
+  if (freqUnit === 'months') {
+    d.setMonth(d.getMonth() + freqNum);
+  } else {
+    d.setDate(d.getDate() + freqNum);
+  }
+
+  const pad = (n) => String(n).padStart(2, '0');
+  const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
   let dueDate;
-  if (baseDate) {
-    const start = new Date(baseDate);
-    if (freqUnit === 'months') {
-      dueDate = new Date(start);
-      dueDate.setMonth(dueDate.getMonth() + freqNum);
-    } else {
-      dueDate = new Date(start.getTime() + (freqNum * 24 * 60 * 60 * 1000));
-    }
+  if (dueTime) {
+    dueDate = new Date(`${dateStr}T${dueTime}:00`);
   } else {
-    const start = new Date(now);
-    if (freqUnit === 'months') {
-      dueDate = new Date(start);
-      dueDate.setMonth(dueDate.getMonth() + freqNum);
-    } else {
-      dueDate = new Date(start.getTime() + (freqNum * 24 * 60 * 60 * 1000));
-    }
+    dueDate = new Date(`${dateStr}T23:59:59`);
   }
-  return dueDate;
+
+  return { dueDate, dateStr, dueTime };
 }
 
 // Calculate comprehensive period stats, diffs, categories and ADHD candidate weights
@@ -537,27 +547,64 @@ function calculateStats() {
     const freqNum = parseInt(r.frequency_number || r.frequency_days) || (freqUnit === 'months' ? 1 : 7);
 
     let dueDate;
+    let targetDateStr;
+    const dueTime = (r.due_time && /^([01]\d|2[0-3]):[0-5]\d$/.test(r.due_time)) ? r.due_time : null;
+
     if (r.postponed_due_date && new Date(r.postponed_due_date + 'T23:59:59') > now) {
-      dueDate = new Date(r.postponed_due_date + 'T23:59:59');
+      targetDateStr = r.postponed_due_date;
+      dueDate = dueTime ? new Date(`${targetDateStr}T${dueTime}:00`) : new Date(`${targetDateStr}T23:59:59`);
     } else if (r.schedule_type === 'from_last' && r.last_completed_at) {
-      dueDate = calculateRoutineDueDate(r, r.last_completed_at, now);
+      const calc = calculateRoutineDueDate(r, r.last_completed_at, now);
+      dueDate = calc.dueDate;
+      targetDateStr = calc.dateStr;
     } else if (r.start_date) {
-      dueDate = new Date(r.start_date + 'T23:59:59');
+      targetDateStr = r.start_date.split('T')[0];
+      dueDate = dueTime ? new Date(`${targetDateStr}T${dueTime}:00`) : new Date(`${targetDateStr}T23:59:59`);
     } else {
-      dueDate = calculateRoutineDueDate(r, null, now);
+      const calc = calculateRoutineDueDate(r, null, now);
+      dueDate = calc.dueDate;
+      targetDateStr = calc.dateStr;
     }
 
-    const diffMs = dueDate - now;
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    // Confronto calendar-based (giorno di calendario intero per default)
+    const targetMidnight = new Date(`${targetDateStr}T00:00:00`);
+    const todayMidnight = new Date(`${todayStr}T00:00:00`);
+    const calendarDiffDays = Math.round((targetMidnight - todayMidnight) / (1000 * 60 * 60 * 24));
 
+    let diffDays = calendarDiffDays;
     let status = "ok";
     let overdueDays = 0;
 
-    if (diffDays < 0) {
+    if (calendarDiffDays === 0) {
+      // Scade OGGI
+      if (dueTime) {
+        if (now > dueDate) {
+          // Ha un orario specifico ed è già passato
+          diffDays = -1;
+          status = "overdue";
+          overdueDays = 1;
+        } else {
+          diffDays = 0;
+          status = "warning";
+        }
+      } else {
+        // Giorno intero: per tutto il giorno oggi è "in scadenza" (warning / Scade oggi)
+        diffDays = 0;
+        status = "warning";
+      }
+    } else if (calendarDiffDays < 0) {
+      // Scaduta nel passato
+      diffDays = calendarDiffDays;
       status = "overdue";
-      overdueDays = Math.abs(diffDays);
-    } else if (diffDays <= warning) {
-      status = "warning";
+      overdueDays = Math.abs(calendarDiffDays);
+    } else {
+      // Futura (tra 1 o più giorni)
+      diffDays = calendarDiffDays;
+      if (diffDays <= warning) {
+        status = "warning";
+      } else {
+        status = "ok";
+      }
     }
 
     const freqText = (freqUnit === 'months') ? `${freqNum} ${freqNum === 1 ? 'mese' : 'mesi'}` : `${freqNum} gg`;
@@ -565,6 +612,9 @@ function calculateStats() {
     return {
       ...r,
       due_date: dueDate.toISOString(),
+      due_date_str: targetDateStr,
+      due_time: dueTime,
+      is_all_day: !dueTime,
       days_remaining: diffDays,
       overdue_days: overdueDays,
       frequency_text: freqText,
@@ -2544,7 +2594,7 @@ app.post('/api/spontaneous_tasks/delete', (req, res) => {
   res.json({ status: "deleted" });
 });
 
-// API: Save Routine Task (with Days or Months frequency units & notification policy)
+// API: Save Routine Task (with Days or Months frequency units, optional due_time & notification policy)
 app.post('/api/routine_tasks', (req, res) => {
   const { 
     id, 
@@ -2555,6 +2605,7 @@ app.post('/api/routine_tasks', (req, res) => {
     frequency_days, 
     warning_days = 1, 
     start_date, 
+    due_time = null,
     schedule_type = "from_last", 
     icon = "mdi:calendar-sync", 
     category = "Routine", 
@@ -2573,6 +2624,9 @@ app.post('/api/routine_tasks', (req, res) => {
   const freqNum = parseInt(frequency_number || frequency_days) || (frequency_unit === 'months' ? 1 : 7);
   const approxDays = (frequency_unit === 'months') ? (freqNum * 30) : freqNum;
 
+  // Normalizza orario se fornito (formato HH:MM)
+  const cleanDueTime = (due_time && /^([01]\d|2[0-3]):[0-5]\d$/.test(due_time.trim())) ? due_time.trim() : null;
+
   const existingItem = idx >= 0 ? appData.routine_tasks[idx] : {};
   const item = {
     ...existingItem,
@@ -2584,6 +2638,7 @@ app.post('/api/routine_tasks', (req, res) => {
     frequency_days: approxDays,
     warning_days: parseInt(warning_days) || 1,
     start_date: start_date || existingItem.start_date || new Date().toISOString().split('T')[0],
+    due_time: cleanDueTime,
     schedule_type: schedule_type || "from_last",
     icon,
     category: category || "Routine",
@@ -2599,6 +2654,39 @@ app.post('/api/routine_tasks', (req, res) => {
   saveData(appData);
   syncToHomeAssistant();
   res.json({ status: "saved", item });
+});
+
+// API: Storico Esecuzioni di una Specifica Routine
+app.get('/api/routine_tasks/history', (req, res) => {
+  const { id, name } = req.query;
+  const targetId = (id || '').trim().toLowerCase();
+  const targetName = (name || '').trim().toLowerCase();
+
+  if (!targetId && !targetName) {
+    return res.status(400).json({ error: "id o name richiesti" });
+  }
+
+  const rout = (appData.routine_tasks || []).find(r => 
+    (targetId && r.id.toLowerCase() === targetId) || 
+    (targetName && r.name.toLowerCase() === targetName)
+  );
+
+  const routName = rout ? rout.name.toLowerCase() : targetName;
+  const routId = rout ? rout.id.toLowerCase() : targetId;
+
+  const historyLogs = (appData.logs || [])
+    .filter(l => {
+      if (l.task_type !== 'routine') return false;
+      const tName = (l.task_name || '').toLowerCase();
+      return (tName === routName || tName === routId);
+    })
+    .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+
+  res.json({
+    routine: rout || { id: targetId, name: targetName },
+    total_executions: historyLogs.length,
+    history: historyLogs
+  });
 });
 
 // API: Delete Routine Task

@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.8.6</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.8.7</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -636,8 +636,21 @@
           <input id="modal-postpone-reason-input" type="text" placeholder="Motivo del posticipo (es. Weekend fuori, rimandato)..." class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs">
         </div>
 
+        <!-- SEZIONE STORICO ESECUZIONI ROUTINE -->
+        <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase flex items-center gap-1.5">
+              <span>📜</span> Storico Esecuzioni Passate
+            </span>
+            <span id="modal-routine-history-count" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full">0 completamenti</span>
+          </div>
+          <div id="modal-routine-history-list" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+            <!-- Popolato via JS da appData.logs -->
+          </div>
+        </div>
+
         <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-          <button type="button" onclick="closeRoutinePostponeModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 font-bold text-xs rounded-xl">Annulla</button>
+          <button type="button" onclick="closeRoutinePostponeModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 font-bold text-xs rounded-xl">Chiudi</button>
           <button type="button" onclick="submitPostponeRoutine()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow">Salva Nuova Scadenza</button>
         </div>
       </div>
@@ -1109,8 +1122,15 @@
           <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Prossima Scadenza</label><input id="rout-edit-start" type="date" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></div>
         </div>
 
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">⏰ Orario Scadenza <span class="text-slate-400 font-normal lowercase">(opzionale)</span></label>
+            <input id="rout-edit-time" type="time" class="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold" placeholder="HH:MM">
+            <span class="text-[10px] text-slate-400">Lascia vuoto per giorno intero (scade a fine giornata)</span>
+          </div>
           <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Tipo di Scadenza</label><select id="rout-edit-type" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"><option value="from_last">🕒 Dall'ultimo</option><option value="fixed">📅 Fissa</option></select></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
           <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Categoria</label><select id="rout-edit-category" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></select></div>
           <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Assegnato a</label><select id="rout-edit-member" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"><option value="all">👥 Famiglia</option></select></div>
         </div>
@@ -1662,6 +1682,53 @@
       document.getElementById('modal-postpone-date-input').value = localDateStr;
       document.getElementById('modal-postpone-reason-input').value = '';
 
+      // Render Storico Esecuzioni per questa specifica routine
+      const historyListEl = document.getElementById('modal-routine-history-list');
+      const historyCountEl = document.getElementById('modal-routine-history-count');
+      const routNameLower = (rout.name || '').toLowerCase();
+      const routIdLower = (rout.id || '').toLowerCase();
+
+      const routineLogs = (appData?.logs || [])
+        .filter(l => {
+          if (l.task_type !== 'routine') return false;
+          const tName = (l.task_name || '').toLowerCase();
+          return (tName === routNameLower || tName === routIdLower);
+        })
+        .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+
+      if (historyCountEl) {
+        historyCountEl.textContent = `${routineLogs.length} ${routineLogs.length === 1 ? 'completamento' : 'completamenti'}`;
+      }
+
+      if (historyListEl) {
+        historyListEl.innerHTML = '';
+        if (routineLogs.length === 0) {
+          historyListEl.innerHTML = '<div class="text-center py-4 text-slate-400 text-xs italic">Nessun completamento precedente registrato per questa routine.</div>';
+        } else {
+          routineLogs.forEach(l => {
+            const dtStr = formatDateTime(l.created_at);
+            const performerName = l.member_name || 'Famiglia';
+            const ptsHtml = l.is_personal ? '<span class="text-slate-400 font-bold text-[10px]">0 pt</span>' : `<span class="text-indigo-600 dark:text-indigo-400 font-extrabold text-xs">+${l.points} pt</span>`;
+            
+            historyListEl.innerHTML += `
+              <div class="p-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between gap-2 text-xs">
+                <div class="flex items-center gap-2 overflow-hidden">
+                  <span class="w-6 h-6 rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-xs font-bold shrink-0">✓</span>
+                  <div class="truncate">
+                    <div class="font-extrabold text-slate-800 dark:text-slate-200 truncate flex items-center gap-1.5">
+                      <span>👤 ${performerName}</span>
+                      ${l.partial_note ? `<span class="text-[10px] text-amber-600 dark:text-amber-400 italic">(${l.partial_note})</span>` : ''}
+                    </div>
+                    <div class="text-[10px] text-slate-500 dark:text-slate-400">🕒 ${dtStr}</div>
+                  </div>
+                </div>
+                <div class="shrink-0 font-bold">${ptsHtml}</div>
+              </div>
+            `;
+          });
+        }
+      }
+
       document.getElementById('modal-routine-postpone').classList.remove('hidden');
     }
     function closeRoutinePostponeModal() { document.getElementById('modal-routine-postpone').classList.add('hidden'); activePostponingRoutineId = null; }
@@ -2100,7 +2167,12 @@
           dueBox.innerHTML = '<div class="text-center py-8 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl font-bold flex items-center justify-center gap-1.5"><span>✅</span> Nessuna routine per questo filtro!</div>';
         } else {
           filteredDueRoutines.forEach(r => {
-            let badge = r.status === 'overdue' ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300">🔴 Scaduta (${r.overdue_days}gg fa)</span>` : (r.status === 'warning' ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300">🟡 ${r.days_remaining === 0 ? 'Scade oggi' : 'Tra ' + r.days_remaining + 'gg'}</span>` : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">🟢 Tra ${r.days_remaining}gg</span>`);
+            let timeHint = r.due_time ? ` (entro le ${r.due_time})` : '';
+            let badge = r.status === 'overdue' 
+              ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300">🔴 Scaduta (${r.overdue_days}gg fa)</span>` 
+              : (r.status === 'warning' 
+                ? `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300">🟡 ${r.days_remaining === 0 ? 'Scade oggi' + timeHint : 'Tra ' + r.days_remaining + 'gg'}</span>` 
+                : `<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">🟢 Tra ${r.days_remaining}gg</span>`);
             const assignedText = r.assigned_member && r.assigned_member !== 'all' ? `👤 ${r.assigned_member}` : '👥 Famiglia';
             const catBadge = r.category ? `<span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.2 rounded-md">${r.category}</span>` : '';
 
@@ -2261,8 +2333,13 @@
       }
 
       filtered.forEach(r => {
-        let statusBadge = r.status === 'overdue' ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-200">🔴 Scaduta da ${r.overdue_days} gg</span>` : (r.status === 'warning' ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">🟡 ${r.days_remaining === 0 ? 'Oggi' : 'Tra ' + r.days_remaining + ' gg'}</span>` : `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">🟢 Tra ${r.days_remaining} gg</span>`);
-        const nextDueDateFormatted = r.due_date ? new Date(r.due_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }) : '-';
+        let timeHint = r.due_time ? ` (entro le ${r.due_time})` : '';
+        let statusBadge = r.status === 'overdue' 
+          ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-rose-100 text-rose-800 border border-rose-200">🔴 Scaduta da ${r.overdue_days} gg</span>` 
+          : (r.status === 'warning' 
+            ? `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">🟡 ${r.days_remaining === 0 ? 'Scade oggi' + timeHint : 'Tra ' + r.days_remaining + ' gg'}</span>` 
+            : `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">🟢 Tra ${r.days_remaining} gg</span>`);
+        const nextDueDateFormatted = r.due_date ? new Date(r.due_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }) + (r.due_time ? ` ore ${r.due_time}` : '') : '-';
 
         routineList.innerHTML += `
           <div onclick="openRoutinePostponeModal('${r.id}')" title="Clicca per visualizzare o posticipare la scadenza di questa routine" class="p-4 sm:p-5 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-3xl shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition cursor-pointer hover:border-indigo-400 group">
@@ -3065,7 +3142,11 @@
                   <div class="text-slate-500 dark:text-slate-400 font-medium mt-0.5">Cadenza: <b>${r.frequency_text || r.frequency_days + 'gg'}</b> • Preavviso: <b>${r.warning_days}gg</b> • Punti: <b>+${r.points} pt</b></div>
                 </div>
               </div>
-              <div class="flex items-center gap-1.5"><button onclick="editRoutine('${r.id}')" class="px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 font-bold rounded-xl text-slate-700 dark:text-slate-200">Modifica</button><button onclick="deleteRoutine('${r.id}')" class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950 font-bold rounded-xl text-rose-600 border border-rose-100">Elimina</button></div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="openRoutinePostponeModal('${r.id}')" title="Visualizza storico e gestisci scadenza" class="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800 font-bold rounded-xl text-indigo-700 dark:text-indigo-300 flex items-center gap-1">📜 Storico</button>
+                <button onclick="editRoutine('${r.id}')" class="px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 font-bold rounded-xl text-slate-700 dark:text-slate-200">Modifica</button>
+                <button onclick="deleteRoutine('${r.id}')" class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950 font-bold rounded-xl text-rose-600 border border-rose-100">Elimina</button>
+              </div>
             </div>
           `;
         });
@@ -3247,6 +3328,7 @@
       document.getElementById('rout-edit-freq-unit').value = item ? (item.frequency_unit || "days") : "days";
       document.getElementById('rout-edit-warning').value = item?.warning_days !== undefined ? item.warning_days : 1;
       document.getElementById('rout-edit-start').value = item?.start_date ? item.start_date.split('T')[0] : new Date().toISOString().split('T')[0];
+      document.getElementById('rout-edit-time').value = item?.due_time || "";
       document.getElementById('rout-edit-type').value = item?.schedule_type || 'from_last';
       document.getElementById('rout-edit-category').value = item?.category || (appData?.categories[0]?.name || 'Pulizia & Casa');
       document.getElementById('rout-edit-priority').value = item?.priority || 'medium';
@@ -3271,6 +3353,7 @@
       const frequency_unit = document.getElementById('rout-edit-freq-unit').value || "days";
       const warning_days = parseInt(document.getElementById('rout-edit-warning').value) || 1;
       const start_date = document.getElementById('rout-edit-start').value;
+      const due_time = document.getElementById('rout-edit-time').value.trim() || null;
       const schedule_type = document.getElementById('rout-edit-type').value;
       const category = document.getElementById('rout-edit-category').value;
       const priority = document.getElementById('rout-edit-priority').value || 'medium';
@@ -3281,7 +3364,7 @@
       await fetch(`${apiBase}/routine_tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, name, points, frequency_number, frequency_unit, warning_days, start_date, schedule_type, category, priority, icon, is_personal, assigned_member, notification_policy })
+        body: JSON.stringify({ id, name, points, frequency_number, frequency_unit, warning_days, start_date, due_time, schedule_type, category, priority, icon, is_personal, assigned_member, notification_policy })
       });
       closeRoutineModal(); showToast("Routine salvata!"); await loadStats();
     }
