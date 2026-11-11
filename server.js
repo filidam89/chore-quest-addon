@@ -149,6 +149,19 @@ function getDefaultRoutineTasks(todayIso) {
   ];
 }
 
+function getDefaultDailyFocusItems() {
+  return [
+    { id: "df_cucina", name: "Cucina", icon: "mdi:silverware-fork-knife", description: "Piani di lavoro, fornelli o lavello veloce", points: 10, enabled: true },
+    { id: "df_salotto", name: "Salotto / Zona Giorno", icon: "mdi:sofa", description: "Divano, cuscini, tavolino o mensole", points: 10, enabled: true },
+    { id: "df_bagno", name: "Bagno Principale", icon: "mdi:shower", description: "Specchio, lavandino o sanitari veloci", points: 10, enabled: true },
+    { id: "df_camera", name: "Camera da Letto", icon: "mdi:bed-king", description: "Comodini, cambio aria o vestiti in ordine", points: 10, enabled: true },
+    { id: "df_ingresso", name: "Ingresso & Corridoio", icon: "mdi:door", description: "Scarpiera, cappotti o svuotatasche", points: 10, enabled: true },
+    { id: "df_balcone", name: "Balcone / Terrazzo", icon: "mdi:flower", description: "Piante, ringhiera o ordine esterno", points: 10, enabled: true },
+    { id: "df_ripostiglio", name: "Ripostiglio & Lavanderia", icon: "mdi:washing-machine", description: "Mensole, cestoni o detersivi", points: 10, enabled: true },
+    { id: "df_studio", name: "Cameretta / Studio", icon: "mdi:desk", description: "Scrivania, fogli o libreria", points: 10, enabled: true }
+  ];
+}
+
 function loadData() {
   const todayIso = new Date().toISOString().split('T')[0];
   const defaultCategories = getDefaultCategories();
@@ -186,6 +199,8 @@ function loadData() {
       if (!data.categories || data.categories.length === 0) data.categories = defaultCategories;
       if (!data.spontaneous_tasks || data.spontaneous_tasks.length === 0) data.spontaneous_tasks = defaultSpontaneous;
       if (!data.routine_tasks || data.routine_tasks.length === 0) data.routine_tasks = defaultRoutines;
+      if (!data.daily_focus_items || data.daily_focus_items.length === 0) data.daily_focus_items = getDefaultDailyFocusItems();
+      if (!data.daily_focus_state) data.daily_focus_state = { date: null, item_id: null, yesterday_item_id: null, last_reroll_at: null };
       if (!data.assigned_tasks) data.assigned_tasks = [];
       if (!data.single_tasks) data.single_tasks = [];
       if (!data.logs) data.logs = [];
@@ -282,6 +297,8 @@ function loadData() {
     categories: defaultCategories,
     spontaneous_tasks: defaultSpontaneous,
     routine_tasks: defaultRoutines,
+    daily_focus_items: getDefaultDailyFocusItems(),
+    daily_focus_state: { date: null, item_id: null, yesterday_item_id: null, last_reroll_at: null },
     single_tasks: [],
     assigned_tasks: [],
     logs: []
@@ -332,6 +349,220 @@ function calculateRoutineDueDate(r, baseDate, now) {
   }
 
   return { dueDate, dateStr, dueTime };
+}
+
+// ==================== DAILY FOCUS ("OGGI È LA GIORNATA DEL...") ====================
+
+// Helper per estrarre o selezionare la stanza/stimolo del giorno
+function getOrSelectDailyFocus(forceReroll = false) {
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  if (!appData.daily_focus_items || appData.daily_focus_items.length === 0) {
+    appData.daily_focus_items = getDefaultDailyFocusItems();
+  }
+  if (!appData.daily_focus_state) {
+    appData.daily_focus_state = { date: null, item_id: null, yesterday_item_id: null };
+  }
+
+  let enabledItems = appData.daily_focus_items.filter(it => it.enabled !== false);
+  if (enabledItems.length === 0) {
+    enabledItems = [...appData.daily_focus_items];
+  }
+
+  // Se per oggi è già stata fatta una selezione valida e non stiamo forzando il reroll
+  if (!forceReroll && appData.daily_focus_state.date === todayStr && appData.daily_focus_state.item_id) {
+    const existing = enabledItems.find(it => it.id === appData.daily_focus_state.item_id);
+    if (existing) {
+      return existing;
+    }
+  }
+
+  // Gestione stanza del giorno precedente (per evitare 2 giorni consecutivi uguali)
+  let yesterdayId = appData.daily_focus_state.item_id;
+  if (appData.daily_focus_state.date === todayStr) {
+    yesterdayId = appData.daily_focus_state.yesterday_item_id;
+  }
+
+  let candidates = [...enabledItems];
+  // Escludi la stanza di ieri se ci sono almeno 2 alternative
+  if (candidates.length > 1 && yesterdayId) {
+    const withoutYesterday = candidates.filter(it => it.id !== yesterdayId);
+    if (withoutYesterday.length > 0) {
+      candidates = withoutYesterday;
+    }
+  }
+
+  // In caso di reroll manuale per oggi, evita anche la stanza attualmente visualizzata
+  if (forceReroll && appData.daily_focus_state.item_id && candidates.length > 1) {
+    const withoutCurrent = candidates.filter(it => it.id !== appData.daily_focus_state.item_id);
+    if (withoutCurrent.length > 0) candidates = withoutCurrent;
+  }
+
+  // Ponderazione basata sulla memoria dell'ultima esecuzione nei log
+  const logs = appData.logs || [];
+  const oneDayMs = 86400000;
+
+  const scoredCandidates = candidates.map(it => {
+    const itNameLower = it.name.toLowerCase();
+    const itLogs = logs.filter(l => l.task_type === 'daily_focus' && (
+      l.daily_focus_id === it.id || 
+      (l.task_name && l.task_name.toLowerCase().includes(itNameLower))
+    ));
+
+    let daysSinceLastExec = 999;
+    if (itLogs.length > 0) {
+      const lastExecTime = Math.max(...itLogs.map(l => new Date(l.created_at).getTime()));
+      daysSinceLastExec = Math.max(0, Math.floor((now.getTime() - lastExecTime) / oneDayMs));
+    }
+
+    // Ponderazione quadratica con tetto a 60 giorni per evitare numeri infiniti
+    const effectiveDays = Math.min(daysSinceLastExec, 60);
+    const weight = Math.pow(effectiveDays + 1, 2);
+
+    return { item: it, daysSinceLastExec, weight };
+  });
+
+  // Estrazione casuale ponderata
+  const totalWeight = scoredCandidates.reduce((acc, c) => acc + c.weight, 0);
+  let randomVal = Math.random() * totalWeight;
+  let selected = scoredCandidates[0].item;
+  for (const c of scoredCandidates) {
+    if (randomVal <= c.weight) {
+      selected = c.item;
+      break;
+    }
+    randomVal -= c.weight;
+  }
+
+  // Aggiorna stato persistente
+  if (appData.daily_focus_state.date !== todayStr) {
+    appData.daily_focus_state.yesterday_item_id = appData.daily_focus_state.item_id;
+  }
+  appData.daily_focus_state.date = todayStr;
+  appData.daily_focus_state.item_id = selected.id;
+  appData.daily_focus_state.item_name = selected.name;
+  appData.daily_focus_state.last_reroll_at = now.toISOString();
+
+  saveData(appData);
+  return selected;
+}
+
+// Calcolo statistiche, stato odierno e classifica dedicata "Giornata del..."
+function calculateDailyFocusStats(todayStr, now) {
+  const currentItem = getOrSelectDailyFocus();
+  const logs = (appData.logs || []).filter(l => l.task_type === 'daily_focus');
+
+  // Log di OGGI (YYYY-MM-DD)
+  const todayLogs = logs.filter(l => l.created_at && l.created_at.startsWith(todayStr));
+
+  // Stato odierno per ciascun membro della famiglia
+  const membersStatus = {};
+  Object.values(appData.members || {}).forEach(m => {
+    const mLog = todayLogs.find(l => l.member_id === m.id || (l.member_name && l.member_name.toLowerCase() === m.name.toLowerCase()));
+    membersStatus[m.id] = {
+      member_id: m.id,
+      member_name: m.name,
+      completed: !!mLog,
+      completed_at: mLog ? mLog.created_at : null,
+      points: mLog ? (parseInt(mLog.points) || 10) : (currentItem?.points || 10),
+      log_id: mLog ? mLog.id : null
+    };
+  });
+
+  // Calcolo classifica dedicata "Giornata del..."
+  const memberStats = {};
+  Object.values(appData.members || {}).forEach(m => {
+    memberStats[m.id] = {
+      id: m.id,
+      name: m.name,
+      icon: m.icon || '👤',
+      color: m.color || '#6366f1',
+      total_count: 0,
+      total_points: 0,
+      current_streak: 0,
+      last_completed_at: null,
+      completed_dates: new Set()
+    };
+  });
+
+  logs.forEach(l => {
+    let m = memberStats[l.member_id];
+    if (!m && l.member_name) {
+      m = Object.values(memberStats).find(x => x.name.toLowerCase() === l.member_name.toLowerCase());
+    }
+    if (m) {
+      const dateStr = (l.created_at || '').split('T')[0];
+      if (dateStr) m.completed_dates.add(dateStr);
+      m.total_count += 1;
+      m.total_points += (parseInt(l.points) || 0);
+      if (!m.last_completed_at || new Date(l.created_at) > new Date(m.last_completed_at)) {
+        m.last_completed_at = l.created_at;
+      }
+    }
+  });
+
+  // Calcolo streak di giorni consecutivi
+  const pad = (n) => String(n).padStart(2, '0');
+  Object.values(memberStats).forEach(m => {
+    let streak = 0;
+    let checkDate = new Date(now);
+    let checkStr = `${checkDate.getFullYear()}-${pad(checkDate.getMonth() + 1)}-${pad(checkDate.getDate())}`;
+
+    if (m.completed_dates.has(checkStr)) {
+      streak = 1;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      checkDate.setDate(checkDate.getDate() - 1);
+      const yesterdayStr = `${checkDate.getFullYear()}-${pad(checkDate.getMonth() + 1)}-${pad(checkDate.getDate())}`;
+      if (m.completed_dates.has(yesterdayStr)) {
+        streak = 1;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        streak = 0;
+      }
+    }
+
+    if (streak > 0) {
+      while (true) {
+        const dStr = `${checkDate.getFullYear()}-${pad(checkDate.getMonth() + 1)}-${pad(checkDate.getDate())}`;
+        if (m.completed_dates.has(dStr)) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+    }
+    m.current_streak = streak;
+    delete m.completed_dates; // Rimuove il Set non serializzabile in JSON
+  });
+
+  const leaderboard = Object.values(memberStats).sort((a, b) => {
+    if (b.total_count !== a.total_count) return b.total_count - a.total_count;
+    if (b.current_streak !== a.current_streak) return b.current_streak - a.current_streak;
+    return b.total_points - a.total_points;
+  });
+
+  leaderboard.forEach((m, idx) => {
+    m.rank = idx + 1;
+    m.medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : `#${idx + 1}`));
+  });
+
+  return {
+    today_item: currentItem,
+    date: todayStr,
+    members_status: membersStatus,
+    today_completions: todayLogs.map(l => ({
+      log_id: l.id,
+      member_id: l.member_id,
+      member_name: l.member_name,
+      points: l.points,
+      created_at: l.created_at
+    })),
+    leaderboard
+  };
 }
 
 // Calculate comprehensive period stats, diffs, categories and ADHD candidate weights
@@ -666,6 +897,8 @@ function calculateStats() {
     pending_single_tasks: pendingSingleTasks,
     spontaneous_tasks: enhancedSpontaneousTasks,
     routine_tasks: routineStatus,
+    daily_focus: calculateDailyFocusStats(todayStr, now),
+    daily_focus_items: (appData.daily_focus_items || []),
     settings: appData.settings,
     logs: (appData.logs || [])
   };
@@ -1043,6 +1276,30 @@ async function syncToHomeAssistant() {
       })
     });
   } catch (err) {}
+
+  // 10. Sensor: Daily Focus ("Oggi è la giornata del...")
+  if (data.daily_focus && data.daily_focus.today_item) {
+    const df = data.daily_focus.today_item;
+    const completedBy = (data.daily_focus.today_completions || []).map(c => c.member_name);
+    try {
+      await fetch(`${haBase}/states/sensor.chorequest_daily_focus`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${supervisorToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          state: df.name,
+          attributes: {
+            friendly_name: `ChoreQuest: Giornata del ${df.name}`,
+            room: df.name,
+            description: df.description || "",
+            points: df.points || 10,
+            icon: df.icon || "mdi:star-circle-outline",
+            completed_by: completedBy,
+            is_completed_today: completedBy.length > 0
+          }
+        })
+      });
+    } catch (err) {}
+  }
 }
 
 syncToHomeAssistant();
@@ -1348,20 +1605,33 @@ async function checkAndSendDailyReminders() {
       });
     }
 
-    // Invia promemoria del giorno (oggi & preavviso)
+    // Includi lo stimolo del giorno ("Oggi è la giornata del...")
+    let dailyFocusLine = "";
+    if (stats.daily_focus && stats.daily_focus.today_item) {
+      const dfItem = stats.daily_focus.today_item;
+      dailyFocusLine = `🌟 Oggi è la giornata del: ${dfItem.name} (+${dfItem.points}pt)!\n💡 ${dfItem.description || '5 minuti di ordine veloce'}\n\n`;
+    }
+
+    // Invia promemoria del giorno (oggi & preavviso o daily focus)
     const totalReminders = todayRoutines.length + todayTasks.length + warningRoutines.length + warningTasks.length;
-    if (totalReminders > 0) {
-      const reminderLines = [
-        ...todayRoutines.map(r => `• ${r.name} (Oggi, +${r.points}pt)`),
-        ...todayTasks.map(t => `• ${t.title} (Oggi, +${t.points}pt)`),
-        ...warningRoutines.map(r => `• ${r.name} (tra ${r.days_remaining}gg)`),
-        ...warningTasks.map(t => `• ${t.title} (tra ${t.days_until}gg)`)
-      ].slice(0, 5);
+    if (totalReminders > 0 || dailyFocusLine) {
+      let reminderBody = "";
+      if (totalReminders > 0) {
+        const reminderLines = [
+          ...todayRoutines.map(r => `• ${r.name} (Oggi, +${r.points}pt)`),
+          ...todayTasks.map(t => `• ${t.title} (Oggi, +${t.points}pt)`),
+          ...warningRoutines.map(r => `• ${r.name} (tra ${r.days_remaining}gg)`),
+          ...warningTasks.map(t => `• ${t.title} (tra ${t.days_until}gg)`)
+        ].slice(0, 5);
+        reminderBody = `${dailyFocusLine}Ecco le tue faccende in programma per oggi:\n${reminderLines.join('\n')}`;
+      } else {
+        reminderBody = `${dailyFocusLine}Nessuna scadenza arretrata per oggi! Completa l'attività del giorno per guadagnare punti e scalare la classifica Focus! ✨`;
+      }
 
       await sendHomeAssistantNotification({
         service: targetServices,
-        title: `🌅 ChoreQuest: Buongiorno ${m.name}! (${totalReminders} attività)`,
-        message: `Ecco le tue faccende in programma per oggi:\n${reminderLines.join('\n')}`,
+        title: `🌅 ChoreQuest: Buongiorno ${m.name}!${totalReminders > 0 ? ` (${totalReminders} attività)` : ''}`,
+        message: reminderBody,
         channelType: 'reminders',
         extraData: { tag: `chorequest_morning_${m.id}` }
       });
@@ -1460,6 +1730,20 @@ async function checkAndSendEveningRecap() {
 
     // 2. Classifica e distacco
     messageSections.push(`🏆 Classifica: ${weeklyPts} pt (${rankMedal}${gapInfo})`);
+
+    // 2.5. Stimolo del Giorno (Giornata del...)
+    if (stats.daily_focus && stats.daily_focus.today_item) {
+      const dfItem = stats.daily_focus.today_item;
+      const mStatus = stats.daily_focus.members_status?.[m.id];
+      const completedByNames = (stats.daily_focus.today_completions || []).map(c => c.member_name);
+      if (mStatus && mStatus.completed) {
+        messageSections.push(`🌟 Giornata del ${dfItem.name}: Completata da te! (+${mStatus.points || 10} pt) 🎉`);
+      } else if (completedByNames.length > 0) {
+        messageSections.push(`🌟 Giornata del ${dfItem.name}: Completata da ${completedByNames.join(', ')}`);
+      } else {
+        messageSections.push(`🌟 Giornata del ${dfItem.name}: Non completata oggi`);
+      }
+    }
 
     // 3. Faccende scadute con giorni esatti
     if (totalOverdue > 0) {
@@ -1871,6 +2155,11 @@ app.post('/api/notifications/test', async (req, res) => {
     finalTitle = finalTitle || `🌅 ChoreQuest: Buongiorno ${mName}!`;
     finalMessage = finalMessage || `Ciao ${mName}, ecco le tue attività in programma per oggi:\n• Lavatrice (Oggi, +5pt)\n• Cambio lenzuola (Oggi, +25pt)\n• Pulizia filtro cappa (scaduta da 3 giorni, +20pt)`;
     finalChannel = "reminders";
+  } else if (test_type === 'daily_focus') {
+    const focusItem = getOrSelectDailyFocus();
+    finalTitle = finalTitle || `🌟 ChoreQuest: Oggi è la Giornata del ${focusItem?.name || 'Salotto'}!`;
+    finalMessage = finalMessage || `Stimolo del giorno per tutta la famiglia:\n🧹 ${focusItem?.name || 'Salotto'} (+${focusItem?.points || 10} pt)\n💡 ${focusItem?.description || 'Dedica 5 minuti a questo spazio'}\nChi la completa guadagna punti e scala la classifica Focus! 🏆`;
+    finalChannel = "reminders";
   } else if (test_type === 'urgent_alerts' || test_type === 'urgent') {
     finalTitle = finalTitle || `🚨 ChoreQuest: 2 Faccende Scadute!`;
     finalMessage = finalMessage || `Attenzione ${mName}: ci sono 2 attività scadute in attesa:\n• Pulizia profonda bagno (scaduta da 1gg, +35pt)\n• Aspirapolvere (scaduta da 2gg, +30pt)`;
@@ -2216,6 +2505,178 @@ app.post('/api/logs/delete', (req, res) => {
     }
   }
   res.json({ status: "deleted" });
+});
+
+// ==================== DAILY FOCUS API ROUTES ====================
+
+// API: Get Daily Focus state, completions, leaderboard and items
+app.get('/api/daily_focus', (req, res) => {
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const focusStats = calculateDailyFocusStats(todayStr, now);
+  res.json({
+    status: "ok",
+    ...focusStats,
+    items: appData.daily_focus_items || []
+  });
+});
+
+// API: Complete or Undo Daily Focus for a member
+app.post('/api/daily_focus/complete', (req, res) => {
+  const { member_id, member_name, undo = false } = req.body;
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  let memberObj = null;
+  if (member_id && appData.members[member_id]) {
+    memberObj = appData.members[member_id];
+  } else if (member_name) {
+    memberObj = Object.values(appData.members || {}).find(m => m.name.toLowerCase() === member_name.toLowerCase());
+  }
+
+  if (!memberObj) {
+    return res.status(404).json({ error: "Membro non trovato" });
+  }
+
+  const currentItem = getOrSelectDailyFocus();
+  if (!currentItem) {
+    return res.status(400).json({ error: "Nessuna attività del giorno disponibile" });
+  }
+
+  if (!appData.logs) appData.logs = [];
+
+  if (undo) {
+    // Rimuovi completamento di oggi per questo membro
+    const existingIndex = appData.logs.findIndex(l => 
+      l.task_type === 'daily_focus' && 
+      (l.created_at || '').startsWith(todayStr) && 
+      (l.member_id === memberObj.id || l.member_name?.toLowerCase() === memberObj.name.toLowerCase())
+    );
+    if (existingIndex >= 0) {
+      appData.logs.splice(existingIndex, 1);
+      saveData(appData);
+      syncToHomeAssistant();
+    }
+    const focusStats = calculateDailyFocusStats(todayStr, now);
+    return res.json({ status: "undone", ...focusStats });
+  }
+
+  // Verifica se già completato oggi
+  const alreadyDone = appData.logs.some(l => 
+    l.task_type === 'daily_focus' && 
+    (l.created_at || '').startsWith(todayStr) && 
+    (l.member_id === memberObj.id || l.member_name?.toLowerCase() === memberObj.name.toLowerCase())
+  );
+
+  if (alreadyDone) {
+    const focusStats = calculateDailyFocusStats(todayStr, now);
+    return res.json({ status: "already_completed", ...focusStats });
+  }
+
+  const logId = `log_df_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+  const points = parseInt(currentItem.points) || 10;
+  const newLog = {
+    id: logId,
+    member_id: memberObj.id,
+    member_name: memberObj.name,
+    task_name: `Giornata del ${currentItem.name}`,
+    task_type: 'daily_focus',
+    category: 'Casa',
+    priority: 'medium',
+    created_by: memberObj.name,
+    task_created_at: now.toISOString(),
+    is_personal: false,
+    points: points,
+    created_at: now.toISOString(),
+    edit_history: []
+  };
+
+  appData.logs.push(newLog);
+  saveData(appData);
+  syncToHomeAssistant();
+
+  const focusStats = calculateDailyFocusStats(todayStr, now);
+  res.json({ status: "completed", log: newLog, ...focusStats });
+});
+
+// API: Manual Reroll of Daily Focus for Today
+app.post('/api/daily_focus/reroll', (req, res) => {
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  const newItem = getOrSelectDailyFocus(true);
+  saveData(appData);
+  syncToHomeAssistant();
+
+  const focusStats = calculateDailyFocusStats(todayStr, now);
+  res.json({ status: "rerolled", item: newItem, ...focusStats });
+});
+
+// API: Create or Update Daily Focus Item (Room/Activity)
+app.post('/api/daily_focus/items', (req, res) => {
+  const { id, name, icon = "mdi:home", description = "", points = 10, enabled = true } = req.body;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: "Il nome dell'attività/stanza è obbligatorio" });
+  }
+
+  if (!appData.daily_focus_items) {
+    appData.daily_focus_items = getDefaultDailyFocusItems();
+  }
+
+  const itemId = id || `df_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+  const idx = appData.daily_focus_items.findIndex(it => it.id === itemId);
+
+  const itemObj = {
+    id: itemId,
+    name: name.trim(),
+    icon: icon.trim() || "mdi:home",
+    description: (description || "").trim(),
+    points: parseInt(points) || 10,
+    enabled: enabled !== false
+  };
+
+  if (idx >= 0) {
+    appData.daily_focus_items[idx] = itemObj;
+  } else {
+    appData.daily_focus_items.push(itemObj);
+  }
+
+  saveData(appData);
+  syncToHomeAssistant();
+  res.json({ status: "saved", item: itemObj, items: appData.daily_focus_items });
+});
+
+// API: Delete Daily Focus Item
+app.post('/api/daily_focus/items/delete', (req, res) => {
+  const { id } = req.body;
+  if (!id) return res.status(400).json({ error: "ID richiesto" });
+
+  if (!appData.daily_focus_items) {
+    appData.daily_focus_items = getDefaultDailyFocusItems();
+  }
+
+  appData.daily_focus_items = appData.daily_focus_items.filter(it => it.id !== id);
+  if (appData.daily_focus_state && appData.daily_focus_state.item_id === id) {
+    // Se era l'elemento corrente, riesegui selezione
+    getOrSelectDailyFocus(true);
+  }
+
+  saveData(appData);
+  syncToHomeAssistant();
+  res.json({ status: "deleted", items: appData.daily_focus_items });
+});
+
+// API: Reset Daily Focus items to defaults
+app.post('/api/daily_focus/reset_defaults', (req, res) => {
+  appData.daily_focus_items = getDefaultDailyFocusItems();
+  appData.daily_focus_state = { date: null, item_id: null, yesterday_item_id: null, last_reroll_at: null };
+  const current = getOrSelectDailyFocus();
+  saveData(appData);
+  syncToHomeAssistant();
+  res.json({ status: "reset", current, items: appData.daily_focus_items });
 });
 
 // API: Single Task Create (with priority, category & notification policy)

@@ -4,6 +4,40 @@ Tutte le novità, miglioramenti e correzioni introdotte nelle versioni di ChoreQ
 
 ---
 
+## [2.9.0] - 2026-11-11
+
+### ✨ Novità
+- **Nuova Funzione "Oggi è la Giornata del..." (Focus Stanze & Attività)**:
+  - Introdotto uno stimolo quotidiano per tutta la famiglia per prendersi cura ogni giorno di uno spazio o stanza diversa con un mini-task rapido (5 minuti) che non appesantisce la routine giornaliera.
+  - Elenco di stanze e ambienti configurabile da Admin (predefinite: *Cucina, Salotto / Zona Giorno, Bagno Principale, Camera da Letto, Ingresso & Corridoio, Balcone / Terrazzo, Ripostiglio & Lavanderia, Cameretta / Studio*).
+- **Algoritmo di Rotazione Intelligente Senza Ripetizioni**:
+  - Estrazione quotidiana pesata che favorisce le stanze non curate da più tempo.
+  - Regola anti-ripetizione rigorosa: impedisce assolutamente che la stessa stanza venga riproposta per 2 giorni consecutivi, anche se il giorno prima nessuno l'ha eseguita.
+  - Supporto al re-roll manuale immediato (`🎲`) sia dal widget Home che dal pannello Admin.
+- **Completamento Multi-Membro e Classifica Dedicata**:
+  - Tutti i membri della famiglia possono completare l'attività del giorno per se stessi e guadagnare punti.
+  - Classifica a parte *"Giornata del..."* con podio, medaglie (🥇 🥈 🥉), conteggio stanze completate e serie di giorni consecutivi attivi (**streak 🔥**).
+- **Integrazione Notifiche Home Assistant & Sensore HA**:
+  - Il promemoria mattutino include in apertura lo stimolo del giorno: `🌟 Oggi è la giornata del: [Stanza] (+X pt)! \n💡 [Suggerimento]`.
+  - Il riepilogo serale riporta se l'attività è stata completata dal membro o dagli altri familiari.
+  - Aggiunto evento di test dedicato `"🌟 Stimolo: Oggi è la Giornata del..."` nel drawer di prova notifiche HA.
+  - Esportato sensore Home Assistant `sensor.chorequest_daily_focus` con stato, friendly_name, descrizione, punti, esecutori di oggi e attributo `is_completed_today`.
+- **Interazione Diretta da Card Membro e Home**:
+  - Widget dedicato e prominente in Home con chip veloci per registrare o revocare il completamento di ciascun membro con un solo tocco.
+  - Quando si tocca la card di un componente della famiglia, nel pannello personale appare in evidenza il banner *"Attività del Giorno"* con pulsante diretto **`[ Fatta ✓ ]`**.
+- **Piena Modificabilità a Posteriori e Audit Trail**:
+  - Ogni completamento del Focus Giornaliero è memorizzato come log di tipo `daily_focus`, visibile sia nello storico del membro che nel registro generale con badge `🌟 Giornata del...`.
+  - Modificabile a posteriori (data effettiva, punti, esecutore, note) o eliminabile con tracciamento audit in qualsiasi momento.
+- **Pannello di Amministrazione Dedicato**:
+  - Nuova scheda Admin *"🌟 Giornata del..."* con gestione CRUD delle stanze/attività (nome, icona MDI, punti, descrizione/suggerimento, toggle attiva/disattiva).
+  - Funzione di estrazione rapida (`🎲`) e ripristino configurazione iniziale (`↺`).
+
+### ⚡ Miglioramenti
+- Visualizzazione immediata dello streak 🔥 attivo dei membri nel widget e nella classifica.
+- Sincronizzazione in tempo reale dello stato dell'attività tra Home, modale membro e sensori Home Assistant.
+
+---
+
 ## [2.8.7] - 2026-10-06
 
 ### ✨ Novità

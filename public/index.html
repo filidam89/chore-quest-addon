@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.8.7</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.9.0</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -109,6 +109,11 @@
         <div id="period-winners-badge" class="flex items-center gap-2 flex-wrap text-xs"></div>
       </div>
       <div id="members-bar" class="w-full"></div>
+    </div>
+
+    <!-- 1.5 WIDGET: OGGI È LA GIORNATA DEL... (FOCUS QUOTIDIANO CASA) -->
+    <div id="home-daily-focus-widget" class="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-indigo-500/10 dark:from-amber-950/40 dark:via-slate-900 dark:to-indigo-950/40 p-5 sm:p-6 rounded-3xl border-2 border-amber-400/40 dark:border-amber-600/30 shadow-md space-y-4 relative overflow-hidden hidden">
+      <!-- Injected via renderDailyFocusWidget() -->
     </div>
 
     <!-- 2. ACTION GRID DEI PULSANTI PRINCIPALI (PULITI, SOLIDI SENZA SFUMATURE CONFUSE) -->
@@ -196,10 +201,11 @@
           <p class="text-xs text-slate-500 dark:text-slate-400">Gestisci categorie, faccende, routine con frequenza in giorni o mesi, membri, e impostazioni</p>
         </div>
       </div>
-      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-9 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
         <button onclick="setAdminTab('categories')" id="adm-tab-categories" class="px-3 py-2.5 rounded-2xl font-extrabold text-xs transition bg-indigo-600 text-white shadow flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-folder-outline text-sm"></i> <span>📁 Categorie</span></button>
         <button onclick="setAdminTab('spontaneous')" id="adm-tab-spontaneous" class="px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-washing-machine text-sm"></i> <span>⚡ Spontanee</span></button>
         <button onclick="setAdminTab('routines')" id="adm-tab-routines" class="px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-calendar-sync-outline text-sm"></i> <span>🔄 Routine</span></button>
+        <button onclick="setAdminTab('daily_focus')" id="adm-tab-daily_focus" class="px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-star-circle-outline text-sm text-amber-500"></i> <span>🌟 Giornata del...</span></button>
         <button onclick="setAdminTab('members')" id="adm-tab-members" class="px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-account-group-outline text-sm"></i> <span>👥 Membri</span></button>
         <button onclick="setAdminTab('notifications')" id="adm-tab-notifications" class="px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-bell-ring-outline text-sm text-amber-500"></i> <span>🔔 Notifiche</span></button>
         <button onclick="setAdminTab('settings')" id="adm-tab-settings" class="px-3 py-2.5 rounded-2xl font-bold text-xs transition text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-1.5 text-center"><i class="mdi mdi-tune-variant text-sm"></i> <span>⚙️ Regole</span></button>
@@ -233,6 +239,31 @@
         <button onclick="openRoutineModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow transition">+ Nuova Routine</button>
       </div>
       <div id="admin-routine-list" class="space-y-3"></div>
+    </div>
+
+    <!-- TAB 3.5: GIORNATA DEL... (DAILY FOCUS) -->
+    <div id="adm-sec-daily_focus" class="hidden bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 flex-wrap gap-2">
+        <div>
+          <h3 class="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2"><i class="mdi mdi-star-circle-outline text-amber-500 text-xl"></i> "Oggi è la Giornata del..." (Focus Stanze & Attività)</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Gestisci le stanze o mini-attività proposte a rotazione intelligente: favorisce gli ambienti meno curati ed evita ripetizioni consecutive.</p>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button onclick="rerollDailyFocus()" title="Estrai subito un'altra stanza per oggi (evita ieri e quella attuale)" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition flex items-center gap-1.5"><i class="mdi mdi-dice-5-outline text-base"></i> <span>Estrai Altra per Oggi</span></button>
+          <button onclick="resetDailyFocusDefaults()" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition flex items-center gap-1.5"><i class="mdi mdi-restore text-base"></i> <span>Ripristina Default</span></button>
+          <button onclick="openDailyFocusItemModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center gap-1.5"><i class="mdi mdi-plus-circle text-base"></i> <span>+ Nuova Stanza</span></button>
+        </div>
+      </div>
+
+      <!-- Current Selection Preview in Admin -->
+      <div id="admin-daily-focus-preview" class="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-2xl flex items-center justify-between gap-3 text-xs flex-wrap">
+        <!-- Injected via JS -->
+      </div>
+
+      <!-- Rooms List -->
+      <div id="admin-daily-focus-list" class="space-y-3">
+        <!-- Injected via JS -->
+      </div>
     </div>
 
     <!-- TAB 4: MEMBRI -->
@@ -476,10 +507,11 @@
             <select id="notif-test-service" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold"></select>
           </div>
           <div class="sm:col-span-4" id="notif-test-type-box">
-            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Tipo di Notifica (12 Eventi):</label>
+            <label class="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase mb-1">Tipo di Notifica (13 Eventi):</label>
             <select id="notif-test-type" class="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
               <option value="evening_recap">🌙 Riepilogo Serale (Punti + Classifica)</option>
               <option value="morning_reminder">🌅 Promemoria Mattutino (Attività di Oggi)</option>
+              <option value="daily_focus">🌟 Stimolo: Oggi è la Giornata del... (+10pt)</option>
               <option value="urgent_alerts">🚨 Avviso Urgente (Faccende Scadute)</option>
               <option value="task_due_soon">⏰ Preavviso Scadenza Imminente (2 ore prima)</option>
               <option value="task_assigned">📋 Nuovo Compito Assegnato a Me</option>
@@ -676,10 +708,82 @@
         <!-- Injected via JS -->
       </div>
 
+      <!-- Banner Attività del Giorno ("Oggi è la Giornata del...") per questo membro -->
+      <div id="member-history-daily-focus-banner" class="hidden">
+        <!-- Injected via JS -->
+      </div>
+
       <!-- Task History List (Most recent on top) -->
       <div class="space-y-2 overflow-y-auto custom-scrollbar flex-1 pr-1" id="member-history-list">
         <!-- Injected via JS -->
       </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: CLASSIFICA DEDICATA GIORNATA DEL... (DAILY FOCUS Z-[70]) ==================== -->
+  <div id="modal-daily-focus-leaderboard" class="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-xl w-full p-6 sm:p-7 space-y-5 shadow-2xl border border-amber-400/40 dark:border-amber-600/40 max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">🏆</span>
+          <div>
+            <div class="text-[11px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Classifica Speciale</div>
+            <h3 class="font-extrabold text-lg text-slate-900 dark:text-white">Giornata del... (Focus Stanze)</h3>
+          </div>
+        </div>
+        <button onclick="closeDailyFocusLeaderboardModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+
+      <div class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+        💡 Classifica dedicata ai mini-task quotidiani di cura della casa. Guadagna punti ogni volta che esegui l'attività del giorno e mantieni attiva la tua serie di giorni consecutivi (<b>streak 🔥</b>)!
+      </div>
+
+      <!-- Leaderboard List -->
+      <div class="space-y-2.5 overflow-y-auto custom-scrollbar flex-1 pr-1" id="daily-focus-leaderboard-list">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: AGGIUNGI/MODIFICA STANZA FOCUS (Z-[80]) ==================== -->
+  <div id="modal-daily-focus-item" class="fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-200 dark:border-slate-800">
+      <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 id="modal-df-item-title" class="font-extrabold text-base text-slate-900 dark:text-white">Nuova Stanza / Attività Focus</h3>
+        <button onclick="closeDailyFocusItemModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+      </div>
+      <form onsubmit="submitDailyFocusItemForm(event)" class="space-y-4">
+        <input type="hidden" id="df-item-id">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Nome Stanza / Spazio</label>
+          <input id="df-item-name" type="text" required placeholder="es. Cucina, Balcone, Bagno..." class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-bold">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Icona MDI</label>
+            <div class="flex items-center gap-2">
+              <input id="df-item-icon" type="text" value="mdi:home" oninput="updateDfIconPreview(this.value)" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
+              <span id="df-item-icon-preview" class="text-xl text-amber-500 shrink-0"><i class="mdi mdi-home"></i></span>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Punti Assegnati</label>
+            <input id="df-item-points" type="number" min="1" max="100" value="10" required class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase mb-1">Descrizione / Suggerimento rapido</label>
+          <input id="df-item-desc" type="text" placeholder="es. Piani di lavoro, fornelli o lavello veloce" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium">
+        </div>
+        <div class="flex items-center gap-2">
+          <input id="df-item-enabled" type="checkbox" checked class="w-4 h-4 rounded text-amber-600">
+          <label for="df-item-enabled" class="text-xs font-bold text-slate-700 dark:text-slate-300">Abilitata per l'estrazione giornaliera</label>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+          <button type="button" onclick="closeDailyFocusItemModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs">Annulla</button>
+          <button type="submit" class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold rounded-xl text-xs shadow">Salva Stanza</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -1588,7 +1692,7 @@
 
     function setAdminTab(tabName) {
       activeAdminTab = tabName;
-      ['categories', 'spontaneous', 'routines', 'members', 'settings', 'notifications', 'backup', 'updates'].forEach(t => {
+      ['categories', 'spontaneous', 'routines', 'daily_focus', 'members', 'settings', 'notifications', 'backup', 'updates'].forEach(t => {
         const btn = document.getElementById(`adm-tab-${t}`);
         const sec = document.getElementById(`adm-sec-${t}`);
         if (btn) {
@@ -1598,6 +1702,7 @@
         }
         if (sec) sec.classList.toggle('hidden', t !== tabName);
       });
+      if (tabName === 'daily_focus') renderAdminDailyFocus();
       if (tabName === 'notifications') loadNotificationSettings();
       if (tabName === 'updates') checkForUpdatesLive();
     }
@@ -1783,6 +1888,9 @@
         <div><div class="text-[10px] text-slate-400 font-bold uppercase">Settimana</div><div class="text-base font-extrabold text-emerald-600 dark:text-emerald-400">${m.weekly_points} pt</div></div>
         <div><div class="text-[10px] text-slate-400 font-bold uppercase">Faccende Fatte</div><div class="text-base font-extrabold text-slate-800 dark:text-slate-200">${m.completed_count}</div></div>
       `;
+
+      // Render Focus del giorno per questo membro
+      renderMemberDailyFocusBanner(m.id);
 
       listEl.innerHTML = '';
       const memberLogs = (appData?.logs || [])
@@ -2025,6 +2133,7 @@
     }
 
     function getTaskTypeBadge(taskType) {
+      if (taskType === 'daily_focus') return `<span class="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-extrabold text-[10px] px-2 py-0.5 rounded-md border border-amber-300 dark:border-amber-700">🌟 Giornata del...</span>`;
       if (taskType === 'routine') return `<span class="bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 font-extrabold text-[10px] px-2 py-0.5 rounded-md">🔄 Routine</span>`;
       if (taskType === 'spontaneous') return `<span class="bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-300 font-extrabold text-[10px] px-2 py-0.5 rounded-md">⚡ Spontanea</span>`;
       if (taskType === 'single_task') return `<span class="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-extrabold text-[10px] px-2 py-0.5 rounded-md">📋 Task Singolo</span>`;
@@ -3165,6 +3274,9 @@
           `;
         });
       }
+
+      // 5. Daily Focus (Giornata del...)
+      renderAdminDailyFocus();
     }
 
     async function reorderCategory(catId, direction) {
@@ -4144,9 +4256,395 @@
       }
     }
 
+    // ==================== DAILY FOCUS ("OGGI È LA GIORNATA DEL...") ====================
+
+    function renderDailyFocusWidget() {
+      const container = document.getElementById('home-daily-focus-widget');
+      if (!container) return;
+
+      const df = appData?.daily_focus;
+      const item = df?.today_item;
+      if (!item) {
+        container.classList.add('hidden');
+        return;
+      }
+      container.classList.remove('hidden');
+
+      const members = Object.values(appData?.members || {});
+      const mStatusMap = df?.members_status || {};
+      const pts = item.points || 10;
+
+      // Streak & Leaderboard info
+      const topFocus = (df?.leaderboard || [])[0];
+      const topFocusText = topFocus && topFocus.total_count > 0 
+        ? `🏆 Leader Focus: <b>${topFocus.name}</b> (${topFocus.total_count} fatte${topFocus.current_streak > 1 ? `, 🔥 ${topFocus.current_streak}gg` : ''})` 
+        : '';
+
+      let membersHtml = '';
+      members.forEach(m => {
+        const st = mStatusMap[m.id];
+        const isDone = !!st?.completed;
+        if (isDone) {
+          membersHtml += `
+            <button onclick="toggleDailyFocusCompletion('${m.id}', true)" title="Completato oggi da ${m.name}! Clicca per annullare" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+              <span>${m.icon || '👤'}</span>
+              <span>✅ ${m.name}</span>
+              <span class="text-[10px] bg-emerald-700/60 px-1 py-0.5 rounded font-black">+${pts}pt</span>
+            </button>
+          `;
+        } else {
+          membersHtml += `
+            <button onclick="toggleDailyFocusCompletion('${m.id}', false)" title="Segna come completato per ${m.name}" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-white dark:bg-slate-800 border-2 border-amber-300 dark:border-amber-700/80 text-slate-800 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:border-amber-400 transition flex items-center gap-1.5 shadow-2xs cursor-pointer group">
+              <span>${m.icon || '👤'}</span>
+              <span>+ ${m.name}</span>
+              <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold group-hover:scale-110 transition">+${pts}pt</span>
+            </button>
+          `;
+        }
+      });
+
+      container.innerHTML = `
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl font-bold shrink-0 shadow-2xs">
+              ${renderIconHtml(item.icon || 'mdi:star-circle-outline')}
+            </span>
+            <div>
+              <div class="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <span>🌟 Stimolo del Giorno</span>
+                <span>•</span>
+                <span>+${pts} pt</span>
+              </div>
+              <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight">
+                Oggi è la Giornata del <span class="text-amber-600 dark:text-amber-400 underline decoration-amber-300 decoration-2 underline-offset-2">${item.name}</span>
+              </h2>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="openDailyFocusLeaderboardModal()" class="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 rounded-xl text-xs font-extrabold transition flex items-center gap-1 shadow-2xs">
+              <span>🏆 Classifica Focus</span>
+            </button>
+            <button onclick="rerollDailyFocus()" title="Estrai subito un'altra stanza per oggi" class="w-8 h-8 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 flex items-center justify-center text-sm shadow-2xs transition">
+              🎲
+            </button>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-600 dark:text-slate-300 font-medium bg-white/70 dark:bg-slate-800/60 p-2.5 rounded-2xl border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-1.5">
+            <span class="text-base">💡</span>
+            <span>${item.description || 'Dedica 5 minuti veloci a questo spazio per conquistare i punti extra!'}</span>
+          </div>
+          ${topFocusText ? `<div class="text-[11px] text-amber-700 dark:text-amber-300 font-semibold">${topFocusText}</div>` : ''}
+        </div>
+
+        <div class="space-y-1.5">
+          <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Chi ha completato il mini-task oggi? (Tocca per registrare):</div>
+          <div class="flex items-center gap-2 flex-wrap">
+            ${membersHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMemberDailyFocusBanner(mId) {
+      const bannerEl = document.getElementById('member-history-daily-focus-banner');
+      if (!bannerEl) return;
+
+      const df = appData?.daily_focus;
+      const item = df?.today_item;
+      if (!item) {
+        bannerEl.classList.add('hidden');
+        return;
+      }
+
+      const mStatus = df?.members_status?.[mId] || {};
+      const isDone = !!mStatus.completed;
+      const pts = item.points || 10;
+
+      bannerEl.className = 'p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 border border-amber-300 dark:border-amber-700/60 rounded-2xl flex items-center justify-between gap-3 shadow-xs';
+      bannerEl.classList.remove('hidden');
+
+      bannerEl.innerHTML = `
+        <div class="flex items-center gap-3 overflow-hidden">
+          <span class="text-2xl text-amber-500 shrink-0">${renderIconHtml(item.icon || 'mdi:star-circle-outline')}</span>
+          <div class="truncate">
+            <div class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+              <span>Attività del Giorno: <b>${item.name}</b></span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200">+${pts} pt</span>
+            </div>
+            <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">${item.description || 'Dedica 5 minuti a questo spazio'}</div>
+          </div>
+        </div>
+        <div class="shrink-0">
+          ${isDone ? `
+            <button onclick="toggleDailyFocusCompletion('${mId}', true)" title="Già completata oggi! Clicca per annullare se necessario" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+              <span>✅ Fatta</span>
+              <span class="text-[10px] opacity-80 underline hover:opacity-100">(Annulla)</span>
+            </button>
+          ` : `
+            <button onclick="toggleDailyFocusCompletion('${mId}', false)" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 group">
+              <span>Fatta ✓</span>
+              <span class="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-md font-black">+${pts}pt</span>
+            </button>
+          `}
+        </div>
+      `;
+    }
+
+    async function toggleDailyFocusCompletion(mId, isUndo = false) {
+      try {
+        const res = await fetch(`${apiBase}/daily_focus/complete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ member_id: mId, undo: !!isUndo })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (appData) {
+            appData.daily_focus = data;
+          }
+          showToast(isUndo ? "Attività del giorno revocata" : "🌟 Attività del giorno completata! Punti accreditati!", isUndo ? "ℹ️" : "🎉");
+          await loadStats();
+          if (activeViewingMember && activeViewingMember.id === mId) {
+            openMemberHistoryModal(mId, activeViewingMember.name);
+          }
+        }
+      } catch (e) {
+        showToast("Errore di connessione", "❌");
+      }
+    }
+
+    async function rerollDailyFocus() {
+      try {
+        const res = await fetch(`${apiBase}/daily_focus/reroll`, { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          if (appData) {
+            appData.daily_focus = data;
+          }
+          showToast(`Nuova stanza estratta: ${data.item?.name || 'Stanza'}!`, "🎲");
+          await loadStats();
+          if (activeAdminTab === 'daily_focus') renderAdminDailyFocus();
+        }
+      } catch (e) {
+        showToast("Errore durante il cambio stanza", "❌");
+      }
+    }
+
+    function openDailyFocusLeaderboardModal() {
+      const modal = document.getElementById('modal-daily-focus-leaderboard');
+      const listEl = document.getElementById('daily-focus-leaderboard-list');
+      if (!modal || !listEl) return;
+
+      const df = appData?.daily_focus;
+      const lb = df?.leaderboard || [];
+
+      listEl.innerHTML = '';
+      if (lb.length === 0) {
+        listEl.innerHTML = '<div class="text-center py-8 text-xs text-slate-400">Nessuna attività registrata finora. Sii il primo a completare la stanza di oggi!</div>';
+      } else {
+        lb.forEach((m, idx) => {
+          const isTop = idx === 0 && m.total_count > 0;
+          const streakBadge = m.current_streak > 0 
+            ? `<span class="px-2 py-0.5 rounded-lg text-[11px] font-black bg-orange-100 dark:bg-orange-950/70 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/60 flex items-center gap-1">🔥 ${m.current_streak} ${m.current_streak === 1 ? 'giorno' : 'giorni'}</span>` 
+            : `<span class="text-[10px] text-slate-400">Nessuna serie attiva</span>`;
+
+          listEl.innerHTML += `
+            <div class="p-3.5 rounded-2xl border ${isTop ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 shadow-xs' : 'bg-slate-50 dark:bg-slate-800/70 border-slate-200 dark:border-slate-700'} flex items-center justify-between gap-3 text-xs">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl">${m.medal || `#${idx + 1}`}</span>
+                <span class="text-2xl">${m.icon || '👤'}</span>
+                <div>
+                  <div class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span>${m.name}</span>
+                    ${isTop ? '<span class="text-[10px] font-black uppercase px-1.5 py-0.2 rounded bg-amber-200 text-amber-900 dark:bg-amber-800 dark:text-amber-100">Campione Focus</span>' : ''}
+                  </div>
+                  <div class="text-slate-500 dark:text-slate-400 text-[11px] font-medium mt-0.5 flex items-center gap-2">
+                    <span>Stanze completate: <b>${m.total_count}</b></span>
+                    <span>•</span>
+                    <span>Punti Focus: <b>+${m.total_points} pt</b></span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                ${streakBadge}
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeDailyFocusLeaderboardModal() {
+      const modal = document.getElementById('modal-daily-focus-leaderboard');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function renderAdminDailyFocus() {
+      const listEl = document.getElementById('admin-daily-focus-list');
+      const previewEl = document.getElementById('admin-daily-focus-preview');
+      if (!listEl) return;
+
+      const items = appData?.daily_focus_items || [];
+      const currentItem = appData?.daily_focus?.today_item;
+
+      if (previewEl && currentItem) {
+        previewEl.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="text-2xl text-amber-600 dark:text-amber-400">${renderIconHtml(currentItem.icon || 'mdi:star-circle-outline')}</span>
+            <div>
+              <div class="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <span>Stanza Attiva Oggi: <b>${currentItem.name}</b> (+${currentItem.points || 10} pt)</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-100">In Corso</span>
+              </div>
+              <div class="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">${currentItem.description || 'Nessun suggerimento rapido impostato'}</div>
+            </div>
+          </div>
+          <div>
+            <button onclick="rerollDailyFocus()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center gap-1.5"><i class="mdi mdi-dice-5-outline text-base"></i> <span>Estrai Altra per Oggi</span></button>
+          </div>
+        `;
+      }
+
+      listEl.innerHTML = '';
+      if (items.length === 0) {
+        listEl.innerHTML = '<div class="text-center py-8 text-xs text-slate-400">Nessuna stanza configurata. Clicca su "+ Nuova Stanza" o "Ripristina Default".</div>';
+      } else {
+        items.forEach(it => {
+          const isEnabled = it.enabled !== false;
+          listEl.innerHTML += `
+            <div class="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs">
+              <div class="flex items-center gap-3">
+                <span class="text-2xl text-amber-500 shrink-0">${renderIconHtml(it.icon || 'mdi:home')}</span>
+                <div>
+                  <div class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>${it.name}</span>
+                    <span class="text-amber-600 font-bold">+${it.points || 10} pt</span>
+                    ${isEnabled ? '<span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">Attiva</span>' : '<span class="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded">Disattivata</span>'}
+                  </div>
+                  <div class="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">${it.description || 'Nessun suggerimento rapido'}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="toggleDailyFocusItemEnabled('${it.id}', ${!isEnabled})" class="px-2.5 py-1.5 rounded-xl border text-[11px] font-bold ${isEnabled ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}">
+                  ${isEnabled ? 'Disattiva' : 'Attiva'}
+                </button>
+                <button onclick="editDailyFocusItem('${it.id}')" class="px-2.5 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold rounded-xl text-slate-700 dark:text-slate-200">Modifica</button>
+                <button onclick="deleteDailyFocusItem('${it.id}')" class="px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950 font-bold rounded-xl text-rose-600 border border-rose-100">Elimina</button>
+              </div>
+            </div>
+          `;
+        });
+      }
+    }
+
+    function openDailyFocusItemModal(itemId = null) {
+      const item = itemId ? (appData?.daily_focus_items || []).find(it => it.id === itemId) : null;
+      document.getElementById('modal-df-item-title').textContent = item ? "Modifica Stanza Focus" : "Nuova Stanza Focus";
+      document.getElementById('df-item-id').value = item ? item.id : "";
+      document.getElementById('df-item-name').value = item ? item.name : "";
+      document.getElementById('df-item-icon').value = item ? item.icon : "mdi:home";
+      document.getElementById('df-item-points').value = item ? (item.points || 10) : 10;
+      document.getElementById('df-item-desc').value = item ? (item.description || "") : "";
+      document.getElementById('df-item-enabled').checked = item ? (item.enabled !== false) : true;
+      updateDfIconPreview(item ? item.icon : "mdi:home");
+      document.getElementById('modal-daily-focus-item').classList.remove('hidden');
+    }
+
+    function closeDailyFocusItemModal() {
+      document.getElementById('modal-daily-focus-item').classList.add('hidden');
+    }
+
+    function editDailyFocusItem(itemId) {
+      openDailyFocusItemModal(itemId);
+    }
+
+    function updateDfIconPreview(iconVal) {
+      const el = document.getElementById('df-item-icon-preview');
+      if (el) el.innerHTML = renderIconHtml(iconVal || 'mdi:home');
+    }
+
+    async function submitDailyFocusItemForm(e) {
+      e.preventDefault();
+      const id = document.getElementById('df-item-id').value;
+      const name = document.getElementById('df-item-name').value.trim();
+      const icon = document.getElementById('df-item-icon').value.trim() || 'mdi:home';
+      const points = parseInt(document.getElementById('df-item-points').value) || 10;
+      const description = document.getElementById('df-item-desc').value.trim();
+      const enabled = document.getElementById('df-item-enabled').checked;
+
+      try {
+        const res = await fetch(`${apiBase}/daily_focus/items`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, name, icon, points, description, enabled })
+        });
+        if (res.ok) {
+          closeDailyFocusItemModal();
+          showToast("Stanza salvata!", "✅");
+          await loadStats();
+          renderAdminDailyFocus();
+        }
+      } catch (err) {
+        showToast("Errore di salvataggio", "❌");
+      }
+    }
+
+    async function toggleDailyFocusItemEnabled(itemId, newEnabled) {
+      const item = (appData?.daily_focus_items || []).find(it => it.id === itemId);
+      if (!item) return;
+      try {
+        const res = await fetch(`${apiBase}/daily_focus/items`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...item, enabled: newEnabled })
+        });
+        if (res.ok) {
+          await loadStats();
+          renderAdminDailyFocus();
+        }
+      } catch (e) {}
+    }
+
+    async function deleteDailyFocusItem(itemId) {
+      if (!confirm("Eliminare questa stanza dall'elenco del Focus Giornaliero?")) return;
+      try {
+        const res = await fetch(`${apiBase}/daily_focus/items/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: itemId })
+        });
+        if (res.ok) {
+          showToast("Stanza eliminata", "🗑️");
+          await loadStats();
+          renderAdminDailyFocus();
+        }
+      } catch (e) {
+        showToast("Errore durante l'eliminazione", "❌");
+      }
+    }
+
+    async function resetDailyFocusDefaults() {
+      if (!confirm("Ripristinare le stanze predefinite del Focus Giornaliero?")) return;
+      try {
+        const res = await fetch(`${apiBase}/daily_focus/reset_defaults`, { method: 'POST' });
+        if (res.ok) {
+          showToast("Stanze predefinite ripristinate!", "↺");
+          await loadStats();
+          renderAdminDailyFocus();
+        }
+      } catch (e) {
+        showToast("Errore durante il ripristino", "❌");
+      }
+    }
+
     function render() {
       if (!appData) return;
       renderMembersBar();
+      renderDailyFocusWidget();
       renderHomeWidgets();
       renderSpontaneousCategoriesGrid();
       renderRoutines();

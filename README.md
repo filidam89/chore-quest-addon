@@ -1,14 +1,38 @@
-# 🏆 ChoreQuest (v2.8.7)
+# 🏆 ChoreQuest (v2.9.0)
 
 > **Add-on Ufficiale Home Assistant per la Gamification e Gestione delle Faccende di Casa e Famiglia**
 
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)
-![Version](https://img.shields.io/badge/Version-2.8.7-emerald.svg)
+![Version](https://img.shields.io/badge/Version-2.9.0-emerald.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
-## ✨ Novità & Funzionalità Chiave v2.8.7
+## ✨ Novità & Funzionalità Chiave v2.9.0
+
+- 🌟 **Nuova Funzione "Oggi è la Giornata del..." (Focus Stanze & Spazi Casa):**
+  - Stimolo quotidiano a prendersi cura di uno spazio o stanza diversa con un mini-task veloce (5 minuti) per tutta la famiglia.
+  - Elenco di stanze e ambienti configurabile liberamente in Admin (*Cucina, Salotto, Bagno, Camera da letto, Ingresso, Balcone, Ripostiglio, Studio*).
+- 🎲 **Rotazione Intelligente Senza Ripetizioni Consecutive:**
+  - L'algoritmo tiene conto dell'ultima esecuzione per favorire gli ambienti meno curati ed **evita rigorosamente che la stessa stanza si ripeta per 2 giorni consecutivi**, anche se il giorno precedente non è stata svolta da nessuno.
+  - Pulsante Reroll rapido (`🎲`) per cambiare stanza per la giornata odierna se necessario.
+- 👥 **Completamento per Singolo Membro & Classifica Focus Dedicata:**
+  - Ciascun membro della famiglia può flaggare il completamento per se stesso e conquistare i punti extra (+10 pt).
+  - Podio e classifica a parte *"Giornata del..."* con totale stanze completate e serie di giorni consecutivi attivi (**streak 🔥**).
+- 🔔 **Integrazione Notifiche Home Assistant & Sensore HA:**
+  - Il promemoria mattutino include in apertura lo stimolo del giorno: `🌟 Oggi è la giornata del: [Stanza] (+X pt)! \n💡 [Suggerimento]`.
+  - Il riepilogo serale riporta se l'attività è stata completata dal membro o dagli altri familiari.
+  - Nuovo evento di test dedicato nel pannello Notifiche HA.
+  - Nuovo sensore Home Assistant: `sensor.chorequest_daily_focus`.
+- 📱 **Interazione Immediata da Card Membro & Home:**
+  - Widget prominente in Home con chip veloci di completamento per ciascun membro.
+  - Toccando il nome di un componente familiare, il modale mostra subito in evidenza il banner *"Attività del Giorno"* con pulsante diretto **`[ Fatta ✓ ]`**.
+- 📜 **Modifiche a Posteriori Garantite:**
+  - I completamenti vengono archiviati come log `daily_focus` con pieno supporto alle modifiche a posteriori (data, punti, esecutore, note) e cancellazione con tracciamento audit.
+
+---
+
+## 🚀 Novità Versione Precedente v2.8.7
 
 - 📜 **Storico Esecuzioni della Routine con Dettaglio Cronologico:**
   - Cliccando su qualsiasi routine o attività in scadenza (es. *Barbiere*, *Cambio Lenzuola*), il modale mostra ora la cronologia completa dei completamenti passati con data e ora esatta, chi l'ha svolta (con avatar e badge utente), punti assegnati e note registrate.
