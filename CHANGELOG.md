@@ -4,6 +4,22 @@ Tutte le novità, miglioramenti e correzioni introdotte nelle versioni di ChoreQ
 
 ---
 
+## [2.9.1] - 2026-11-11
+
+### ✨ Novità & Affinamenti "Giornata del..."
+- **Isolamento Completo Punti Focus dalla Classifica Generale**:
+  - I punti guadagnati completando l'attività del giorno sono ora **a sé stanti**: concorrono esclusivamente alla classifica speciale *"Giornata del..."* con serie consecutive (streak 🔥) e non influenzano in alcun modo i punti totali, settimanali o le posizioni della classifica generale.
+  - Nei registri attività e nello storico membro, i punti del mini-task sono esplicitamente etichettati come `+X pt Focus`.
+- **Interfaccia Home Minimale & Senza Riquadro Ingombrante**:
+  - Rimosso il riquadro/card separato in Home in favore di un testo fluido, elegante e pulito: `🌟 Oggi è la giornata del [Stanza] (+X pt Focus) — [Suggerimento]`, con link rapido alla *Classifica Focus*.
+  - Rimosso il pulsante dado (`🎲`) dalla schermata Home.
+- **Registrazione Minitask Esclusiva dalla Scheda Membro**:
+  - Rimossi i pulsanti/chip di registrazione rapida dalla Home: la marcatura del minitask avviene unicamente aprendo la scheda personale del singolo utente (cliccando sul membro familiare) tramite il pulsante dedicato **`[ Fatta ✓ ]`**.
+- **Snellimento Scheda Admin "Giornata del..."**:
+  - Rimosso il pulsante "Ripristina Default" dalla scheda di gestione admin per evitare reset accidentali delle stanze personalizzate.
+
+---
+
 ## [2.9.0] - 2026-11-11
 
 ### ✨ Novità

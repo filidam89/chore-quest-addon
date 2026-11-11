@@ -64,7 +64,7 @@
         <div>
           <h1 class="font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
             <span>ChoreQuest</span>
-            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.9.0</span>
+            <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded-md border border-indigo-200/50 dark:border-indigo-800/50">v2.9.1</span>
           </h1>
           <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -111,8 +111,8 @@
       <div id="members-bar" class="w-full"></div>
     </div>
 
-    <!-- 1.5 WIDGET: OGGI È LA GIORNATA DEL... (FOCUS QUOTIDIANO CASA) -->
-    <div id="home-daily-focus-widget" class="bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-indigo-500/10 dark:from-amber-950/40 dark:via-slate-900 dark:to-indigo-950/40 p-5 sm:p-6 rounded-3xl border-2 border-amber-400/40 dark:border-amber-600/30 shadow-md space-y-4 relative overflow-hidden hidden">
+    <!-- 1.5 TESTO IN HOME: OGGI È LA GIORNATA DEL... (SENZA RIQUADRO) -->
+    <div id="home-daily-focus-widget" class="hidden">
       <!-- Injected via renderDailyFocusWidget() -->
     </div>
 
@@ -250,7 +250,6 @@
         </div>
         <div class="flex items-center gap-2 flex-wrap">
           <button onclick="rerollDailyFocus()" title="Estrai subito un'altra stanza per oggi (evita ieri e quella attuale)" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition flex items-center gap-1.5"><i class="mdi mdi-dice-5-outline text-base"></i> <span>Estrai Altra per Oggi</span></button>
-          <button onclick="resetDailyFocusDefaults()" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs rounded-xl transition flex items-center gap-1.5"><i class="mdi mdi-restore text-base"></i> <span>Ripristina Default</span></button>
           <button onclick="openDailyFocusItemModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center gap-1.5"><i class="mdi mdi-plus-circle text-base"></i> <span>+ Nuova Stanza</span></button>
         </div>
       </div>
@@ -1902,7 +1901,7 @@
       } else {
         memberLogs.forEach(l => {
           const dt = formatDateTime(l.created_at);
-          const ptsBadge = l.is_personal ? '<span class="text-[11px] font-bold text-slate-400">0 pt</span>' : `<span class="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm">+${l.points} pt</span>`;
+          const ptsBadge = l.is_personal ? '<span class="text-[11px] font-bold text-slate-400">0 pt</span>' : (l.task_type === 'daily_focus' ? `<span class="font-extrabold text-amber-600 dark:text-amber-400 text-sm">+${l.points} pt Focus</span>` : `<span class="font-extrabold text-indigo-600 dark:text-indigo-400 text-sm">+${l.points} pt</span>`);
           const partialTag = l.is_partial ? `<span class="bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 text-[10px] font-extrabold px-1.5 py-0.2 rounded">✂️ Parziale</span>` : '';
           const editBadge = (l.edit_history && l.edit_history.length > 0) ? `<span class="bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 text-[10px] font-bold px-1.5 py-0.2 rounded">✏️ Modificato</span>` : '';
 
@@ -3047,7 +3046,7 @@
 
       filtered.forEach(l => {
         const executedAtFormatted = formatDateTime(l.created_at);
-        const ptsBadge = (l.is_personal || l.points === 0) ? '<span class="text-[11px] font-bold text-slate-400">0 pt</span>' : `<span class="font-extrabold text-indigo-600 dark:text-indigo-400 text-base">+${l.points} pt</span>`;
+        const ptsBadge = (l.is_personal || l.points === 0) ? '<span class="text-[11px] font-bold text-slate-400">0 pt</span>' : (l.task_type === 'daily_focus' ? `<span class="font-extrabold text-amber-600 dark:text-amber-400 text-base">+${l.points} pt Focus</span>` : `<span class="font-extrabold text-indigo-600 dark:text-indigo-400 text-base">+${l.points} pt</span>`);
         const partialBadge = l.is_partial ? `<span class="bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 text-[10px] font-extrabold px-1.5 py-0.2 rounded">✂️ Parziale</span>` : '';
         const editBadge = (l.edit_history && l.edit_history.length > 0) ? `<span class="bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-300 text-[10px] font-bold px-1.5 py-0.2 rounded">✏️ Modificato</span>` : '';
         const typeBadge = getTaskTypeBadge(l.task_type);
@@ -4270,79 +4269,20 @@
       }
       container.classList.remove('hidden');
 
-      const members = Object.values(appData?.members || {});
-      const mStatusMap = df?.members_status || {};
       const pts = item.points || 10;
-
-      // Streak & Leaderboard info
-      const topFocus = (df?.leaderboard || [])[0];
-      const topFocusText = topFocus && topFocus.total_count > 0 
-        ? `🏆 Leader Focus: <b>${topFocus.name}</b> (${topFocus.total_count} fatte${topFocus.current_streak > 1 ? `, 🔥 ${topFocus.current_streak}gg` : ''})` 
-        : '';
-
-      let membersHtml = '';
-      members.forEach(m => {
-        const st = mStatusMap[m.id];
-        const isDone = !!st?.completed;
-        if (isDone) {
-          membersHtml += `
-            <button onclick="toggleDailyFocusCompletion('${m.id}', true)" title="Completato oggi da ${m.name}! Clicca per annullare" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white hover:bg-emerald-700 transition flex items-center gap-1.5 shadow-xs cursor-pointer">
-              <span>${m.icon || '👤'}</span>
-              <span>✅ ${m.name}</span>
-              <span class="text-[10px] bg-emerald-700/60 px-1 py-0.5 rounded font-black">+${pts}pt</span>
-            </button>
-          `;
-        } else {
-          membersHtml += `
-            <button onclick="toggleDailyFocusCompletion('${m.id}', false)" title="Segna come completato per ${m.name}" class="px-3 py-1.5 rounded-xl text-xs font-extrabold bg-white dark:bg-slate-800 border-2 border-amber-300 dark:border-amber-700/80 text-slate-800 dark:text-slate-200 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:border-amber-400 transition flex items-center gap-1.5 shadow-2xs cursor-pointer group">
-              <span>${m.icon || '👤'}</span>
-              <span>+ ${m.name}</span>
-              <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold group-hover:scale-110 transition">+${pts}pt</span>
-            </button>
-          `;
-        }
-      });
+      const desc = item.description ? ` — <span class="text-slate-500 dark:text-slate-400 text-[11px]">${item.description}</span>` : '';
 
       container.innerHTML = `
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <div class="flex items-center gap-3">
-            <span class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl font-bold shrink-0 shadow-2xs">
-              ${renderIconHtml(item.icon || 'mdi:star-circle-outline')}
-            </span>
-            <div>
-              <div class="text-[10px] font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                <span>🌟 Stimolo del Giorno</span>
-                <span>•</span>
-                <span>+${pts} pt</span>
-              </div>
-              <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight">
-                Oggi è la Giornata del <span class="text-amber-600 dark:text-amber-400 underline decoration-amber-300 decoration-2 underline-offset-2">${item.name}</span>
-              </h2>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <button onclick="openDailyFocusLeaderboardModal()" class="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 rounded-xl text-xs font-extrabold transition flex items-center gap-1 shadow-2xs">
-              <span>🏆 Classifica Focus</span>
-            </button>
-            <button onclick="rerollDailyFocus()" title="Estrai subito un'altra stanza per oggi" class="w-8 h-8 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300 flex items-center justify-center text-sm shadow-2xs transition">
-              🎲
-            </button>
-          </div>
-        </div>
-
-        <div class="text-xs text-slate-600 dark:text-slate-300 font-medium bg-white/70 dark:bg-slate-800/60 p-2.5 rounded-2xl border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-between flex-wrap gap-2">
-          <div class="flex items-center gap-1.5">
-            <span class="text-base">💡</span>
-            <span>${item.description || 'Dedica 5 minuti veloci a questo spazio per conquistare i punti extra!'}</span>
-          </div>
-          ${topFocusText ? `<div class="text-[11px] text-amber-700 dark:text-amber-300 font-semibold">${topFocusText}</div>` : ''}
-        </div>
-
-        <div class="space-y-1.5">
-          <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Chi ha completato il mini-task oggi? (Tocca per registrare):</div>
+        <div class="flex items-center justify-between flex-wrap gap-2 text-xs py-1 px-1">
           <div class="flex items-center gap-2 flex-wrap">
-            ${membersHtml}
+            <span class="text-amber-500 font-extrabold text-sm">🌟</span>
+            <span class="text-slate-700 dark:text-slate-300 font-medium">
+              Oggi è la giornata del <b class="text-slate-900 dark:text-white font-extrabold underline decoration-amber-400 decoration-2 underline-offset-2">${item.name}</b> (+${pts} pt Focus)${desc}
+            </span>
           </div>
+          <button onclick="openDailyFocusLeaderboardModal()" class="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer">
+            <i class="mdi mdi-trophy-outline"></i> <span>Classifica Focus</span>
+          </button>
         </div>
       `;
     }
@@ -4371,21 +4311,21 @@
           <div class="truncate">
             <div class="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
               <span>Attività del Giorno: <b>${item.name}</b></span>
-              <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200">+${pts} pt</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200">+${pts} pt Focus</span>
             </div>
             <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">${item.description || 'Dedica 5 minuti a questo spazio'}</div>
           </div>
         </div>
         <div class="shrink-0">
           ${isDone ? `
-            <button onclick="toggleDailyFocusCompletion('${mId}', true)" title="Già completata oggi! Clicca per annullare se necessario" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center gap-1.5">
+            <button onclick="toggleDailyFocusCompletion('${mId}', true)" title="Già completata oggi! Clicca per annullare se necessario" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center gap-1.5 cursor-pointer">
               <span>✅ Fatta</span>
               <span class="text-[10px] opacity-80 underline hover:opacity-100">(Annulla)</span>
             </button>
           ` : `
-            <button onclick="toggleDailyFocusCompletion('${mId}', false)" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 group">
+            <button onclick="toggleDailyFocusCompletion('${mId}', false)" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 group cursor-pointer">
               <span>Fatta ✓</span>
-              <span class="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-md font-black">+${pts}pt</span>
+              <span class="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-md font-black">+${pts}pt Focus</span>
             </button>
           `}
         </div>

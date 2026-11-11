@@ -1,14 +1,23 @@
-# 🏆 ChoreQuest (v2.9.0)
+# 🏆 ChoreQuest (v2.9.1)
 
 > **Add-on Ufficiale Home Assistant per la Gamification e Gestione delle Faccende di Casa e Famiglia**
 
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)
-![Version](https://img.shields.io/badge/Version-2.9.0-emerald.svg)
+![Version](https://img.shields.io/badge/Version-2.9.1-emerald.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ---
 
-## ✨ Novità & Funzionalità Chiave v2.9.0
+## ✨ Novità & Affinamenti v2.9.1
+
+- 🔒 **Isolamento Punti Focus a Sé Stanti**: I punti della *"Giornata del..."* non alterano più il punteggio totale, settimanale o il podio della classifica generale, concorrendo unicamente alla classifica speciale Focus e agli streak 🔥.
+- 💬 **Testo Pulito in Home Senza Riquadro Separato**: Rimosso il box/card pesante e il dado; la stanza del giorno è indicata con eleganza tramite un semplice testo informativo ed un link alla classifica Focus.
+- 👤 **Registrazione Solo da Scheda Utente**: La registrazione del completamento avviene unicamente toccando la card del singolo membro della famiglia, all'interno del suo modale tramite il tasto `[ Fatta ✓ ]`.
+- 🧹 **Scheda Admin Pulita**: Rimosso il tasto di ripristino default per preservare le stanze configurate.
+
+---
+
+## 🚀 Novità Versione Precedente v2.9.0
 
 - 🌟 **Nuova Funzione "Oggi è la Giornata del..." (Focus Stanze & Spazi Casa):**
   - Stimolo quotidiano a prendersi cura di uno spazio o stanza diversa con un mini-task veloce (5 minuti) per tutta la famiglia.

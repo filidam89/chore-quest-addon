@@ -667,7 +667,8 @@ function calculateStats() {
         m.completed_single_tasks_count += 1;
       }
 
-      if (!log.is_personal && pts > 0) {
+      // Daily Focus points are independent and do not affect general points or rankings
+      if (!log.is_personal && pts > 0 && log.task_type !== 'daily_focus') {
         m.total_points += pts;
         m.completed_count += 1;
 
@@ -1679,8 +1680,8 @@ async function checkAndSendEveningRecap() {
     mCfg.last_evening_date = todayIso;
     anyUpdated = true;
 
-    // Attività completate oggi da questo membro
-    const mTodayLogs = todayLogs.filter(l => l.member_name === m.name && !l.is_personal && l.points > 0);
+    // Attività completate oggi da questo membro (i punti Focus sono calcolati separatamente)
+    const mTodayLogs = todayLogs.filter(l => l.member_name === m.name && !l.is_personal && l.points > 0 && l.task_type !== 'daily_focus');
     const todayPts = mTodayLogs.reduce((acc, l) => acc + (parseInt(l.points) || 0), 0);
     const todayTasksCount = mTodayLogs.length;
 
